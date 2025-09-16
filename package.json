@@ -1,0 +1,55 @@
+{
+  "name": "certmanager-ui-remote",
+  "private": true,
+  "type": "module",
+  "types": "dist/types/index.d.ts",
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "types": "tsc -p tsconfig.types.json",
+    "preview": "vite preview --port 5175",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "ci:build": "turbo run build --force",
+    "ci:verify": "turbo run lint test typecheck --force"
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Edge versions",
+    "Firefox >= 102",
+    "Safari >= 15.4",
+    "not dead"
+  ],
+  "dependencies": {
+    "@module-federation/vite": "^1.7.1",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@tailwindcss/vite": "^4.1.12",
+    "@totesoft/ui-kit": "2.5.2",
+    "@types/node": "^24.3.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "@vitejs/plugin-react-swc": "^4.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.542.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-router-dom": "^6",
+    "secure-core": "link:C:/Users/User5/AppData/Local/pnpm/global/5/node_modules/@totesoft/secure-core",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
+    "tw-animate-css": "^1.3.7"
+  },
+  "devDependencies": {
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10",
+    "postcss": "^8",
+    "tailwindcss": "^4",
+    "turbo": "^2.5.6",
+    "typescript": "^5",
+    "vite": "^5"
+  }
+}

@@ -1,0 +1,42 @@
+{ 
+   "files": [],
+   "references": [
+      {
+      "path": "./tsconfig.app.json",
+      },
+
+   ],
+   "compilerOptions": {
+      "target": "ES2022",
+      "module": "ESNext",
+      "lib": ["ES2022", "DOM"],
+      "moduleResolution": "Bundler",
+      "declaration": true,
+      "emitDeclarationOnly": true,
+      "strict": true,
+     // "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "declarationDir": "dist/types",
+      "outDir": "dist",
+      "rootDir": "src",
+      "baseUrl": ".",
+      "jsx": "react-jsx",
+      "types" : ["vite/client"],
+         "paths": {
+            "@/*": [
+               "./src/*"
+            ]
+         }
+   },
+"include": [
+   "src/**/*.ts",
+   "src/**/*.tsx"
+],
+"exclude": [
+   "src/index.tsx",
+   "src/pages/**",
+   "src/routes/**"
+]
+
+}
