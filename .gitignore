@@ -138,3 +138,6 @@ dist
 .__mf__temp/certmanager_mf_2_ui_mf_2_remote/localSharedImportMap.js
 .github/.DS_Store
 .DS_Store
+
+
+.npmrc
