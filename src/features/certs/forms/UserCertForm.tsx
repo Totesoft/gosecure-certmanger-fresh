@@ -66,8 +66,9 @@ function UserCertForm() {
     };
 
     return (
-        <div className="relative w-full flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-            <h2 className="text-2xl font-bold p-3 text-gray-900 dark:text-gray-100">Create User Certificate</h2>
+       <div className="flex  p-4 items-center justify-center">
+            <div className="w-full max-w-xl mx-auto  rounded-xl shadow-lg relative overflow-hidden">
+            <h2 className="text-2xl font-bold p-3 text-[var(--sidebar-foreground)] hover:text-[var(--sidebar-accent-foreground)]">Create User Certificate</h2>
             <Toaster position="top-right" reverseOrder={false} />
 
             <motion.form
@@ -150,12 +151,13 @@ function UserCertForm() {
                 <div className="flex justify-center pt-4">
                     <Button
                         type="submit"
-                        className="bg-blue-400 text-white font-bold py-3 px-12 rounded-full shadow-lg transition-all transform hover:scale-105 hover:bg-blue-500 active:scale-95"
+                        className="bg-[var(--sidebar-accent)] hover:bg-blue-600 px-6 py-2 h-9 text-white w-full font-bold shadow-lg transition-all transform hover:scale-105 active:scale-95"
                     >
                         Generate User Certificate
                     </Button>
                 </div>
             </motion.form>
+            </div>
         </div>
     );
 }

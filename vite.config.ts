@@ -12,7 +12,8 @@ console.log("VITE REMOTE CERT URL", process.env.VITE_REMOTE_CERT_URL);
 
 export default defineConfig({
   server: {
-    // port: 5101,
+     port: 5101,
+     strictPort: true,
     // cors: true,
     headers: { "Access-Control-Allow-Origin": "*" }, // helps Safari
     //origin: "http://localhost", // good practice for dev

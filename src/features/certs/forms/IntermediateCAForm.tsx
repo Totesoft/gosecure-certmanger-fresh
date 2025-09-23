@@ -79,8 +79,9 @@ function IntermediateCertForm() {
     };
 
     return (
-        <div className="relative w-full flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-            <h2 className="text-2xl font-bold p-3 text-gray-900 dark:text-gray-100">Create Intermediate CA Certificate</h2>
+       <div className="flex p-4 items-center justify-center">
+            <div className="w-full max-w-xl mx-auto  rounded-xl shadow-lg relative overflow-hidden">
+            <h2 className="text-2xl font-bold p-3 text-[var(--sidebar-foreground)] hover:text-[var(--sidebar-accent-foreground)]">Create Intermediate CA Certificate</h2>
             <Toaster position="top-right" reverseOrder={false} />
 
             <motion.form
@@ -103,16 +104,19 @@ function IntermediateCertForm() {
                             className="flex flex-col md:flex-row md:items-center gap-2 py-2 border-b border-gray-100 last:border-b-0"
                         >
                             {/* Label */}
+                            <div className="md:w-1/4 text-md text-left font-medium flex items-center gap-3">
                             <Label
                                 htmlFor={key}
-                                className="md:w-1/4 text-md text-left font-medium flex items-center gap-2"
+                                
                             >
                                 {extractLabel(key)}
                                 {isImportant && <span className="text-red-500 text-lg">*</span>}
                             </Label>
+                            </div>
 
                             {/* Field */}
                             <div className="flex-1">
+                                <div className="space-y-4">
                                 {fieldType === "select" ? (
                                     <Controller
                                         name={key as keyof IntermediateCASchemaType}
@@ -162,6 +166,7 @@ function IntermediateCertForm() {
                                         {errors[key as keyof IntermediateCASchemaType]?.message}
                                     </p>
                                 )}
+                                </div>
                             </div>
                         </div>
                     );
@@ -170,8 +175,9 @@ function IntermediateCertForm() {
                 {/* Button Section */}
                 <div className="flex justify-center pt-4">
                     <Button
+                        variant="default"
                         type="submit"
-                        className="bg-blue-400 text-white font-bold py-3 px-12 rounded-full shadow-lg transition-all transform hover:scale-105 hover:bg-blue-500 active:scale-95"
+                        className="bg-[var(--sidebar-accent)] hover:bg-blue-600 px-6 py-2 h-9 text-white w-full font-bold  shadow-lg transition-all transform hover:scale-105  active:scale-95"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                     >
@@ -180,6 +186,7 @@ function IntermediateCertForm() {
                     </Button>
                 </div>
             </motion.form>
+            </div>
         </div>
     );
 }
