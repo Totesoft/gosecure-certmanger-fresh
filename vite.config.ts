@@ -19,12 +19,15 @@ export default defineConfig({
   },
   base: isVercel ? '/' : '/gosecure-certmanager/',
   plugins: [
-    react(),tailwindcss(),
+    react(), tailwindcss(),
     federation({
       name: "certmanager-ui-remote",
       filename: "remoteEntry.js",
       exposes: {
         "./routes": "./src/routes/index.tsx", // <- make sure this path exists
+        "./RootCert": "./src/pages/RootCert",
+        "./IntermediateCert": "./src/pages/IntermediateCert",
+        "./UserCert": "./src/pages/UserCert",
       },
       shared: ["react", "react-dom", "react-router-dom"],
     }),

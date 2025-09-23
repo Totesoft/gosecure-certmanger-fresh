@@ -1,14 +1,249 @@
 @import "tailwindcss";
-:root{
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
+/* :root {
+   --background: 0 0% 100%;
+   --foreground: 222.2 47.4% 11.2%;
+
+
+    --card: 0 0% 100%;
+   --card-foreground: 240 10% 3.9%;
+
+
+   --primary: 222.2 47.4% 11.2%;
+   --primary-foreground: 210 40% 98%;
+
+
+   --sidebar-background: 206 17% 38%;
+   --sidebar-foreground: 240 10% 3.9%;
+   --sidebar-primary: 240 5.9% 10%;
+   --sidebar-primary-foreground: 0 0% 98%;
+   --sidebar-accent: 180 75% 40%;
+   --sidebar-accent-foreground: 0 0% 100%;
+   --sidebar-border: 0 0% 80%;
+   --sidebar-ring: 0 0% 70%;
+} */
+
+
+
+
+.light {
+  /* Base Colors */
+  --background: hsl(0, 0%, 100%);
+  /* Off-white page background */
+  --foreground: hsl(215, 15%, 20%);
+  /* Dark neutral text */
+
+
+  /* Card / Surface Colors */
+  --card-background: hsl(0, 0%, 100%);
+  /* Pure white cards */
+  --card-foreground: var(--foreground);
+
+
+  /* Primary Accent */
+  --primary: oklch(0.546 0.245 262.881);
+  /* Main brand color */
+  --primary-foreground: hsl(0, 0%, 100%);
+  --primary-hover: oklch(0.51 0.245 262.881);
+
+
+  /* Muted / Subtle Text */
+  --muted-background: hsl(210, 20%, 95%);
+  --muted-foreground: hsl(215, 15%, 60%);
+
+
+  /* Sidebar */
+  --sidebar-background: hsl(220 13% 91%);
+  /* Light gray sidebar */
+  --sidebar-foreground: var(--foreground);
+  /* --sidebar-border: hsl(240, 1%, 76%); */
+  --sidebar-active-background: var(--card-background);
+  --sidebar-active-foreground: var(--primary);
+  --sidebar-accent: var(--primary-hover);
+  --sidebar-accent-foreground: var(--background);
+
+
+  --gradient-start: oklch(0.51 0.245 262.881);
+  --gradient-end: oklch(0.51 0.245 262.881);
+}
+
+
+/* Body Background */
+body {
+  margin: 0;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+
+/* Sidebar Layout */
+.sidebar {
+  width: 250px;
+  background-color: var(--sidebar-background);
+  /* <--- Now applied here */
+  border-right: 1px solid var(--sidebar-border);
+  padding: 1rem;
+  flex-shrink: 0;
+}
+
+.navbar {
+  background-color: var(--gradient-start);
+  color: var(--gradient-end);
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+
+.navbar a {
+  color: var(--navbar-foreground);
+  text-decoration: none;
+  margin-right: 1rem;
+  transition: color 0.2s ease;
+}
+
+
+.navbar a:hover {
+  color: var(--muted-foreground);
+}
+
+/* Buttons */
+.light .button-color-effects {
+  background-color: var(--primary);
+  color: hsl(225, 14%, 95%);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+
+.light .hover\:color-effects:hover {
+  background-color: var(--primary-hover);
+  color: hsl(225, 14%, 95%);
+}
+
+
+.dark {
+  --background: hsl(240 10% 4%);
+  --foreground: hsl(0, 0%, 93%);
+  --card: 240, 10%, 8%;
+  --card-foreground: var(--foreground);
+  --primary: hsl(217, 91%, 60%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --primary-hover: hsl(217, 91%, 50%);
+  --muted: hsl(240, 10%, 12%);
+  --muted-foreground: hsl(215, 20%, 70%);
+  --sidebar-background: 240 10% 6%;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--primary-hover);
+  --sidebar-border: hsl(0, 0%, 14%);
+  --sidebar-ring: hsl(217, 91%, 70%);
+}
+
+
+.dark input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+
+.dark .navbar .breadcrumb {
+  color: hsl(var(--sidebar-foreground));
+}
+
+
+.dark .navbar .breadcrumb a {
+  color: hsl(var(--primary));
+  /* font-weight: 500; */
+}
+
+
+.dark .navbar .breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+
+.dark .button-color-effects {
+  background-color: oklch(0.546 0.245 262.881);
+  color: hsl(225, 14%, 95%);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+
+.dark .hover\:color-effects:hover {
+  background-color: oklch(0.546 0.245 262.881);
+  color: hsl(225, 14%, 95%);
+}
+
+
+.blue {
+  --sidebar-background: oklch(0.55 0.22 263);
+  --sidebar-foreground: #fffefe;
+  --sidebar-muted: hsl(0, 0%, 14%);
+  --background: #ffffff;
+  --foreground: 222.2 47.4% 8%;
+
+
+  --primary: oklch(0.546 0.245 262.881);
+  --primary-hover: oklch(0.546 0.245 262.881);
+  --primary-foreground: #cfcece;
+
+
+  --card-background: hsl(0, 0%, 100%);
+  --card-foreground: var(--foreground);
+
+
+  --sidebar-active-background: var(--card-background);
+  --sidebar-active-foreground: var(--primary);
+  --sidebar-accent: var(--primary-hover);
+  --sidebar-accent-foreground: var(--background);
+}
+
+
+
+
+.blue .sidebar {
+  background-color: var(--sidebar-background);
+  color: var(--sidebar-foreground);
+  height: 100vh;
+  min-width: 240px;
+  padding: 15px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+
+.blue .sidebar a {
+  padding: 10px 15px;
+  color: var(--sidebar-foreground);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+
+.blue .sidebar a:hover {
+  background-color: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+}
+
+
+.blue .sidebar a.active {
+  background-color: var(--sidebar-background);
+  font-weight: 600;
+}
+
+
+.blue .button-color-effects {
+  background-color: oklch(0.546 0.245 262.881);
+  color: hsl(225, 14%, 95%);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+
+.blue .hover\:color-effects:hover {
+  background-color: oklch(0.546 0.245 262.881);
+  color: hsl(225, 14%, 95%);
 }

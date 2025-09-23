@@ -4,6 +4,11 @@ import Dashboard from "@/pages/Dashboard";
 import OvpnGenerator from "@/pages/vpn";
 import RootCADetail from "@/pages/rootcadetail-form";
 
+
+import RootCert from "@/pages/RootCert";
+import IntermediateCert from "@/pages/IntermediateCert";
+import UserCert from "@/pages/UserCert";
+
 function NotFound() {
   return (
     <div className="p-4">
@@ -35,6 +40,12 @@ export default function CertsRoutes() {
         pem_cert: ""
       }} />} />
       {/* Add more nested routes under /certs here */}
+      {/* <Route path="/root-ca" element={<RootCAPage />} />
+      <Route path="/intermediate-ca" element={<IntermediateCAPage />} />
+      <Route path="/user-ca" element={<UserCertForm />} /> */}
+      <Route path="/certs/root" element={<RootCert />} />
+      <Route path="/certs/intermediate" element={<IntermediateCert />} />
+      <Route path="/certs/user" element={<UserCert />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

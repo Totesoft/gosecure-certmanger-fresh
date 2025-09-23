@@ -3,7 +3,11 @@ import ReactDOM from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import CertsRoutes from './routes'
 import './index.css'
-import "@totesoft/ui-kit/globals.css";
+//import './styles/global.css'
+
+import "@totesoft/ui-kit";
+
+//document.documentElement.classList.add("light");
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
