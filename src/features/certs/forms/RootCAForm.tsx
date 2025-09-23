@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ZodEffects, ZodObject, ZodEnum, ZodNumber, ZodString, type ZodTypeAny } from 'zod';
+import type { ZodTypeAny } from "zod";
+import { ZodEffects, ZodObject, ZodEnum, ZodNumber, ZodString } from 'zod';
 import { motion } from 'framer-motion';
 import { RootCASchema, type RootCASchemaType } from "@/zod-schemas/RootCASchema";
 import { CertFields } from "@/hooks/cert-fields";
@@ -68,17 +69,17 @@ function RootCertForm() {
         }
     }, [keyLength, setValue]);
 
-
-
-
     const importantFields = ['common_name', 'key_length', 'passphrase', 'confirmPassphrase'];
-
+    const onSubmit = (data: RootCASchemaType) => {
+        console.log("Root CA Data:", data);
+    };
 
     return (
         <div className="relative w-full flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
             <h2 className="text-2xl font-bold p-3 text-gray-900 dark:text-gray-100">Create Root CA Certificate</h2>
             <Toaster position="top-right" reverseOrder={false} />
             <motion.form
+                onSubmit={handleSubmit(onSubmit)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
