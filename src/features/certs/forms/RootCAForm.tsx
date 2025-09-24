@@ -114,7 +114,7 @@ function RootCertForm() {
                                         render={({ field }) => (
                                             <Select
                                                 value={field.value || ""}
-                                                onValueChange={(val) => {
+                                                onValueChange={(val: any) => {
                                                     field.onChange(val);
 
                                                     if (key === "keyLength") {

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import  { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
@@ -105,7 +105,7 @@ function UserCertForm() {
                                         render={({ field }) => (
                                             <Select
                                                 value={field.value?.toString() || ""}
-                                                onValueChange={(val) =>
+                                                onValueChange={(val: any) =>
                                                     field.onChange(isNumber ? Number(val) : val)
                                                 }
                                             >
