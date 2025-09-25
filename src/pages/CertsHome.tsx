@@ -1,7 +1,3 @@
-// import '@/index.css';
-
-
-
 import { Link } from 'react-router-dom';
 import { Button } from '@totesoft/ui-kit';
 
@@ -19,8 +15,10 @@ export default function CertsHome() {
         <Button variant="destructive">
           <Link to="/certs/user">User CertForm</Link>
         </Button>
+        <Button variant="destructive">
+          <Link to="/certs/rootca">RootCAdetail</Link>
+        </Button>
       </div>
     </div>
   );
 }
-

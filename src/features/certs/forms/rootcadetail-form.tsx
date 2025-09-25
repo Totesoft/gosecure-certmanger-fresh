@@ -61,7 +61,7 @@ export default function RootCADetail() {
   const fetchAndParsePem = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/vp.pem");
+      const response = await fetch("/gosecure-certmanager/vp.pem");
       if (!response.ok) throw new Error(`Failed to fetch PEM: ${response.status}`);
 
       let pemText = await response.text();

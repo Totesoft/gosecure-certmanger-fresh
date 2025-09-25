@@ -12,8 +12,8 @@ console.log("VITE REMOTE CERT URL", process.env.VITE_REMOTE_CERT_URL);
 
 export default defineConfig({
   server: {
-     port: 5101,
-     strictPort: true,
+    port: 5101,
+    strictPort: true,
     // cors: true,
     headers: { "Access-Control-Allow-Origin": "*" }, // helps Safari
     //origin: "http://localhost", // good practice for dev
@@ -24,13 +24,28 @@ export default defineConfig({
     federation({
       name: "certmanager-ui-remote",
       filename: "remoteEntry.js",
+      remotes: {
+        "gosecure-shell": {
+          type: "module",
+          name: "gosecure-shell",
+          entry: "http://localhost:5180/gosecure-shell/remoteEntry.js",
+          entryGlobalName: "gosecure-shell",
+          shareScope: "default",
+        },
+      },
       exposes: {
         "./routes": "./src/routes/index.tsx", // <- make sure this path exists
         "./RootCert": "./src/pages/RootCert",
         "./IntermediateCert": "./src/pages/IntermediateCert",
         "./UserCert": "./src/pages/UserCert",
       },
-      shared: ["react", "react-dom", "react-router-dom"],
+      shared: {
+        react: { singleton: true } as any,
+        "react-dom": { singleton: true } as any,
+        "react-router-dom": { singleton: true } as any,
+        "@react-keycloak/web": { singleton: true, eager: true } as any,
+        "keycloak-js": { singleton: true, eager: true } as any,
+      },
     }),
   ],
   esbuild: { target: "esnext" },
