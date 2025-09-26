@@ -38,6 +38,7 @@ export default defineConfig({
         "./RootCert": "./src/pages/RootCert",
         "./IntermediateCert": "./src/pages/IntermediateCert",
         "./UserCert": "./src/pages/UserCert",
+        "./RootCADetail":"./src/pages/CertViewer-form",
       },
       shared: {
         react: { singleton: true } as any,

@@ -23,7 +23,7 @@ function NotFound() {
 export default function CertsRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<CertsHome />} />
+      <Route path="/certs" element={<CertsHome />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/ovpn" element={<OvpnGenerator />} />
       {/* Add more nested routes under /certs here */}

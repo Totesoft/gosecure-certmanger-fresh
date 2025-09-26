@@ -6,7 +6,7 @@ import "./index.css";
 import "@totesoft/ui-kit";
 import App from "./App";
 
-const basePath = "/gosecure-certmanager";
+
 
 
 

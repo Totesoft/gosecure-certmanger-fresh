@@ -61,7 +61,15 @@ export default function App() {
             {authenticated ? (
                 <Route path="/*" element={<CertsRoutes />} />
             ) : (
-                <Route path="*" element={<div>Redirecting to Shell login...</div>} />
+                <Route path="*" element={ <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex-1 flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-200 to-white p-4"
+            >
+                <div className="flex items-center gap-3 text-black text-lg font-medium">
+                    <Loader className="size-10 animate-spin" /> Redirecting to shell login ...
+                </div>
+            </motion.div>} />
             )}
         </Routes>
     );
