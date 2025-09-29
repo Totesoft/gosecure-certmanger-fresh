@@ -39,23 +39,19 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
     window.URL.revokeObjectURL(url)
   }
 
-
-
   const Field = ({ label, value }: { label: string; value: string }) => (
     <div className="grid grid-cols-3 gap-4 py-2 border-b last:border-0">
       <div className="font-bold">{label}</div>
-      <div className="col-span-2">{value}</div>
+      <div className="col-span-2 break-words">{value}</div>
     </div>
   )
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10">
+    <div className="max-w-5xl mx-auto px-6 py-10 relative rounded-lg shadow-md">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-10">
-        <h1 className="text-3xl font-bold">
-          Certificate Viewer
-        </h1>
-        <div className="flex gap-3 mt-4 md:mt-0">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
+        <h1 className="text-3xl font-bold">Certificate Viewer</h1>
+        <div className="flex gap-3">
           <Button variant="outline" onClick={handleDownload}>
             <Download className="h-4 w-4 mr-2" /> Download PEM
           </Button>
@@ -65,7 +61,7 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
 
       {/* Tabs */}
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid grid-cols-3 max-w-md mx-auto m-2">
+        <TabsList className="flex justify-center gap-4 max-w-md mx-auto m-2">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="validity">Validity</TabsTrigger>
           <TabsTrigger value="pem">PEM</TabsTrigger>
@@ -113,9 +109,9 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
               <CardTitle>SHA-256 Fingerprints</CardTitle>
             </CardHeader>
             <CardContent className="divide-y text-md">
-              <div className="flex items-center justify-between py-2">
+              <div className="flex items-center justify-between py-2 gap-2">
                 <span className="font-medium">Certificate</span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <span className="truncate max-w-xs">{cert.sha256_fingerprint}</span>
                   <Button
                     size="icon"
@@ -126,9 +122,9 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
                   </Button>
                 </div>
               </div>
-              <div className="flex items-center justify-between py-2">
+              <div className="flex items-center justify-between py-2 gap-2">
                 <span className="font-medium">Public Key</span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <span className="truncate max-w-xs">{cert.public_key_sha256}</span>
                   <Button
                     size="icon"
@@ -162,7 +158,7 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
                   <Copy className="h-4 w-4 mr-2" /> Copy PEM
                 </Button>
               </div>
-              <pre className="overflow-auto max-h-[500px] text-md  p-4 rounded-lg border">
+              <pre className="overflow-auto max-h-[500px] text-md p-4 rounded-lg border break-words">
                 {cert.pem_cert}
               </pre>
               {copied === "PEM Certificate" && (
