@@ -8,7 +8,7 @@ import RootCADetail from "@/features/certs/forms/rootcadetail-form";
 import RootCert from "@/pages/RootCert";
 import IntermediateCert from "@/pages/IntermediateCert";
 import UserCert from "@/pages/UserCert";
-
+import TestAPI from "@/pages/testapipage";
 function NotFound() {
   return (
     <div className="p-4">
@@ -34,6 +34,7 @@ export default function CertsRoutes() {
       <Route path="/certs/intermediate" element={<IntermediateCert />} />
       <Route path="/certs/user" element={<UserCert />} />
       <Route path="/certs/rootca" element={<RootCADetail />} />
+      <Route path="/certs/testapi" element={<TestAPI />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

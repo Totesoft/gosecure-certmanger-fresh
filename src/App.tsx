@@ -17,6 +17,7 @@ export default function App() {
             .then((module) => {
                 const kc = module?.keycloak;
                 if (!kc) throw new Error("Keycloak module is undefined!");
+                console.log('keeeeeeeeeeeeeeeeeeeeycloak')
                 setKeycloak(kc);
 
                 // Initialize Keycloak
@@ -58,9 +59,9 @@ export default function App() {
 
     return (
         <Routes>
-            {authenticated ? (
-                <Route path="/*" element={<CertsRoutes />} />
-            ) : (
+            {/* {authenticated ? ( */}
+            <Route path="/*" element={<CertsRoutes />} />
+            {/* ) : (
                 <Route path="*" element={ <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -70,7 +71,7 @@ export default function App() {
                     <Loader className="size-10 animate-spin" /> Redirecting to shell login ...
                 </div>
             </motion.div>} />
-            )}
+            )} */}
         </Routes>
     );
 }
