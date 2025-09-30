@@ -51,11 +51,17 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
       {/* Header */}
+<<<<<<< Updated upstream
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-10">
         <h1 className="text-3xl font-bold">
           Certificate Viewer
         </h1>
         <div className="flex gap-3 mt-4 md:mt-0">
+=======
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
+        <h1 className="text-3xl font-bold mb-1">Certificate Viewer</h1>
+        <div className="flex gap-3">
+>>>>>>> Stashed changes
           <Button variant="outline" onClick={handleDownload}>
             <Download className="h-4 w-4 mr-2" /> Download PEM
           </Button>
@@ -68,7 +74,7 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
         <TabsList className="grid grid-cols-3 max-w-md mx-auto m-2">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="validity">Validity</TabsTrigger>
-          <TabsTrigger value="pem">PEM</TabsTrigger>
+           {cert.pem_cert && <TabsTrigger value="pem">PEM</TabsTrigger>}
         </TabsList>
 
         {/* General Tab */}
@@ -145,15 +151,13 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* PEM Tab */}
-        <TabsContent value="pem" className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>PEM Encoded Certificate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-end mb-2">
+  {/* PEM (only if available) */}
+    {cert.pem_cert && (
+    <TabsContent value="pem" className="mt-8">
+      <Card>
+        <CardHeader><CardTitle>PEM Encoded Certificate</CardTitle></CardHeader>
+        <CardContent>
+           <div className="flex justify-end mb-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -162,15 +166,23 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
                   <Copy className="h-4 w-4 mr-2" /> Copy PEM
                 </Button>
               </div>
+<<<<<<< Updated upstream
               <pre className="overflow-auto max-h-[500px] text-md  p-4 rounded-lg border">
                 {cert.pem_cert}
               </pre>
               {copied === "PEM Certificate" && (
+=======
+          <pre className="overflow-auto max-h-[500px] text-md p-4 rounded-lg border break-words">
+            {cert.pem_cert}
+          </pre>
+           {copied === "PEM Certificate" && (
+>>>>>>> Stashed changes
                 <p className="text-md text-green-600 mt-2">PEM copied</p>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        </CardContent>
+      </Card>
+    </TabsContent>
+         )}
       </Tabs>
     </div>
   )

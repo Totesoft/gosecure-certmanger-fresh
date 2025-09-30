@@ -3,14 +3,21 @@ import { Routes, Route } from "react-router-dom";
 import CertsRoutes from "./routes";
 import { Loader } from "lucide-react";
 import { motion } from "framer-motion";
+import { KeycloakProviderWrapper, useKeycloak } from "gosecure-shell/KeycloakProvider";
 
 export default function App() {
-    const [keycloak, setKeycloak] = useState<any>(null);
-    const [authenticated, setAuthenticated] = useState(false);
-    const [initialized, setInitialized] = useState(false);
+  return (
+    <KeycloakProviderWrapper>
+      <AppInner />
+    </KeycloakProviderWrapper>
+  );
+}
 
-    import("gosecure-shell/Keycloak").then(console.log).catch(console.error);
+function AppInner() {
+  const { keycloak, initialized } = useKeycloak();
+  const [authCheckDone, setAuthCheckDone] = useState(false);
 
+<<<<<<< Updated upstream
     useEffect(() => {
         // Dynamically import Keycloak from host
         import("gosecure-shell/Keycloak")
@@ -19,45 +26,37 @@ export default function App() {
                 if (!kc) throw new Error("Keycloak module is undefined!");
                 console.log('keeeeeeeeeeeeeeeeeeeeycloak')
                 setKeycloak(kc);
+=======
+  useEffect(() => {
+    if (!initialized || !keycloak) return;
+>>>>>>> Stashed changes
 
-                // Initialize Keycloak
-                kc.init({ onLoad: "check-sso" }).then((auth: boolean) => {
-                    setAuthenticated(auth);
-                    setInitialized(true);
-
-                    // Redirect to Shell login if not authenticated
-                    if (!auth) {
-                        kc.login();
-                    }
-                });
-
-                // Listen for login/logout events
-                kc.onAuthSuccess = () => setAuthenticated(true);
-                kc.onAuthLogout = () => setAuthenticated(false);
-                kc.onTokenExpired = () =>
-                    kc.updateToken(30).catch(() => setAuthenticated(false));
-            })
-            .catch((err) => {
-                console.error("Failed to load Keycloak from host", err);
-                setInitialized(true);
-            });
-    }, []);
-
-    if (!initialized) {
-        return (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex-1 flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-200 to-white p-4"
-            >
-                <div className="flex items-center gap-3 text-black text-lg font-medium">
-                    <Loader className="size-10 animate-spin" /> Loading...please wait.
-                </div>
-            </motion.div>
-        );
+    // Keycloak is ready
+    if (!keycloak.authenticated) {
+      // ✅ Redirect to Keycloak login page
+      keycloak.login();
+    } else {
+      setAuthCheckDone(true);
     }
 
+    // Listen for logout
+    keycloak.onAuthLogout = () => {
+      keycloak.login(); // redirect immediately
+    };
+
+    keycloak.onTokenExpired = () => {
+      keycloak.updateToken(30).catch(() => keycloak.login());
+    };
+
+    return () => {
+      keycloak.onAuthLogout = null;
+      keycloak.onTokenExpired = null;
+    };
+  }, [initialized, keycloak]);
+
+  if (!initialized || !authCheckDone) {
     return (
+<<<<<<< Updated upstream
         <Routes>
             {/* {authenticated ? ( */}
             <Route path="/*" element={<CertsRoutes />} />
@@ -73,5 +72,23 @@ export default function App() {
             </motion.div>} />
             )} */}
         </Routes>
+=======
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex-1 flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-200 to-white p-4"
+      >
+        <div className="flex items-center gap-3 text-black text-lg font-medium">
+          <Loader className="size-10 animate-spin" /> Redirecting to Keycloak login...
+        </div>
+      </motion.div>
+>>>>>>> Stashed changes
     );
+  }
+
+  return (
+    <Routes>
+      <Route path="/*" element={<CertsRoutes />} />
+    </Routes>
+  );
 }

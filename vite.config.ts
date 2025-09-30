@@ -49,6 +49,7 @@ export default defineConfig({
         "react-router-dom": { singleton: true } as any,
         "@react-keycloak/web": { singleton: true, eager: true } as any,
         "keycloak-js": { singleton: true, eager: true } as any,
+        "axios":{ singleton: true }as any,
       },
     }),
   ],

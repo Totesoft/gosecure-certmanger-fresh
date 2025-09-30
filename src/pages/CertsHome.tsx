@@ -19,8 +19,14 @@ export default function CertsHome() {
           <Link to="/certs/rootca">RootCAdetail</Link>
         </Button>
         <Button variant="destructive">
+<<<<<<< Updated upstream
           <Link to="/certs/testapi">TestAPI</Link>
         </Button>
+=======
+          <Link to="/certs/home">API</Link>
+        </Button>
+
+>>>>>>> Stashed changes
       </div>
     </div>
   );
