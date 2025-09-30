@@ -19,14 +19,13 @@ export default defineConfig({
   },
   base: isVercel ? '/' : '/gosecure-certmanager/',
   plugins: [
-    react(),tailwindcss(),
+    react(), tailwindcss(),
     federation({
       name: "certmanager-ui-remote",
       filename: "remoteEntry.js",
       exposes: {
         "./routes": "./src/routes/index.tsx", // <- make sure this path exists
-<<<<<<< Updated upstream
-=======
+
         "./RootCert": "./src/pages/RootCert",
         "./IntermediateCert": "./src/pages/IntermediateCert",
         "./UserCert": "./src/pages/UserCert",
@@ -41,11 +40,7 @@ export default defineConfig({
         "react-router-dom": { singleton: true } as any,
         "@react-keycloak/web": { singleton: true, eager: true } as any,
         "keycloak-js": { singleton: true, eager: true } as any,
-        "axios": { singleton: true } as any,
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
       },
       shared: ["react", "react-dom", "react-router-dom"],
     }),

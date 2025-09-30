@@ -17,10 +17,7 @@ import IntermediateCert from "@/pages/IntermediateCert";
 import UserCert from "@/pages/UserCert";
 import TestAPI from "@/pages/testapipage";
 import API from "@/pages/Home";
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 function NotFound() {
   return (
     <div className="p-4">
@@ -52,11 +49,7 @@ export default function CertsRoutes() {
         pem_cert: ""
       }} />} />
       {/* Add more nested routes under /certs here */}
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
+
       {/* <Route path="/root-ca" element={<RootCAPage />} />
       <Route path="/intermediate-ca" element={<IntermediateCAPage />} />
       <Route path="/user-ca" element={<UserCertForm />} /> */}
@@ -65,24 +58,6 @@ export default function CertsRoutes() {
       <Route path="/certs/user" element={<UserCert />} />
       <Route path="/certs/testapi" element={<TestAPI />} />
       <Route path="/certs/home" element={<API />} />
-<<<<<<< Updated upstream
-=======
-
-
-      <Route path="/certs/rootca" element={<RootCADetail cert={{
-        subject_cn: "",
-        subject_o: undefined,
-        subject_ou: undefined,
-        issuer_cn: "",
-        issuer_o: undefined,
-        issuer_ou: undefined,
-        not_before: "",
-        not_after: "",
-        sha256_fingerprint: "",
-        public_key_sha256: "",
-        pem_cert: ""
-      }} />} />
->>>>>>> Stashed changes
 
 
       <Route path="/certs/rootca" element={<RootCADetail cert={{
@@ -99,7 +74,9 @@ export default function CertsRoutes() {
         pem_cert: ""
       }} />} />
 
->>>>>>> Stashed changes
+
+
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
