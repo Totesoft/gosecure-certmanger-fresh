@@ -168,6 +168,7 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
               </div>
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
               <pre className="overflow-auto max-h-[500px] text-md  p-4 rounded-lg border">
                 {cert.pem_cert}
               </pre>
@@ -175,11 +176,16 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           <pre className="overflow-auto max-h-[500px] text-md p-4 rounded-lg border break-words">
             {cert.pem_cert}
           </pre>
            {copied === "PEM Certificate" && (
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

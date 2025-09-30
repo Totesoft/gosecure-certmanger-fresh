@@ -19,6 +19,7 @@ function AppInner() {
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     useEffect(() => {
         // Dynamically import Keycloak from host
         import("gosecure-shell/Keycloak")
@@ -27,6 +28,10 @@ function AppInner() {
                 if (!kc) throw new Error("Keycloak module is undefined!");
                 console.log('keeeeeeeeeeeeeeeeeeeeycloak')
                 setKeycloak(kc);
+=======
+  useEffect(() => {
+    if (!initialized || !keycloak) return;
+>>>>>>> Stashed changes
 =======
   useEffect(() => {
     if (!initialized || !keycloak) return;
@@ -63,6 +68,7 @@ function AppInner() {
     return (
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         <Routes>
             {/* {authenticated ? ( */}
             <Route path="/*" element={<CertsRoutes />} />
@@ -81,6 +87,8 @@ function AppInner() {
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -90,10 +98,13 @@ function AppInner() {
           <Loader className="size-10 animate-spin" /> Redirecting to Keycloak login...
         </div>
       </motion.div>
+<<<<<<< Updated upstream
 
 
 
 
+=======
+>>>>>>> Stashed changes
     );
   }
 
