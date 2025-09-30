@@ -17,29 +17,8 @@ function AppInner() {
   const { keycloak, initialized } = useKeycloak();
   const [authCheckDone, setAuthCheckDone] = useState(false);
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    useEffect(() => {
-        // Dynamically import Keycloak from host
-        import("gosecure-shell/Keycloak")
-            .then((module) => {
-                const kc = module?.keycloak;
-                if (!kc) throw new Error("Keycloak module is undefined!");
-                console.log('keeeeeeeeeeeeeeeeeeeeycloak')
-                setKeycloak(kc);
-=======
   useEffect(() => {
     if (!initialized || !keycloak) return;
->>>>>>> Stashed changes
-=======
-  useEffect(() => {
-    if (!initialized || !keycloak) return;
->>>>>>> Stashed changes
-=======
-  useEffect(() => {
-    if (!initialized || !keycloak) return;
->>>>>>> Stashed changes
 
     // Keycloak is ready
     if (!keycloak.authenticated) {
@@ -66,29 +45,6 @@ function AppInner() {
 
   if (!initialized || !authCheckDone) {
     return (
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        <Routes>
-            {/* {authenticated ? ( */}
-            <Route path="/*" element={<CertsRoutes />} />
-            {/* ) : (
-                <Route path="*" element={ <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex-1 flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-200 to-white p-4"
-            >
-                <div className="flex items-center gap-3 text-black text-lg font-medium">
-                    <Loader className="size-10 animate-spin" /> Redirecting to shell login ...
-                </div>
-            </motion.div>} />
-            )} */}
-        </Routes>
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -98,13 +54,6 @@ function AppInner() {
           <Loader className="size-10 animate-spin" /> Redirecting to Keycloak login...
         </div>
       </motion.div>
-<<<<<<< Updated upstream
-
-
-
-
-=======
->>>>>>> Stashed changes
     );
   }
 

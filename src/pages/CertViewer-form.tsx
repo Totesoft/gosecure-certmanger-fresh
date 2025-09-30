@@ -51,17 +51,11 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
       {/* Header */}
-<<<<<<< Updated upstream
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-10">
         <h1 className="text-3xl font-bold">
           Certificate Viewer
         </h1>
         <div className="flex gap-3 mt-4 md:mt-0">
-=======
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
-        <h1 className="text-3xl font-bold mb-1">Certificate Viewer</h1>
-        <div className="flex gap-3">
->>>>>>> Stashed changes
           <Button variant="outline" onClick={handleDownload}>
             <Download className="h-4 w-4 mr-2" /> Download PEM
           </Button>
@@ -166,29 +160,10 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
                   <Copy className="h-4 w-4 mr-2" /> Copy PEM
                 </Button>
               </div>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-              <pre className="overflow-auto max-h-[500px] text-md  p-4 rounded-lg border">
-                {cert.pem_cert}
-              </pre>
-              {copied === "PEM Certificate" && (
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
           <pre className="overflow-auto max-h-[500px] text-md p-4 rounded-lg border break-words">
             {cert.pem_cert}
           </pre>
            {copied === "PEM Certificate" && (
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
                 <p className="text-md text-green-600 mt-2">PEM copied</p>
               )}
         </CardContent>
