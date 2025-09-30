@@ -25,6 +25,24 @@ export default defineConfig({
       filename: "remoteEntry.js",
       exposes: {
         "./routes": "./src/routes/index.tsx", // <- make sure this path exists
+<<<<<<< Updated upstream
+=======
+        "./RootCert": "./src/pages/RootCert",
+        "./IntermediateCert": "./src/pages/IntermediateCert",
+        "./UserCert": "./src/pages/UserCert",
+        "./RootCADetail": "./src/pages/CertViewer-form",
+        "./testapi": "./src/pages/testapipage",
+        "./Home": "./src/pages/Home",
+
+      },
+      shared: {
+        react: { singleton: true } as any,
+        "react-dom": { singleton: true } as any,
+        "react-router-dom": { singleton: true } as any,
+        "@react-keycloak/web": { singleton: true, eager: true } as any,
+        "keycloak-js": { singleton: true, eager: true } as any,
+        "axios": { singleton: true } as any,
+>>>>>>> Stashed changes
       },
       shared: ["react", "react-dom", "react-router-dom"],
     }),
