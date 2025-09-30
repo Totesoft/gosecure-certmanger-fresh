@@ -42,6 +42,9 @@ export default defineConfig({
         "@react-keycloak/web": { singleton: true, eager: true } as any,
         "keycloak-js": { singleton: true, eager: true } as any,
         "axios": { singleton: true } as any,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
       },
       shared: ["react", "react-dom", "react-router-dom"],
