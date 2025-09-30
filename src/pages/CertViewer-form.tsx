@@ -68,7 +68,7 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
         <TabsList className="grid grid-cols-3 max-w-md mx-auto m-2">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="validity">Validity</TabsTrigger>
-          <TabsTrigger value="pem">PEM</TabsTrigger>
+           {cert.pem_cert && <TabsTrigger value="pem">PEM</TabsTrigger>}
         </TabsList>
 
         {/* General Tab */}
@@ -145,15 +145,13 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* PEM Tab */}
-        <TabsContent value="pem" className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>PEM Encoded Certificate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-end mb-2">
+  {/* PEM (only if available) */}
+    {cert.pem_cert && (
+    <TabsContent value="pem" className="mt-8">
+      <Card>
+        <CardHeader><CardTitle>PEM Encoded Certificate</CardTitle></CardHeader>
+        <CardContent>
+           <div className="flex justify-end mb-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -162,15 +160,16 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
                   <Copy className="h-4 w-4 mr-2" /> Copy PEM
                 </Button>
               </div>
-              <pre className="overflow-auto max-h-[500px] text-md  p-4 rounded-lg border">
-                {cert.pem_cert}
-              </pre>
-              {copied === "PEM Certificate" && (
+          <pre className="overflow-auto max-h-[500px] text-md p-4 rounded-lg border break-words">
+            {cert.pem_cert}
+          </pre>
+           {copied === "PEM Certificate" && (
                 <p className="text-md text-green-600 mt-2">PEM copied</p>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        </CardContent>
+      </Card>
+    </TabsContent>
+         )}
       </Tabs>
     </div>
   )

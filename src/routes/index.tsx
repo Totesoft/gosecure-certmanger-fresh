@@ -2,14 +2,14 @@ import { Routes, Route, Link } from "react-router-dom";
 import CertsHome from "../pages/CertsHome";
 import Dashboard from "@/pages/Dashboard";
 import OvpnGenerator from "@/pages/vpn";
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-import RootCADetail from "@/pages/rootcadetail-form";
 
-=======
-=======
->>>>>>> Stashed changes
-import RootCADetail from "@/pages/CertViewer-form";
+//import RootCADetail from "@/pages/rootcadetail-form";
+import RootCADetail from "@/features/certs/forms/rootcadetail-form";
+
+import Home from "@/pages/Home";
+
+
+//import RootCADetail from "@/pages/CertViewer-form";
 
 
 import RootCert from "@/pages/RootCert";
@@ -32,22 +32,9 @@ function NotFound() {
 export default function CertsRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<CertsHome />} />
+      <Route path="/certs" element={<CertsHome />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/ovpn" element={<OvpnGenerator />} />
-      <Route path="/root" element={<RootCADetail cert={{
-        subject_cn: "",
-        subject_o: undefined,
-        subject_ou: undefined,
-        issuer_cn: "",
-        issuer_o: undefined,
-        issuer_ou: undefined,
-        not_before: "",
-        not_after: "",
-        sha256_fingerprint: "",
-        public_key_sha256: "",
-        pem_cert: ""
-      }} />} />
       {/* Add more nested routes under /certs here */}
 
       {/* <Route path="/root-ca" element={<RootCAPage />} />
@@ -78,6 +65,6 @@ export default function CertsRoutes() {
 
 
       <Route path="*" element={<NotFound />} />
-    </Routes>
+    </Routes >
   );
 }
