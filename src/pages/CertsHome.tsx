@@ -20,8 +20,14 @@ export default function CertsHome() {
         </Button>
         <Button variant="destructive">
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
           <Link to="/certs/testapi">TestAPI</Link>
         </Button>
+=======
+          <Link to="/certs/home">API</Link>
+        </Button>
+
+>>>>>>> Stashed changes
 =======
           <Link to="/certs/home">API</Link>
         </Button>
