@@ -38,7 +38,7 @@ export default defineConfig({
         "./RootCert": "./src/pages/RootCert",
         "./IntermediateCert": "./src/pages/IntermediateCert",
         "./UserCert": "./src/pages/UserCert",
-        "./RootCADetail": "./src/pages/CertViewer-form",
+        //   "./RootCADetail": "./src/pages/CertViewer-form",
         "./testapi": "./src/pages/testapipage",
 
 
@@ -49,7 +49,7 @@ export default defineConfig({
         "react-router-dom": { singleton: true } as any,
         "@react-keycloak/web": { singleton: true, eager: true } as any,
         "keycloak-js": { singleton: true, eager: true } as any,
-        "axios":{ singleton: true }as any,
+        "axios": { singleton: true } as any,
       },
     }),
   ],

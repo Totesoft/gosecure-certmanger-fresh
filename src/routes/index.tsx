@@ -1,12 +1,13 @@
 import { Routes, Route, Link } from "react-router-dom";
 import CertsHome from "../pages/CertsHome";
-import Dashboard from "@/pages/Dashboard";
-import OvpnGenerator from "@/pages/vpn";
+//import Dashboard from "@/pages/Dashboard";
+//import OvpnGenerator from "@/pages/vpn";
 import RootCADetail from "@/features/certs/forms/rootcadetail-form";
 import RootCert from "@/pages/RootCert";
 import IntermediateCert from "@/pages/IntermediateCert";
 import UserCert from "@/pages/UserCert";
-import Home from "@/pages/Home";
+import TestAPI from "@/pages/testapipage"
+//import Home from "@/pages/Home";
 
 
 function NotFound() {
@@ -24,16 +25,16 @@ export default function CertsRoutes() {
   return (
     <Routes>
       <Route path="/certs" element={<CertsHome />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/ovpn" element={<OvpnGenerator />} />
+      {/* <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/ovpn" element={<OvpnGenerator />} /> */}
       {/* Add more nested routes under /certs here */}
-      <Route path="/certs/home" element={<Home />} />
-      <Route path="/certs/home" element={<Home />} />
+      {/* <Route path="/certs/home" element={<Home />} /> */}
       <Route path="/certs/root" element={<RootCert />} />
       <Route path="/certs/intermediate" element={<IntermediateCert />} />
       <Route path="/certs/user" element={<UserCert />} />
       <Route path="/certs/rootca" element={<RootCADetail />} />
-      
+      <Route path="/certs/testapi" element={<TestAPI />} />
+
 
       <Route path="*" element={<NotFound />} />
     </Routes>

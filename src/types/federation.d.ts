@@ -22,6 +22,6 @@ declare module "gosecure-shell/KeycloakProvider" {
 
 //useApi
 declare module "gosecure-shell/useApi" {
-  import { AxiosInstance } from "axios";
-  export function useApi(): AxiosInstance;
+    import { AxiosInstance } from "axios";
+    export function useApi(): AxiosInstance;
 }
