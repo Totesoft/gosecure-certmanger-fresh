@@ -65,7 +65,7 @@ export default function RootCADetail({ cert }: RootCADetailProps) {
 
       {/* Tabs */}
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid grid-cols-3 max-w-md mx-auto m-2">
+        <TabsList className="flex justify-center gap-4 max-w-md mx-auto m-2">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="validity">Validity</TabsTrigger>
            {cert.pem_cert && <TabsTrigger value="pem">PEM</TabsTrigger>}

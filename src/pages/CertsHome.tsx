@@ -19,7 +19,7 @@ export default function CertsHome() {
           <Link to="/certs/rootca">RootCAdetail</Link>
         </Button>
         <Button variant="destructive">
-          <Link to="/certs/testapi">testAPI</Link>
+          <Link to="/certs/home">testAPI</Link>
         </Button>
 
       </div>

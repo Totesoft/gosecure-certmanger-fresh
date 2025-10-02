@@ -1,5 +1,4 @@
-import React from "react";
-import IntermediateCertForm from "@/features/certs/forms/IntermediateCAForm";
+import IntermediateCertForm from "@/features/forms/IntermediateCAForm";
 
 
 

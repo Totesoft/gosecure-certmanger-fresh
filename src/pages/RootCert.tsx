@@ -1,5 +1,5 @@
 
-import RootCertForm from "@/features/certs/forms/RootCAForm";
+import RootCertForm from "@/features/forms/RootCAForm";
 
 function RootCert() {
     return (

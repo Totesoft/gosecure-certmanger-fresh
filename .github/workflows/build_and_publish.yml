@@ -3,7 +3,7 @@ name: build-and-publish
 on:
   push:
     tags: [v*.*.*]
-    branches: [feature/enhancement]
+    branches: [feature/enhance]
 
 permissions:
   contents: read

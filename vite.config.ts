@@ -38,8 +38,8 @@ export default defineConfig({
         "./RootCert": "./src/pages/RootCert",
         "./IntermediateCert": "./src/pages/IntermediateCert",
         "./UserCert": "./src/pages/UserCert",
-        //   "./RootCADetail": "./src/pages/CertViewer-form",
-        "./testapi": "./src/pages/testapipage",
+        "./RootCADetail": "./src/pages/CertViewer-form",
+       
 
 
       },

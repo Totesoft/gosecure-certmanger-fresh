@@ -1,5 +1,5 @@
 import React from "react";
-import UserCertForm from "@/features/certs/forms/UserCertForm";
+import UserCertForm from "@/features/forms/UserCertForm";
 
 function UserCertPage() {
     return (
