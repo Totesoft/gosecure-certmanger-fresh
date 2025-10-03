@@ -98,3 +98,94 @@ export default function TestAPI() {
 //         </div>
 //     );
 // }
+
+
+
+// export default function CertificateList() {
+//     const [certs, setCerts] = useState<any>(null);
+//     const [loading, setLoading] = useState(true);
+//     const [error, setError] = useState<string | null>(null);
+
+//     useEffect(() => {
+//         async function fetchCertificates() {
+//             try {
+//                 const res = await fetch("https://gosecure.totesoft.com/api/v1/certificates/list", {
+//                     method: "GET",
+//                     headers: {
+//                         "Content-Type": "application/json",
+//                         // "Authorization": `Bearer ${token}`  // uncomment if needed
+//                     },
+//                 });
+
+//                 if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+
+//                 const json = await res.json();
+//                 setCerts(json);
+//             } catch (err: any) {
+//                 setError(err.message);
+//             } finally {
+//                 setLoading(false);
+//             }
+//         }
+
+//         fetchCertificates();
+//     }, []);
+
+//     if (loading) return <div>Loading certificates...</div>;
+//     if (error) return <div>Error: {error}</div>;
+
+//     return (
+//         <div className="p-4 bg-background text-foreground rounded-md shadow-md">
+//             <h2 className="text-xl font-bold mb-2">Certificates JSON</h2>
+//             <pre className="bg-card p-4 rounded-md overflow-auto">
+//                 {JSON.stringify(certs, null, 2)}
+//             </pre>
+//         </div>
+//     );
+// }
+
+
+
+
+// export default function VpnMetrics() {
+//     const [data, setData] = useState<any>(null);
+//     const [loading, setLoading] = useState(true);
+//     const [error, setError] = useState<string | null>(null);
+
+//     useEffect(() => {
+//         async function loadMetrics() {
+//             try {
+//                 // If using Vite proxy, call /api instead of full URL
+//                 const res = await fetch("https://gosecure.totesoft.com/api/v1/vpn/metrics", {
+//                     method: "GET",
+//                     headers: {
+//                         "Content-Type": "application/json",
+//                     },
+//                 });
+
+//                 if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+
+//                 const json = await res.json();
+//                 setData(json);
+//             } catch (err: any) {
+//                 setError(err.message);
+//             } finally {
+//                 setLoading(false);
+//             }
+//         }
+
+//         loadMetrics();
+//     }, []);
+
+//     if (loading) return <div>Loading VPN metrics...</div>;
+//     if (error) return <div>Error: {error}</div>;
+
+//     return (
+//         <div className="p-4 bg-background text-foreground rounded-md shadow-md">
+//             <h2 className="text-xl font-bold mb-2">GoSecure VPN Metrics</h2>
+//             <pre className="bg-card p-4 rounded-md overflow-auto">
+//                 {JSON.stringify(data, null, 2)}
+//             </pre>
+//         </div>
+//     );
+// }
