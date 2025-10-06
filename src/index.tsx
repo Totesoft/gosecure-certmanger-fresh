@@ -5,7 +5,9 @@ import CertsHome from "@/pages/CertsHome";
 import RootCert from "@/pages/RootCert";
 import IntermediateCert from "@/pages/IntermediateCert";
 import UserCert from "@/pages/UserCert";
-import RootCADetail from './features/certs/forms/rootcadetail-form';
+//import RootCADetail from './features/certs/forms/rootcadetail-form';
+import RootCADetail from '@/pages/CertViewer-form';
+
 import Home from './pages/Home';
 
 

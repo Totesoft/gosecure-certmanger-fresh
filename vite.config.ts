@@ -38,9 +38,10 @@ export default defineConfig({
         "./RootCert": "./src/pages/RootCert",
         "./IntermediateCert": "./src/pages/IntermediateCert",
         "./UserCert": "./src/pages/UserCert",
-        "./RootCADetail": "./src/pages/CertViewer-form",
+        //"./RootCADetail": "./src/pages/CertViewer-form",
         "./testapi": "./src/pages/testapipage",
         "./Home": "./src/pages/Home",
+        "./dashboard": "./src/pages/Dashboard",
 
       },
       shared: {

@@ -4,14 +4,12 @@ import Dashboard from "@/pages/Dashboard";
 import OvpnGenerator from "@/pages/vpn";
 
 //import RootCADetail from "@/pages/rootcadetail-form";
-import RootCADetail from "@/features/certs/forms/rootcadetail-form";
+//import RootCADetail from "@/features/certs/forms/rootcadetail-form";
 
 import Home from "@/pages/Home";
 
 
-//import RootCADetail from "@/pages/CertViewer-form";
-
-
+import RootCADetail from "@/pages/CertViewer-form";
 import RootCert from "@/pages/RootCert";
 import IntermediateCert from "@/pages/IntermediateCert";
 import UserCert from "@/pages/UserCert";
