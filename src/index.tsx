@@ -7,8 +7,9 @@ import IntermediateCert from "@/pages/IntermediateCert";
 import UserCert from "@/pages/UserCert";
 //import RootCADetail from './features/certs/forms/rootcadetail-form';
 import RootCADetail from '@/pages/CertViewer-form';
-
+import CertmanagerDashboard from './pages/CertmanagerDashboard';
 import Home from './pages/Home';
+import VPNMonitoring from './pages/VPNmonitoring';
 
 
 
@@ -21,6 +22,8 @@ export const routes: RouteObject[] = [
 
   { path: "/certs/user", element: <UserCert /> },
   { path: "/certs/rootca", element: <RootCADetail /> }
+   { path: "/certs/certdashboard", element: <CertmanagerDashboard /> }
+   { path: "/certs/vpnmonitoring", element: <VPNMonitoring /> }
 
 
 ];
