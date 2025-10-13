@@ -20,7 +20,6 @@ export default function VPNMonitoring() {
         strongswan: "/api/monitoring/services/strongswan",
     };
 
-    // Human-readable headings for sidebar
     const apiHeadings = {
         health: "Monitoring Health",
         status: "Monitoring Status(All VPN Services)",
@@ -36,21 +35,24 @@ export default function VPNMonitoring() {
         async function fetchAll() {
             setLoading(true);
             setError(null);
-            try {
-                const fetchPromises = Object.entries(apiEndpoints).map(async ([key, url]) => {
-                    const res = await fetch(url);
-                    const json = await res.json();
-                    return [key, json];
-                });
+            const newResults = {};
 
-                const entries = await Promise.all(fetchPromises);
-                setResults(Object.fromEntries(entries));
-            } catch (err) {
-                console.error("Error fetching monitoring data:", err);
-                setError("Failed to load monitoring data");
-            } finally {
-                setLoading(false);
-            }
+            await Promise.all(
+                Object.entries(apiEndpoints).map(async ([key, url]) => {
+                    try {
+                        const res = await fetch(url);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const json = await res.json();
+                        newResults[key] = json;
+                    } catch (err) {
+                        console.error(`Failed to fetch ${key}:`, err);
+                        newResults[key] = { error: "Failed to load data" };
+                    }
+                })
+            );
+
+            setResults(newResults);
+            setLoading(false);
         }
 
         fetchAll();
@@ -58,7 +60,7 @@ export default function VPNMonitoring() {
 
     return (
         <div className="min-h-screen flex bg-gray-50">
-            {/* Sidebar with API headings */}
+            {/* Sidebar */}
             <div className="w-64 bg-gray-200 p-6 border-r border-gray-300">
                 <h2 className="text-xl font-semibold mb-4">VPN Monitoring</h2>
                 <ul className="space-y-2 text-gray-700 text-sm">
@@ -79,54 +81,25 @@ export default function VPNMonitoring() {
                     </Card>
                 )}
 
-                {error && (
-                    <Card className="p-6 bg-red-50 border border-red-300 text-red-800">
-                        {error}
-                    </Card>
-                )}
-
-                {!loading && !error && (
-                    <>
-                        {results.health && <HealthCard data={results.health} />}
-                        {results.status && <StatusCard data={results.status} />}
-                        {results.services && <ServicesCard data={results.services} />}
-
-                        <Card className="p-6">
-                            <h2 className="text-xl font-semibold mb-2">{apiHeadings.metrics}</h2>
-                            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto text-sm">
-                                {JSON.stringify(results.metrics, null, 2)}
-                            </pre>
+                {!loading &&
+                    Object.keys(apiEndpoints).map((key) => (
+                        <Card className="p-6" key={key}>
+                            <h2 className="text-xl font-semibold mb-2">{apiHeadings[key]}</h2>
+                            {results[key]?.error ? (
+                                <p className="text-red-600">{results[key].error}</p>
+                            ) : key === "health" ? (
+                                <HealthCard data={results[key]} />
+                            ) : key === "status" ? (
+                                <StatusCard data={results[key]} />
+                            ) : key === "services" ? (
+                                <ServicesCard data={results[key]} />
+                            ) : (
+                                <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto text-sm">
+                                    {JSON.stringify(results[key], null, 2)}
+                                </pre>
+                            )}
                         </Card>
-
-                        <Card className="p-6">
-                            <h2 className="text-xl font-semibold mb-2">{apiHeadings.alerts}</h2>
-                            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto text-sm">
-                                {JSON.stringify(results.alerts, null, 2)}
-                            </pre>
-                        </Card>
-
-                        <Card className="p-6">
-                            <h2 className="text-xl font-semibold mb-2">{apiHeadings.openvpn}</h2>
-                            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto text-sm">
-                                {JSON.stringify(results.openvpn, null, 2)}
-                            </pre>
-                        </Card>
-
-                        <Card className="p-6">
-                            <h2 className="text-xl font-semibold mb-2">{apiHeadings.wireguard}</h2>
-                            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto text-sm">
-                                {JSON.stringify(results.wireguard, null, 2)}
-                            </pre>
-                        </Card>
-
-                        <Card className="p-6">
-                            <h2 className="text-xl font-semibold mb-2">{apiHeadings.strongswan}</h2>
-                            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto text-sm">
-                                {JSON.stringify(results.strongswan, null, 2)}
-                            </pre>
-                        </Card>
-                    </>
-                )}
+                    ))}
             </div>
 
             <style>{`
@@ -138,7 +111,6 @@ export default function VPNMonitoring() {
                   height: 24px;
                   animation: spin 1s linear infinite;
                 }
-
                 @keyframes spin {
                   0% { transform: rotate(0deg); }
                   100% { transform: rotate(360deg); }
