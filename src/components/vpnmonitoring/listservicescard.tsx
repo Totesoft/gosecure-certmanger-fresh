@@ -1,5 +1,3 @@
-
-import { Card } from "@totesoft/ui-kit";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
 
 export default function ServicesCard({ data }) {
@@ -9,8 +7,8 @@ export default function ServicesCard({ data }) {
     }));
 
     return (
-        <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">List Monitored Services</h2>
+        <div className="p-6 rounded-xl shadow-lg bg-white border border-gray-200">
+            {/* <h2 className="text-xl font-semibold mb-4">List Monitored Services</h2> */}
 
             <BarChart width={400} height={250} data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -34,6 +32,6 @@ export default function ServicesCard({ data }) {
                     ))}
                 </ul>
             </div>
-        </Card>
+        </div>
     );
 }

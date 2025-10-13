@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Card } from "@totesoft/ui-kit";
 import HealthCard from "@/components/vpnmonitoring/healthcard";
 import StatusCard from "@/components/vpnmonitoring/monitoringstatus";
 import ServicesCard from "@/components/vpnmonitoring/listservicescard";
@@ -22,7 +21,7 @@ export default function VPNMonitoring() {
 
     const apiHeadings = {
         health: "Monitoring Health",
-        status: "Monitoring Status(All VPN Services)",
+        status: "Monitoring Status (All VPN Services)",
         metrics: "System Metrics",
         alerts: "Active Alerts",
         services: "List Monitored Services",
@@ -59,63 +58,68 @@ export default function VPNMonitoring() {
     }, []);
 
     return (
-        <div className="min-h-screen flex bg-gray-50">
+        <div className="min-h-screen flex bg-gray-50 text-sm">
             {/* Sidebar */}
-            <div className="w-64 bg-gray-200 p-6 border-r border-gray-300">
-                <h2 className="text-xl font-semibold mb-4">VPN Monitoring</h2>
-                <ul className="space-y-2 text-gray-700 text-sm">
+            <div className="w-56 bg-gray-200 p-4 border-r border-gray-300 text-xs">
+                <h2 className="text-lg font-semibold mb-3">VPN Monitoring</h2>
+                <ul className="space-y-1 text-gray-700">
                     {Object.keys(apiHeadings).map((key) => (
-                        <li key={key} className="font-medium">
-                            {apiHeadings[key]}
-                        </li>
+                        <li key={key} className="font-medium">{apiHeadings[key]}</li>
                     ))}
                 </ul>
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 p-8 overflow-auto space-y-6">
-                {loading && (
-                    <Card className="p-8 flex justify-center items-center">
+            {/* Main Dashboard */}
+            <div className="flex-1 p-4 overflow-auto">
+                {loading ? (
+                    <div className="flex flex-col justify-center items-center h-48">
                         <div className="loader"></div>
-                        <span className="ml-3 text-lg">Fetching all monitoring data...</span>
-                    </Card>
-                )}
+                        <span className="mt-2 text-base font-semibold">
+                            Fetching all monitoring data...
+                        </span>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {Object.keys(apiEndpoints).map((key) => (
+                            <div
+                                key={key}
+                                className="p-3 rounded-lg bg-white border border-gray-200"
+                            >
+                                <h2 className="text-sm font-semibold mb-1">{apiHeadings[key]}</h2>
 
-                {!loading &&
-                    Object.keys(apiEndpoints).map((key) => (
-                        <Card className="p-6" key={key}>
-                            <h2 className="text-xl font-semibold mb-2">{apiHeadings[key]}</h2>
-                            {results[key]?.error ? (
-                                <p className="text-red-600">{results[key].error}</p>
-                            ) : key === "health" ? (
-                                <HealthCard data={results[key]} />
-                            ) : key === "status" ? (
-                                <StatusCard data={results[key]} />
-                            ) : key === "services" ? (
-                                <ServicesCard data={results[key]} />
-                            ) : (
-                                <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto text-sm">
-                                    {JSON.stringify(results[key], null, 2)}
-                                </pre>
-                            )}
-                        </Card>
-                    ))}
+                                {results[key]?.error ? (
+                                    <p className="text-red-600">{results[key].error}</p>
+                                ) : key === "health" ? (
+                                    <HealthCard data={results[key]} />
+                                ) : key === "status" ? (
+                                    <StatusCard data={results[key]} />
+                                ) : key === "services" ? (
+                                    <ServicesCard data={results[key]} />
+                                ) : (
+                                    <pre className="bg-gray-100 p-2 rounded overflow-x-auto text-xs">
+                                        {JSON.stringify(results[key], null, 2)}
+                                    </pre>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <style>{`
-                .loader {
-                  border: 4px solid #f3f3f3;
-                  border-top: 4px solid #007bff;
-                  border-radius: 50%;
-                  width: 24px;
-                  height: 24px;
-                  animation: spin 1s linear infinite;
-                }
-                @keyframes spin {
-                  0% { transform: rotate(0deg); }
-                  100% { transform: rotate(360deg); }
-                }
-            `}</style>
+        .loader {
+          border: 3px solid #f3f3f3;
+          border-top: 3px solid #007bff;
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
         </div>
     );
 }

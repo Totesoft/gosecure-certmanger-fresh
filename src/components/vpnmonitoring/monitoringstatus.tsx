@@ -20,7 +20,7 @@ export default function StatusCard({ data }: Props) {
 
     return (
         <Card className="p-6 rounded-xl shadow-lg bg-white flex flex-col gap-4">
-            <h2 className="text-xl font-bold">Monitoring Status(All VPN Services)</h2>
+            {/* <h2 className="text-xl font-bold">Monitoring Status(All VPN Services)</h2> */}
 
             <div>
                 <span className="font-semibold">Agent:</span> {data.agent.name} (v{data.agent.version})
