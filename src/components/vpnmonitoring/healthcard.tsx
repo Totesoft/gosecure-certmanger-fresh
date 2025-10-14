@@ -1,31 +1,21 @@
-import { Card } from "@totesoft/ui-kit";
+import React from "react";
 
-type HealthData = {
-  status: string;
-  timestamp: number;
-  version: string;
-};
-
-interface Props {
-  data: HealthData | null;
-}
-
-export default function HealthCard({ data }: Props) {
+export default function HealthCard({ data }) {
   if (!data) return null;
 
-  // Convert UNIX timestamp to human-readable format
+  const isHealthy = data.status === "healthy";
+  const icon = isHealthy ? "✓" : "✗";
+  const iconColor = isHealthy ? "text-green-600" : "text-red-600";
+
   const time = new Date(data.timestamp * 1000).toLocaleString();
 
-  // Color indicator based on status
-  const statusColor = data.status === "healthy" ? "bg-green-500" : "bg-red-500";
-
   return (
-    <Card className="p-6 rounded-xl shadow-lg bg-white flex flex-col gap-3">
-      {/* <h2 className="text-xl font-bold">Monitoring Health</h2> */}
-
+    <div className="flex flex-col gap-2 text-sm">
       <div className="flex items-center gap-2">
-        <span className={`w-3 h-3 rounded-full ${statusColor}`}></span>
-        <span className="capitalize font-semibold">{data.status}</span>
+        <span className={`text-lg font-bold ${iconColor}`}>{icon}</span>
+        <span className={`capitalize font-semibold ${iconColor}`}>
+          {data.status}
+        </span>
       </div>
 
       <div>
@@ -35,87 +25,6 @@ export default function HealthCard({ data }: Props) {
       <div>
         <span className="font-semibold">Last Checked:</span> {time}
       </div>
-    </Card>
+    </div>
   );
 }
-
-
-// import React from "react";
-// import { Card } from "@totesoft/ui-kit";
-// import { PieChart, Pie, Cell, Legend } from "recharts";
-
-// export default function HealthCard({ data }) {
-//   const healthData = [
-//     { name: "Healthy", value: data.status === "healthy" ? 1 : 0 },
-//     { name: "Unhealthy", value: data.status === "healthy" ? 0 : 1 },
-//   ];
-
-//   const COLORS = ["#00C49F", "#FF8042"];
-
-//   return (
-//     <Card className="p-6">
-//       <h2 className="text-xl font-semibold mb-2">Monitoring Health</h2>
-
-//       <div className="flex items-center gap-8">
-//         <PieChart width={200} height={200}>
-//           <Pie
-//             data={healthData}
-//             cx={100}
-//             cy={100}
-//             innerRadius={60}
-//             outerRadius={80}
-//             dataKey="value"
-//           >
-//             {healthData.map((entry, index) => (
-//               <Cell key={index} fill={COLORS[index]} />
-//             ))}
-//           </Pie>
-//           <Legend />
-//         </PieChart>
-
-//         <div>
-//           <p className="text-lg font-medium">
-//             Status:{" "}
-//             <span
-//               className={`font-semibold ${data.status === "healthy" ? "text-green-600" : "text-red-600"
-//                 }`}
-//             >
-//               {data.status}
-//             </span>
-//           </p>
-//           <p className="text-gray-600">Version: {data.version}</p>
-//           <p className="text-gray-600">
-//             Timestamp: {new Date(data.timestamp * 1000).toLocaleString()}
-//           </p>
-//         </div>
-//       </div>
-//     </Card>
-//   );
-// }
-
-
-
-// import React from "react";
-
-// export default function HealthCard({ data }) {
-//   const status = data?.status?.toLowerCase() || "unknown";
-//   const isHealthy = status === "healthy";
-
-//   return (
-//     <div className="flex items-center space-x-2">
-//       {/* Round indicator */}
-//       <span
-//         className={`h-3 w-3 rounded-full ${isHealthy ? "bg-green-500" : "bg-red-500"
-//           }`}
-//       ></span>
-
-//       {/* Status text */}
-//       <span
-//         className={`text-sm font-semibold ${isHealthy ? "text-green-700" : "text-red-700"
-//           }`}
-//       >
-//         {isHealthy ? "Healthy" : "Unhealthy"}
-//       </span>
-//     </div>
-//   );
-// }

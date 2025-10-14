@@ -35,8 +35,9 @@ export default function CertsHome() {
           <Link to="/certdashboard">CertDashboard</Link>
         </Button>
         <Button variant="destructive">
+          <Link to="/vpndashboard">VPNDashboard</Link>
 
-          <Link to="/vpnmonitoring">VPNmonitoring</Link>
+          {/* <Link to="/vpnmonitoring">VPNmonitoring</Link> */}
         </Button>
 
       </div>

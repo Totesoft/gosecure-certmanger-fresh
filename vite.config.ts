@@ -11,7 +11,9 @@ console.log("VITE REMOTE CERT URL", process.env.VITE_REMOTE_CERT_URL);
 
 export default defineConfig({
   server: {
+    // port: 5101,
     port: 5180,
+
     strictPort: true,
     proxy: {
       "/api": {
@@ -33,6 +35,7 @@ export default defineConfig({
           type: "module",
           name: "gosecure-shell",
           entry: "http://localhost:5101/gosecure-shell/remoteEntry.js",
+          // entry: "https://totesoft.github.io/gosecure-shell/",
           entryGlobalName: "gosecure-shell",
           shareScope: "default",
         },

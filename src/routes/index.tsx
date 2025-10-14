@@ -8,13 +8,13 @@ import OvpnGenerator from "@/pages/vpn";
 
 import Home from "@/pages/Home";
 
-
 import RootCADetail from "@/pages/CertViewer-form";
 import RootCert from "@/pages/RootCert";
 import IntermediateCert from "@/pages/IntermediateCert";
 import UserCert from "@/pages/UserCert";
 import TestAPI from "@/pages/testapipage";
-import VPNmonitoring from "@/pages/VPNmonitoring";
+//import VPNmonitoring from "@/pages/VPNmonitoring";
+import VPNDashboard from "@/pages/vpndashboard"
 import API from "@/pages/Home";
 
 function NotFound() {
@@ -43,7 +43,8 @@ export default function CertsRoutes() {
       <Route path="/certs/user" element={<UserCert />} />
       <Route path="/certs/testapi" element={<TestAPI />} />
       <Route path="/certdashboard" element={<CertmanagerDashboard />} />
-      <Route path="/vpnmonitoring" element={<VPNmonitoring />} />
+      {/* <Route path="/vpnmonitoring" element={<VPNmonitoring />} /> */}
+      <Route path="/vpndashboard" element={<VPNDashboard />} />
 
       {/* <Route path="/certs/home" element={<API />} /> */}
 
