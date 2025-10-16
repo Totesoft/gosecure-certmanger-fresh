@@ -71,3 +71,39 @@ export const getMonitoredServices = async () => {
 //     return { success: false, data: [] };
 //   }
 // };
+
+
+/** ✅ Get OpenVPN Service */
+export const getOpenVPNService = async () => {
+    try {
+        const res = await axios.get(`${API_BASE}/services/openvpn`);
+        //  console.log('response;', res)
+
+        return { success: true, data: res.data };
+    } catch {
+        MonitoringFailureMessage("Failed to load OpenVPN service");
+        return { success: false, data: [] };
+    }
+};
+
+/** ✅ Get WireGuard Service */
+export const getWireGuardService = async () => {
+    try {
+        const res = await axios.get(`${API_BASE}/services/wireguard`);
+        return { success: true, data: res.data };
+    } catch {
+        MonitoringFailureMessage("Failed to load WireGuard service");
+        return { success: false, data: [] };
+    }
+};
+
+/** ✅ Get StrongSwan Service */
+export const getStrongSwanService = async () => {
+    try {
+        const res = await axios.get(`${API_BASE}/services/strongswan`);
+        return { success: true, data: res.data };
+    } catch {
+        MonitoringFailureMessage("Failed to load StrongSwan service");
+        return { success: false, data: [] };
+    }
+};

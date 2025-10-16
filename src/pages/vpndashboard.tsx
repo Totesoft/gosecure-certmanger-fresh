@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Loader2, Users, AlertTriangle, Clock, BarChart, Database, Activity } from "lucide-react";
 import { Doughnut, Bar } from "react-chartjs-2";
+import { CheckCircle, XCircle } from "lucide-react"; // import icons
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -17,6 +18,9 @@ import {
     getMonitoringMetrics,
     getMonitoringAlerts,
     getMonitoredServices,
+    getOpenVPNService,
+    getWireGuardService,
+    getStrongSwanService,
 } from "@/api/vpn-monitor-apis";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
@@ -30,7 +34,7 @@ const getStatusBadge = (status) => {
 };
 
 const MetricCard = ({ icon, title, value, subtext }) => (
-    <div className="shadow-lg border-t-4 border-t-primary p-4 rounded-xl hover:shadow-xl transition">
+    <div className=" border-t-primary p-4 rounded-xl hover:shadow-xl transition border-gray-100">
         <div className="flex justify-between items-center mb-2">
             <h3 className="font-semibold uppercase text-sm">{title}</h3>
             {icon}
@@ -56,6 +60,10 @@ const VpnDashboard = () => {
     const [metrics, setMetrics] = useState({});
     const [alerts, setAlerts] = useState([]);
     const [services, setServices] = useState([]);
+    const [ovpn, setOvpn] = useState(null);
+    const [wireguard, setWireguard] = useState(null);
+    const [strongswan, setStrongSwan] = useState(null);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -64,20 +72,32 @@ const VpnDashboard = () => {
             setLoading(true);
             setError(null);
             try {
-                const [healthRes, statusRes, metricsRes, alertsRes, servicesRes] = await Promise.all([
+                const [healthRes, statusRes, metricsRes, alertsRes, servicesRes, ovpnRes, wireguardRes, strongSwanRes,] = await Promise.all([
                     getMonitoringHealth(),
                     getMonitoringStatus(),
                     getMonitoringMetrics(),
                     getMonitoringAlerts(),
                     getMonitoredServices(),
+                    getOpenVPNService(),
+                    getWireGuardService(),
+                    getStrongSwanService(),
                 ]);
 
                 // ✅ Correct response parsing
                 setHealth(healthRes?.data || { status: "unknown" });
-                setStatus(statusRes?.data || {});
+                //      setStatus(statusRes?.data || {});
+                setStatus(Array.isArray(statusRes?.data?.services) ? statusRes.data.services : []);
+
                 setMetrics(metricsRes?.data || {});
                 setAlerts(Array.isArray(alertsRes?.data?.alerts) ? alertsRes.data.alerts : alertsRes?.data?.alerts || []);
-                setServices(Array.isArray(statusRes?.data?.services) ? statusRes.data.services : []);
+                //                setServices(Array.isArray(servicesRes?.data?.services) ? servicesRes.data.services : []);
+                //  setServices(servicesRes?.data.services || []);
+                setServices(Array.isArray(servicesRes?.data?.services) ? servicesRes.data.services : []);
+                setOvpn(ovpnRes?.data.service || {});
+                setWireguard(wireguardRes?.data.service || {});
+                setStrongSwan(strongSwanRes?.data.service || {});
+                console.log("serviceRes", servicesRes)
+                console.log('status', status)
             } catch (err) {
                 console.error(err);
                 setError("Failed to load VPN monitoring data.");
@@ -108,7 +128,7 @@ const VpnDashboard = () => {
 
     // ✅ CHARTS CONFIGURATION
 
-    // Health Donut
+    // Health status
     const healthChart = {
         labels: ["Healthy", "Unhealthy"],
         datasets: [
@@ -122,12 +142,12 @@ const VpnDashboard = () => {
 
     // Service Status Donut
     const serviceStatusChart = {
-        labels: ["Active", "Inactive"],
+        labels: ["active", "inactive"],
         datasets: [
             {
                 data: [
-                    services.filter((s) => s.status?.toLowerCase() === "active").length,
-                    services.filter((s) => s.status?.toLowerCase() !== "active").length,
+                    status.filter((s) => s.status?.toLowerCase() === "active").length,
+                    status.filter((s) => s.status?.toLowerCase() !== "active").length,
                 ],
                 backgroundColor: ["#22c55e", "#ef4444"],
                 hoverOffset: 4,
@@ -135,6 +155,31 @@ const VpnDashboard = () => {
         ],
     };
 
+    // Metrics Bar Chart
+    const metricsChart = {
+        labels: metrics.metrics?.map((m) => m.name) || [],
+        datasets: [
+            {
+                label: "Metric Values",
+                data: metrics.metrics?.map((m) => m.value) || [],
+                backgroundColor: "#3b82f6", // blue
+            },
+        ],
+    };
+
+    // Services by Type Bar Chart
+    const servicesByTypeChart = {
+        labels: services.map((s) => s.name),
+        datasets: [
+            {
+                label: "Service Type",
+                data: services.map(() => 1), // simple count for each service
+                backgroundColor: services.map((s) =>
+                    s.enabled ? "#22c55e" : "#ef4444" // green if enabled, red if not
+                ),
+            },
+        ],
+    };
     // Alerts Bar Chart
     const alertChart = {
         labels: services.map((s) => s.service_name),
@@ -147,91 +192,171 @@ const VpnDashboard = () => {
         ],
     };
 
+
+
+    const renderServiceDetails = (service) => {
+        if (!service) return null;
+
+        return (
+            <div className="shadow-xl rounded-xl p-4 mb-6 bg-white dark:bg-gray-800">
+                <h3 className="font-semibold text-lg mb-4">{service.Name} ({service.Type})</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <DetailItem icon={<Database className="h-5 w-5 text-purple-500" />} label="Status" value={service.Status.toUpperCase()} />
+                    <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Uptime (h)" value={((service.Uptime / 1e9) / 60 / 60).toFixed(2)} />
+                    <DetailItem icon={<Users className="h-5 w-5 text-green-500" />} label="Connections" value={service.Connections} />
+                    <DetailItem icon={<Activity className="h-5 w-5 text-red-500" />} label="PID" value={service.PID} />
+                    <DetailItem icon={<Database className="h-5 w-5 text-indigo-500" />} label="Last Check" value={service.LastCheck} />
+                    <DetailItem icon={<BarChart className="h-5 w-5 text-gray-500" />} label="Config File" value={service.Config?.config_file || "N/A"} />
+                    <DetailItem icon={<BarChart className="h-5 w-5 text-gray-500" />} label="Log File" value={service.Config?.log_file || "N/A"} />
+                    <DetailItem icon={<BarChart className="h-5 w-5 text-gray-500" />} label="Status File" value={service.Config?.status_file || "N/A"} />
+                </div>
+            </div>
+        );
+    };
+
+
+
+
+
+
+
+
+
     return (
-        <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-            <h1 className="text-4xl font-extrabold mb-8 border-b pb-3">VPN Monitoring Dashboard</h1>
+        <div className=" h-screen overflow-y-auto p-8 space-y-6 ">
+            <div className="max-w-7xl mx-auto">
+                < h1 className="text-4xl font-extrabold mb-8 border-b pb-3" > VPN Monitoring Dashboard</h1 >
 
-            {/* Top Metrics */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10">
-                <MetricCard
-                    icon={<Activity className="h-6 w-6 text-green-500" />}
-                    title="System Health"
-                    value={health.status || "Unknown"}
-                    subtext={`Version: ${health.version || "N/A"}`}
-                />
-                <MetricCard
-                    icon={<Users className="h-6 w-6 text-blue-500" />}
-                    title="Active Services"
-                    value={services.filter((s) => s.status?.toLowerCase() === "active").length}
-                    subtext="Currently running"
-                />
-                <MetricCard
-                    icon={<AlertTriangle className="h-6 w-6 text-red-500" />}
-                    title="Active Alerts"
-                    value={alerts.length}
-                    subtext="Current monitoring alerts"
-                />
-                <MetricCard
-                    icon={<Database className="h-6 w-6 text-purple-500" />}
-                    title="Total Services"
-                    value={services.length}
-                    subtext="All monitored VPN services"
-                />
-            </div>
+                {/* Top Metrics */}
+                < div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10" >
+                    <MetricCard
+                        icon={<Activity className="h-6 w-6 text-green-500" />}
+                        title="Monitoring Health"
+                        value={health.status.toUpperCase() || "Unknown"}
+                        subtext={`Version: ${health.version || "N/A"}`}
+                    />
+                    <MetricCard
+                        icon={<Users className="h-6 w-6 text-blue-500" />}
+                        title="Monitored Status(All VPN services)"
+                        value={status.filter((s) => s.status?.toLowerCase() === "active").length}
+                        subtext={`Agent: ${status.agent?.name || "N/A"}`} />
+                    <MetricCard
+                        icon={<AlertTriangle className="h-6 w-6 text-red-500" />}
+                        title="Active Alerts"
+                        value={alerts.length}
+                        subtext="Current monitoring alerts"
+                    />
+                    <MetricCard
+                        icon={<Users className="h-6 w-6 text-purple-500" />}
+                        title="List Monitored Services"
+                        value={services.length}
+                        subtext={`Enabled: ${services.filter(s => s.enabled).length} |  ${services.map(s => s.name).join(", ")}`}
+                    />
 
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-                <div className="shadow-xl rounded-xl p-4 h-64 md:h-80">
-                    <h3 className="font-semibold mb-2">System Health</h3>
-                    <Doughnut data={healthChart} options={{ responsive: true, maintainAspectRatio: false }} />
-                </div>
-                <div className="shadow-xl rounded-xl p-4 h-64 md:h-80">
-                    <h3 className="font-semibold mb-2">Service Status</h3>
-                    <Doughnut data={serviceStatusChart} options={{ responsive: true, maintainAspectRatio: false }} />
-                </div>
-                <div className="shadow-xl rounded-xl p-4 h-64 md:h-80">
-                    <h3 className="font-semibold mb-2">Alerts per Service</h3>
-                    <Bar data={alertChart} options={{ responsive: true, maintainAspectRatio: false }} />
-                </div>
-            </div>
 
-            {/* Services Table */}
-            <h2 className="text-2xl font-bold mb-4 text-indigo-600">Services Status</h2>
-            <div className="shadow-xl rounded-xl overflow-x-auto">
-                <table className="w-full table-auto text-left border-collapse">
-                    <thead className="bg-gray-100 sticky top-0">
-                        <tr>
-                            <th className="px-4 py-2">Service Name</th>
-                            <th className="px-4 py-2">Status</th>
-                            <th className="px-4 py-2">Version</th>
-                            <th className="px-4 py-2">Uptime</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {services.length ? (
-                            services.map((s, i) => (
-                                <tr key={i} className="hover:bg-gray-50">
-                                    <td className="px-4 py-2">{s.service_name}</td>
-                                    <td className="px-4 py-2">
-                                        <span className={`px-2 py-1 rounded ${getStatusBadge(s.status)}`}>{s.status}</span>
-                                    </td>
-                                    <td className="px-4 py-2">{s.version || "N/A"}</td>
-                                    <td className="px-4 py-2">{s.uptime}</td>
-                                </tr>
-                            ))
+                    <MetricCard
+                        icon={<BarChart className="h-6 w-6 text-blue-500" />}
+                        title="Total Metrics"
+                        value={metrics.length || "0"}
+                        subtext={metrics.length ? "All collected monitoring metrics" : "No metrics available"}
+                    />
+
+                    <MetricCard
+                        icon={<Database className="h-6 w-6 text-green-500" />}
+                        title={`${ovpn.Name} Status`}
+                        value={ovpn.Status.toUpperCase()}
+                        subtext={`Connections: ${ovpn.Connections} | Uptime: ${(ovpn.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
+                    />
+                    <MetricCard
+                        icon={<Database className="h-6 w-6 text-blue-500" />}
+                        title={`${wireguard.Name} Status`}
+                        value={wireguard.Status.toUpperCase()}
+                        subtext={`Connections: ${wireguard.Connections} | Uptime: ${(wireguard.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
+                    />
+                    <MetricCard
+                        icon={<Database className="h-6 w-6 text-purple-500" />}
+                        title={`${strongswan.Name} Status`}
+                        value={strongswan.Status.toUpperCase()}
+                        subtext={`Connections: ${strongswan.Connections} | Uptime: ${(strongswan.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
+                    />
+                </div >
+                {/* Charts */}
+                < div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10" >
+
+                    <div className="shadow-xl rounded-xl p-4 h-64 md:h-80 flex flex-col justify-center items-center">
+                        <h3 className="font-semibold mb-4">Monitoring Health</h3>
+                        {health.status?.toLowerCase() === "healthy" ? (
+                            <CheckCircle className="h-16 w-16 text-green-500 mb-2" />
                         ) : (
-                            <tr>
-                                <td colSpan={4} className="px-4 py-4 text-center">
-                                    No services available
-                                </td>
-                            </tr>
+                            <XCircle className="h-16 w-16 text-red-500 mb-2" />
                         )}
-                    </tbody>
-                </table>
-            </div>
+                        <span className={`text-2xl font-bold ${health.status?.toLowerCase() === "healthy" ? "text-green-600" : "text-red-600"}`}>
+                            {health.status ? health.status.toUpperCase() : "UNKNOWN"}
+                        </span>
+                    </div>
+                    <div className="shadow-xl rounded-xl p-4 h-64 md:h-80">
+                        <h3 className="font-semibold mb-2">Monitored Status</h3>
+                        <Doughnut data={serviceStatusChart} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
+                    <div className="shadow-xl rounded-xl p-4 h-64 md:h-80">
+                        <h3 className="font-semibold mb-2">Alerts per Service</h3>
+                        <Bar data={alertChart} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+                        {/* Metrics Chart */}
+                        {/* <div className="shadow-xl rounded-xl p-4 h-64 md:h-80">
+                        <h3 className="font-semibold mb-2">System Metrics</h3>
+                        <Bar data={metricsChart} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div> */}
 
-            {/* Alerts Table */}
-            <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600">Monitoring Alerts</h2>
+                        {/* Services by Type */}
+                        {/* <div className="shadow-xl rounded-xl p-4 h-64 md:h-80">
+                        <h3 className="font-semibold mb-2">Services by Type</h3>
+                        <Bar data={servicesByTypeChart} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div> */}
+                    </div>
+
+                </div >
+
+                <h2 className="text-2xl font-bold mb-4 text-indigo-600">Configured Services</h2>
+                <div className="shadow-xl rounded-xl overflow-x-auto">
+                    <table className="w-full table-auto text-left border-collapse">
+                        <thead className="bg-gray-100 sticky top-0">
+                            <tr>
+                                <th className="px-4 py-2">Name</th>
+                                <th className="px-4 py-2">Type</th>
+                                <th className="px-4 py-2">Enabled</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {services.length ? (
+                                services.map((s, i) => (
+                                    <tr key={i} className="hover:bg-gray-50">
+                                        <td className="px-4 py-2">{s.name}</td>
+                                        <td className="px-4 py-2">{s.type}</td>
+                                        <td className="px-4 py-2">
+                                            <span
+                                                className={`px-2 py-1 rounded ${s.enabled ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                                                    }`}
+                                            >
+                                                {s.enabled ? "Enabled" : "Disabled"}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={3} className="px-4 py-4 text-center">
+                                        No services available
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Alerts Table */}
+                {/* <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600">Monitoring Alerts</h2>
             <div className="shadow-xl rounded-xl overflow-x-auto">
                 <table className="w-full table-auto text-left border-collapse">
                     <thead className="bg-gray-100 sticky top-0">
@@ -259,14 +384,21 @@ const VpnDashboard = () => {
                         )}
                     </tbody>
                 </table>
-            </div>
+            </div> */}
 
-            {/* System Metrics */}
-            <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600">System Metrics</h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10">
-                <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Timestamp" value={metrics.timestamp || "N/A"} />
-                <DetailItem icon={<BarChart className="h-5 w-5 text-green-500" />} label="Metrics Count" value={metrics.metrics?.length || 0} />
-            </div>
+                {/* System Metrics */}
+                <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600">System Metrics</h2>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10">
+                    <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Timestamp" value={metrics.timestamp || "N/A"} />
+                    <DetailItem icon={<BarChart className="h-5 w-5 text-green-500" />} label="Metrics Count" value={metrics.metrics?.length || 0} />
+                </div>
+                <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600">VPN Service Details</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {renderServiceDetails(ovpn)}
+                    {renderServiceDetails(wireguard)}
+                    {renderServiceDetails(strongswan)}
+                </div>
+            </div >
         </div>
     );
 };
