@@ -64,6 +64,8 @@ const VpnDashboard = () => {
     const [wireguard, setWireguard] = useState(null);
     const [strongswan, setStrongSwan] = useState(null);
 
+
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -71,42 +73,48 @@ const VpnDashboard = () => {
         const fetchData = async () => {
             setLoading(true);
             setError(null);
-            try {
-                const [healthRes, statusRes, metricsRes, alertsRes, servicesRes, ovpnRes, wireguardRes, strongSwanRes,] = await Promise.all([
-                    getMonitoringHealth(),
-                    getMonitoringStatus(),
-                    getMonitoringMetrics(),
-                    getMonitoringAlerts(),
-                    getMonitoredServices(),
-                    getOpenVPNService(),
-                    getWireGuardService(),
-                    getStrongSwanService(),
-                ]);
 
-                // ✅ Correct response parsing
-                setHealth(healthRes?.data || { status: "unknown" });
-                //      setStatus(statusRes?.data || {});
-                setStatus(Array.isArray(statusRes?.data?.services) ? statusRes.data.services : []);
+            const endpoints = {
+                health: getMonitoringHealth,
+                status: getMonitoringStatus,
+                metrics: getMonitoringMetrics,
+                alerts: getMonitoringAlerts,
+                services: getMonitoredServices,
+                ovpn: getOpenVPNService,
+                wireguard: getWireGuardService,
+                strongswan: getStrongSwanService,
+            };
 
-                setMetrics(metricsRes?.data || {});
-                setAlerts(Array.isArray(alertsRes?.data?.alerts) ? alertsRes.data.alerts : alertsRes?.data?.alerts || []);
-                //                setServices(Array.isArray(servicesRes?.data?.services) ? servicesRes.data.services : []);
-                //  setServices(servicesRes?.data.services || []);
-                setServices(Array.isArray(servicesRes?.data?.services) ? servicesRes.data.services : []);
-                setOvpn(ovpnRes?.data.service || {});
-                setWireguard(wireguardRes?.data.service || {});
-                setStrongSwan(strongSwanRes?.data.service || {});
-                console.log("serviceRes", servicesRes)
-                console.log('status', status)
-            } catch (err) {
-                console.error(err);
-                setError("Failed to load VPN monitoring data.");
-            } finally {
-                setLoading(false);
-            }
+            const results = {};
+
+            await Promise.all(
+                Object.entries(endpoints).map(async ([key, apiFn]) => {
+                    try {
+                        const res = await apiFn();
+                        results[key] = res?.data || {};
+                    } catch (err) {
+                        console.error(`Failed to fetch ${key}:`, err);
+                        results[key] = { error: "Failed to load data" };
+                    }
+                })
+            );
+
+            // Update states individually
+            setHealth(results.health || { status: "unknown" });
+            setStatus(Array.isArray(results.status?.services) ? results.status.services : []);
+            setMetrics(results.metrics || {});
+            setAlerts(Array.isArray(results.alerts?.alerts) ? results.alerts.alerts : []);
+            setServices(Array.isArray(results.services?.services) ? results.services.services : []);
+            setOvpn(results.ovpn?.service || {});
+            setWireguard(results.wireguard?.service || {});
+            setStrongSwan(results.strongswan?.service || {});
+
+            setLoading(false);
         };
+
         fetchData();
     }, []);
+
 
     if (loading)
         return (
@@ -206,14 +214,13 @@ const VpnDashboard = () => {
                     <DetailItem icon={<Users className="h-5 w-5 text-green-500" />} label="Connections" value={service.Connections} />
                     <DetailItem icon={<Activity className="h-5 w-5 text-red-500" />} label="PID" value={service.PID} />
                     <DetailItem icon={<Database className="h-5 w-5 text-indigo-500" />} label="Last Check" value={service.LastCheck} />
-                    <DetailItem icon={<BarChart className="h-5 w-5 text-gray-500" />} label="Config File" value={service.Config?.config_file || "N/A"} />
+                    {/* <DetailItem icon={<BarChart className="h-5 w-5 text-gray-500" />} label="Config File" value={service.Config?.config_file || "N/A"} />
                     <DetailItem icon={<BarChart className="h-5 w-5 text-gray-500" />} label="Log File" value={service.Config?.log_file || "N/A"} />
-                    <DetailItem icon={<BarChart className="h-5 w-5 text-gray-500" />} label="Status File" value={service.Config?.status_file || "N/A"} />
+                    <DetailItem icon={<BarChart className="h-5 w-5 text-gray-500" />} label="Status File" value={service.Config?.status_file || "N/A"} /> */}
                 </div>
             </div>
         );
     };
-
 
 
 
@@ -229,12 +236,17 @@ const VpnDashboard = () => {
 
                 {/* Top Metrics */}
                 < div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10" >
+
+
+
+
                     <MetricCard
                         icon={<Activity className="h-6 w-6 text-green-500" />}
                         title="Monitoring Health"
-                        value={health.status.toUpperCase() || "Unknown"}
+                        value={health.status || "Unknown"}
                         subtext={`Version: ${health.version || "N/A"}`}
                     />
+
                     <MetricCard
                         icon={<Users className="h-6 w-6 text-blue-500" />}
                         title="Monitored Status(All VPN services)"
