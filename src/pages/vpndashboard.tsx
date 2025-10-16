@@ -64,6 +64,7 @@ const VpnDashboard = () => {
     const [wireguard, setWireguard] = useState(null);
     const [strongswan, setStrongSwan] = useState(null);
 
+    const [healthhovered, setHealthhovered] = useState(false);
 
 
     const [loading, setLoading] = useState(true);
@@ -158,6 +159,7 @@ const VpnDashboard = () => {
                     status.filter((s) => s.status?.toLowerCase() !== "active").length,
                 ],
                 backgroundColor: ["#22c55e", "#ef4444"],
+                //     backgroundColor: ["#3B82F6", "#6B7280"],
                 hoverOffset: 4,
             },
         ],
@@ -238,20 +240,62 @@ const VpnDashboard = () => {
                 < div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10" >
 
 
+                    {/* Health Metric Card with hover tooltip */}
+                    <div
+                        className="relative"
+                        onMouseEnter={() => setHealthhovered(true)}
+                        onMouseLeave={() => setHealthhovered(false)}
+                    >
+                        <MetricCard
+                            icon={<Activity className="h-6 w-6 text-blue-500" />}
+                            title="Monitoring Health"
+                            value={health.status || "Unknown"}
+                            subtext={`Version: ${health.version || "N/A"}`}
+                        />
+
+                        {/* Tooltip / Details box */}
+                        {healthhovered && (
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
+                                <h4 className="font-semibold mb-2">Health Details</h4>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-blue-400 font-bold">✔</span>
+                                    <span>Status: {health.status || "N/A"}</span>
+                                </div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-blue-400 font-bold">✔</span>
+                                    <span>Version: {health.version || "N/A"}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-blue-400 font-bold">✔</span>
+                                    <span>Timestamp: {health.timestamp || "N/A"}</span>
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
 
 
-                    <MetricCard
-                        icon={<Activity className="h-6 w-6 text-green-500" />}
-                        title="Monitoring Health"
-                        value={health.status || "Unknown"}
-                        subtext={`Version: ${health.version || "N/A"}`}
-                    />
+
+
+
+
+
+
+
+
 
                     <MetricCard
                         icon={<Users className="h-6 w-6 text-blue-500" />}
-                        title="Monitored Status(All VPN services)"
-                        value={status.filter((s) => s.status?.toLowerCase() === "active").length}
-                        subtext={`Agent: ${status.agent?.name || "N/A"}`} />
+                        title="Monitored Status (All VPN services)"
+                        value={status.filter(s => s.status?.toLowerCase() === "active").length}
+                        subtext={`Active: ${status
+                            .filter(s => s.status?.toLowerCase() === "active")
+                            .map(s => s.service_name)
+                            .join(", ") || "N/A"
+                            }`}
+                    />
+
+
                     <MetricCard
                         icon={<AlertTriangle className="h-6 w-6 text-red-500" />}
                         title="Active Alerts"
@@ -268,7 +312,7 @@ const VpnDashboard = () => {
 
                     <MetricCard
                         icon={<BarChart className="h-6 w-6 text-blue-500" />}
-                        title="Total Metrics"
+                        title="System Metrics"
                         value={metrics.length || "0"}
                         subtext={metrics.length ? "All collected monitoring metrics" : "No metrics available"}
                     />
@@ -295,7 +339,7 @@ const VpnDashboard = () => {
                 {/* Charts */}
                 < div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10" >
 
-                    <div className="shadow-xl rounded-xl p-4 h-64 md:h-80 flex flex-col justify-center items-center">
+                    <div className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col justify-center items-center">
                         <h3 className="font-semibold mb-4">Monitoring Health</h3>
                         {health.status?.toLowerCase() === "healthy" ? (
                             <CheckCircle className="h-16 w-16 text-green-500 mb-2" />
@@ -306,11 +350,11 @@ const VpnDashboard = () => {
                             {health.status ? health.status.toUpperCase() : "UNKNOWN"}
                         </span>
                     </div>
-                    <div className="shadow-xl rounded-xl p-4 h-64 md:h-80">
+                    <div className="shadow-xl rounded-xl p-4 h-64 md:h-95">
                         <h3 className="font-semibold mb-2">Monitored Status</h3>
                         <Doughnut data={serviceStatusChart} options={{ responsive: true, maintainAspectRatio: false }} />
                     </div>
-                    <div className="shadow-xl rounded-xl p-4 h-64 md:h-80">
+                    <div className="shadow-xl rounded-xl p-24 h-64 md:h-95">
                         <h3 className="font-semibold mb-2">Alerts per Service</h3>
                         <Bar data={alertChart} options={{ responsive: true, maintainAspectRatio: false }} />
                     </div>
@@ -330,7 +374,7 @@ const VpnDashboard = () => {
 
                 </div >
 
-                <h2 className="text-2xl font-bold mb-4 text-indigo-600">Configured Services</h2>
+                <h2 className="text-2xl font-bold mb-4 text-indigo-600">List Services</h2>
                 <div className="shadow-xl rounded-xl overflow-x-auto">
                     <table className="w-full table-auto text-left border-collapse">
                         <thead className="bg-gray-100 sticky top-0">
