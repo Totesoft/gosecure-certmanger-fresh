@@ -5,7 +5,7 @@ import CertsRoutes from "./routes";
 import "./index.css";
 import "@totesoft/ui-kit";
 import App from "./App";
-
+//document.documentElement.classList.add("light");
 
 
 

@@ -35,27 +35,37 @@ const getStatusBadge = (status) => {
 
 const MetricCard = ({ icon, title, value, subtext, className = "" }) => (
     <div
-        className={`bg-white border border-gray-200 rounded-xl p-4 shadow-md 
-                        hover:shadow-xl hover:-translate-y-1 transition-all duration-300
-                        ${className}`}
-    >        <div className="flex justify-between items-center mb-2">
+        className={`bg-white dark:bg-gray-800 
+                border border-gray-200 dark:border-gray-700 
+                text-gray-900 dark:text-gray-100 
+                rounded-xl p-4 shadow-md 
+                hover:shadow-xl hover:-translate-y-1 transition-all duration-300
+                ${className}`}
+    >
+        <div className="flex justify-between items-center mb-2">
             <h3 className="font-semibold uppercase text-sm">{title}</h3>
             {icon}
         </div>
         <div className="text-2xl font-bold">{value}</div>
-        <p className="text-sm mt-1">{subtext}</p>
+        <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">{subtext}</p>
     </div>
 );
 
 const DetailItem = ({ icon, label, value }) => (
-    <div className="flex items-start space-x-3 p-3 rounded-lg shadow-sm">
-        <div className="pt-1">{icon}</div>
+    <div
+        className="flex items-start space-x-3 p-3 rounded-lg 
+               bg-white dark:bg-gray-800 
+               border border-gray-200 dark:border-gray-700 
+               shadow-sm hover:shadow-md transition-all duration-300"
+    >
+        <div className="pt-1 text-gray-600 dark:text-gray-300">{icon}</div>
         <div>
-            <p className="text-sm font-medium uppercase">{label}</p>
-            <p className="font-bold">{value ?? "N/A"}</p>
+            <p className="text-sm font-medium uppercase text-gray-700 dark:text-gray-400">{label}</p>
+            <p className="font-bold text-gray-900 dark:text-gray-100">{value ?? "N/A"}</p>
         </div>
     </div>
 );
+
 
 const VpnDashboard = () => {
     const [health, setHealth] = useState({});
@@ -306,22 +316,22 @@ const VpnDashboard = () => {
             "VPN Service Details"
         ];
         return (
-            <div className="w-64 h-screen bg-gray-100 p-4 shadow-lg pt-18">
-                <h2 className="text-xl font-bold mb-4">VPN monitoring </h2>
+            <div className="w-64 h-screen bg-gray-100 dark:bg-gray-900 p-4 shadow-lg pt-18">
+                <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">VPN monitoring</h2>
                 <ul className="space-y-2">
                     {headings.map((heading, idx) => (
-                        <li key={idx} className="text-gray-700 font-medium">
+                        <li key={idx} className="font-medium text-gray-700 dark:text-gray-300">
                             {heading}
                         </li>
                     ))}
                 </ul>
             </div>
-        );
+        )
     };
     return (
 
 
-        <div className="flex p=4">
+        <div className="flex p-4">
             <Sidebar /> {/* Sidebar displayed on the left */}
             <div className=" p-0">
                 {/* Your existing VPN Dashboard JSX */}
@@ -330,31 +340,26 @@ const VpnDashboard = () => {
 
 
 
-
-            <div className=" h-screen overflow-y-auto p-8 space-y-6 ">
+            <div className="h-screen overflow-y-auto p-8 space-y-6 dark:bg-gray-900">
                 <div className="max-w-7xl mx-auto">
-                    < h1 className="text-blue-800 text-4xl font-extrabold mb-8 border-b pb-3" > VPN Monitoring Dashboard</h1 >
+                    <h1 className="text-blue-800 dark:text-blue-400 text-4xl font-extrabold mb-8 border-b pb-3">
+                        VPN Monitoring Dashboard
+                    </h1>
 
-                    {/* Top Metrics */}
-                    {/* < div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10" > */}
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10 relative">
-
-                        {/* Health Metric Card with hover tooltip */}
                         <div
                             className="relative"
                             onMouseEnter={() => setHealthhovered(true)}
                             onMouseLeave={() => setHealthhovered(false)}
                         >
                             <MetricCard
-                                icon={<Activity className="h-6 w-6 text-blue-500" />}
+                                icon={<Activity className="h-6 w-6 text-blue-500 dark:text-blue-400" />}
                                 title="Monitoring Health"
                                 value={health.status || "Unknown"}
                                 subtext={`Version: ${health.version || "N/A"}`}
                             />
-                            {/* Tooltip / Details box */}
                             {healthhovered && (
-                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
-                                    <h4 className="font-semibold mb-2">Health Details</h4>
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">                                    <h4 className="font-semibold mb-2">Health Details</h4>
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-blue-400 font-bold">✔</span>
                                         <span>Status: {health.status || "N/A"}</span>
@@ -590,7 +595,7 @@ const VpnDashboard = () => {
 
                         {/* /////Status Donut////// */}
 
-                        <div className="shadow-xl rounded-xl p-4 h-64 md:h-95">
+                        <div className="shadow-xl rounded-xl p-4 h-0 md:h-95">
                             <h3 className="font-semibold mb-2">Monitored Status</h3>
                             <Doughnut
                                 data={serviceStatusChart}
