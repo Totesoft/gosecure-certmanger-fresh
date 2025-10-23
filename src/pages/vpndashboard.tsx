@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Loader2, Users, AlertTriangle, Clock, BarChart, Database, Activity } from "lucide-react";
 import { Doughnut, Bar } from "react-chartjs-2";
@@ -22,7 +23,6 @@ import {
     getWireGuardService,
     getStrongSwanService,
 } from "@/api/vpn-monitor-apis";
-
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
 
 const getStatusBadge = (status) => {
@@ -464,26 +464,26 @@ const VpnDashboard = () => {
 
 
 
-                        <MetricCard
+                        {/* <MetricCard
                             icon={<BarChart className="h-6 w-6 text-blue-500" />}
                             title="System Metrics"
                             value={metrics.length || "0"}
                             subtext={metrics.length ? "All collected monitoring metrics" : "No metrics available"}
-                        />
+                        /> */}
                         {/* OVPN Metric Card with hover tooltip  */}
-                        <div
+                        {/* <div
                             className="relative inline-block"
                             onMouseEnter={() => setOvpnhovered(true)}
                             onMouseLeave={() => setOvpnhovered(false)}
-                        >
-                            <MetricCard
-                                icon={<Database className="h-6 w-6 text-green-500" />}
-                                title={`${ovpn.Name} Status`}
-                                value={ovpn.Status.toUpperCase()}
-                                subtext={`Connections: ${ovpn.Connections} | Uptime: ${(ovpn.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
-                            />
-                            {/* Tooltip / Details Box */}
-                            {ovpnhovered && ovpn && (
+                        > */}
+                        {/* <MetricCard
+                            icon={<Database className="h-6 w-6 text-green-500" />}
+                            title={`${ovpn.Name} Status`}
+                            value={ovpn.Status.toUpperCase()}
+                            subtext={`Connections: ${ovpn.Connections} | Uptime: ${(ovpn.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
+                        /> */}
+                        {/* Tooltip / Details Box */}
+                        {/* {ovpnhovered && ovpn && (
                                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
                                     <h4 className="font-semibold mb-2">Details:</h4>
                                     <div className="flex justify-between mb-1">
@@ -502,85 +502,87 @@ const VpnDashboard = () => {
                                         <span className>Type:</span> <span>{ovpn.Type}</span>
                                     </div>
                                 </div>
-                            )}
-                        </div>
+                            )} */}
+                        {/* </div> */}
 
-                        <div
-                            className="relative inline-block"
-                            onMouseEnter={() => setWireguardHovered(true)}
-                            onMouseLeave={() => setWireguardHovered(false)}
-                        >
-                            <MetricCard
-                                icon={<Database className="h-6 w-6 text-blue-500" />}
-                                title={`${wireguard.Name} Status`}
-                                value={wireguard.Status.toUpperCase()}
-                                subtext={`Connections: ${wireguard.Connections} | Uptime: ${(wireguard.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
-                            />
+                        {/* <div
+                        className="relative inline-block"
+                        onMouseEnter={() => setWireguardHovered(true)}
+                        onMouseLeave={() => setWireguardHovered(false)}
+                    >
+                        <MetricCard
+                            icon={<Database className="h-6 w-6 text-blue-500" />}
+                            title={`${wireguard.Name} Status`}
+                            value={wireguard.Status.toUpperCase()}
+                            subtext={`Connections: ${wireguard.Connections} | Uptime: ${(wireguard.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
+                        /> */}
 
-                            {/* Tooltip / Details Box */}
-                            {wireguardHovered && wireguard && (
-                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
-                                    <h4 className="font-semibold mb-2">Details:</h4>
-                                    <div className="flex justify-between mb-1">
-                                        <span>Name:</span> <span>{wireguard.Name}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-1">
-                                        <span>Status:</span> <span className={wireguard.Status.toLowerCase() === "active" ? "text-green-400" : "text-gray-400"}>{wireguard.Status}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-1">
-                                        <span>Connections:</span> <span>{wireguard.Connections}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-1">
-                                        <span>Uptime (h):</span> <span>{(wireguard.Uptime / 1e9 / 60 / 60).toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>Type:</span> <span>{wireguard.Type}</span>
-                                    </div>
+                        {/* Tooltip / Details Box */}
+                        {/* {wireguardHovered && wireguard && (
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
+                                <h4 className="font-semibold mb-2">Details:</h4>
+                                <div className="flex justify-between mb-1">
+                                    <span>Name:</span> <span>{wireguard.Name}</span>
                                 </div>
-                            )}
-                        </div>
-
-                        <div
-                            className="relative inline-block"
-                            onMouseEnter={() => setStrongSwanHovered(true)}
-                            onMouseLeave={() => setStrongSwanHovered(false)}
-                        >
-                            <MetricCard
-                                icon={<Database className="h-6 w-6 text-purple-500" />}
-                                title={`${strongswan.Name} Status`}
-                                value={strongswan.Status.toUpperCase()}
-                                subtext={`Connections: ${strongswan.Connections} | Uptime: ${(strongswan.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
-                            />
-
-                            {/* Tooltip / Details Box */}
-                            {strongSwanHovered && strongswan && (
-                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
-                                    <h4 className="font-semibold mb-2">Details:</h4>
-                                    <div className="flex justify-between mb-1">
-                                        <span>Name:</span> <span>{strongswan.Name}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-1">
-                                        <span>Status:</span> <span className={strongswan.Status.toLowerCase() === "active" ? "text-green-400" : "text-gray-400"}>{strongswan.Status}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-1">
-                                        <span>Connections:</span> <span>{strongswan.Connections}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-1">
-                                        <span>Uptime (h):</span> <span>{(strongswan.Uptime / 1e9 / 60 / 60).toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>Type:</span> <span>{strongswan.Type}</span>
-                                    </div>
+                                <div className="flex justify-between mb-1">
+                                    <span>Status:</span> <span className={wireguard.Status.toLowerCase() === "active" ? "text-green-400" : "text-gray-400"}>{wireguard.Status}</span>
                                 </div>
-                            )}
-                        </div>
+                                <div className="flex justify-between mb-1">
+                                    <span>Connections:</span> <span>{wireguard.Connections}</span>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                    <span>Uptime (h):</span> <span>{(wireguard.Uptime / 1e9 / 60 / 60).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Type:</span> <span>{wireguard.Type}</span>
+                                </div>
+                            </div>
+                        )} */}
+
+
+                        {/* </div> */}
+
+                        {/* <div
+                        className="relative inline-block"
+                        onMouseEnter={() => setStrongSwanHovered(true)}
+                        onMouseLeave={() => setStrongSwanHovered(false)}
+                    >
+                        <MetricCard
+                            icon={<Database className="h-6 w-6 text-purple-500" />}
+                            title={`${strongswan.Name} Status`}
+                            value={strongswan.Status.toUpperCase()}
+                            subtext={`Connections: ${strongswan.Connections} | Uptime: ${(strongswan.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
+                        /> */}
+
+                        {/* Tooltip / Details Box */}
+                        {/* {strongSwanHovered && strongswan && (
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
+                                <h4 className="font-semibold mb-2">Details:</h4>
+                                <div className="flex justify-between mb-1">
+                                    <span>Name:</span> <span>{strongswan.Name}</span>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                    <span>Status:</span> <span className={strongswan.Status.toLowerCase() === "active" ? "text-green-400" : "text-gray-400"}>{strongswan.Status}</span>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                    <span>Connections:</span> <span>{strongswan.Connections}</span>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                    <span>Uptime (h):</span> <span>{(strongswan.Uptime / 1e9 / 60 / 60).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Type:</span> <span>{strongswan.Type}</span>
+                                </div>
+                            </div>
+                        )}
+                    </div> */}
 
                     </div >
                     {/* Charts************************ */}
                     {/* //////Monitoring Health CheckCircle//// */}
-                    < div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10" >
+                    < div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10" >
 
-                        <div className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col justify-center items-center">
+                        {/* <div className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col justify-center items-center">
                             <h3 className="font-semibold mb-4">Monitoring Health</h3>
                             {health.status?.toLowerCase() === "healthy" ? (
                                 <CheckCircle className="h-16 w-16 text-green-500 mb-2" />
@@ -590,12 +592,12 @@ const VpnDashboard = () => {
                             <span className={`text-2xl font-bold ${health.status?.toLowerCase() === "healthy" ? "text-green-600" : "text-red-600"}`}>
                                 {health.status ? health.status.toUpperCase() : "UNKNOWN"}
                             </span>
-                        </div>
+                        </div> */}
 
 
                         {/* /////Status Donut////// */}
 
-                        <div className="shadow-xl rounded-xl p-4 h-0 md:h-95">
+                        <div className="shadow-xl rounded-xl p-4 h-64 md:h-96">
                             <h3 className="font-semibold mb-2">Monitored Status</h3>
                             <Doughnut
                                 data={serviceStatusChart}
@@ -684,7 +686,7 @@ const VpnDashboard = () => {
 
 
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6h-64 md:h-96 mb-10">
                         {/* System Metrics */}
                         <div className="shadow-xl rounded-xl p-6">
                             <h2 className="text-2xl font-bold mb-4 text-indigo-600">System Metrics</h2>
