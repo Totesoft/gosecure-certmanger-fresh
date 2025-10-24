@@ -6,7 +6,8 @@ import {
 } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { Card } from "@/components/ui/card"; // shadcn card wrapper
+//import { Card } from "@/components/ui/card"; // shadcn card wrapper
+import { Card } from "@totesoft/ui-kit"; // shadcn card wrapper
 
 interface CircularMetricCardProps {
     title: string;

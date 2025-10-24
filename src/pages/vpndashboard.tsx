@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from "react";
-import { Loader2, Users, AlertTriangle, Clock, BarChart, Database, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, Loader2, Users, AlertTriangle, Clock, BarChart, Database, Activity } from "lucide-react";
 import { Doughnut, Bar } from "react-chartjs-2";
 import { CheckCircle, XCircle } from "lucide-react"; // import icons
+import CircularMetricCard from "@/components/ui/CircularMetricCard";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -13,6 +14,7 @@ import {
     Legend,
     Title,
 } from "chart.js";
+import { Badge, Card, CardHeader, CardTitle, CardContent, CardDescription, Alert, AlertDescription, AlertTitle } from "@totesoft/ui-kit"
 import {
     getMonitoringHealth,
     getMonitoringStatus,
@@ -24,14 +26,6 @@ import {
     getStrongSwanService,
 } from "@/api/vpn-monitor-apis";
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
-
-const getStatusBadge = (status) => {
-    if (!status) return "bg-gray-500 text-white";
-    const s = status.toLowerCase();
-    if (s === "active" || s === "healthy" || s === "running") return "bg-green-500 text-white";
-    if (s === "inactive" || s === "stopped") return "bg-red-500 text-white";
-    return "bg-gray-500 text-white";
-};
 
 const MetricCard = ({ icon, title, value, subtext, className = "" }) => (
     <div
@@ -80,9 +74,12 @@ const VpnDashboard = () => {
     const [healthhovered, setHealthhovered] = useState(false);
     const [statushovered, setStatushovered] = useState(false);
     const [serviceshovered, setServiceshovered] = useState(false);
+    const [alertshovered, setAlertshovered] = useState(false);
+
     const [ovpnhovered, setOvpnhovered] = useState(false);
     const [wireguardHovered, setWireguardHovered] = useState(false);
     const [strongSwanHovered, setStrongSwanHovered] = useState(false);
+
 
 
     const [loading, setLoading] = useState(true);
@@ -137,35 +134,26 @@ const VpnDashboard = () => {
 
     if (loading)
         return (
-            <div className="flex flex-col justify-center items-center h-[80vh]">
-                <Loader2 className="h-10 w-10 animate-spin" />
-                <span className="mt-4 text-xl font-semibold">Loading VPN Dashboard...</span>
+            <div className="flex flex-col justify-center items-center">
+                <Loader2 className="h-16 w-16 animate-spin text-blue-600" />
+                <span className="mt-4 text-xl font-medium">Loading Dashboard Data...</span>
+            </div>
+        );
+    if (error)
+        return (
+            <div className="p-8 max-w-xl mx-auto mt-20 rounded-xl shadow-2xl">
+                <Alert className="border-red-500 bg-red-50 text-red-800">
+                    <AlertTitle className="flex items-center text-xl font-bold">
+                        <AlertTriangle className="w-6 h-6 mr-3" /> System Error
+                    </AlertTitle>
+                    <AlertDescription className="text-base mt-2">{error}</AlertDescription>
+                </Alert>
             </div>
         );
 
-    if (error)
-        return (
-            <div className="p-8 max-w-lg mx-auto mt-10 bg-red-50 border border-red-400 rounded-lg">
-                <h2 className="flex items-center text-red-600 font-bold mb-2">
-                    <AlertTriangle className="w-5 h-5 mr-2" />Error
-                </h2>
-                <p>{error}</p>
-            </div>
-        );
 
     // ✅ CHARTS CONFIGURATION
 
-    // Health status
-    const healthChart = {
-        labels: ["Healthy", "Unhealthy"],
-        datasets: [
-            {
-                data: [health.status === "healthy" ? 1 : 0, health.status === "healthy" ? 0 : 1],
-                backgroundColor: ["#22c55e", "#ef4444"],
-                hoverOffset: 4,
-            },
-        ],
-    };
 
     // Service Status Donut
     const serviceStatusChart = {
@@ -177,10 +165,10 @@ const VpnDashboard = () => {
                     status.filter((s) => s.status?.toLowerCase() !== "active").length,
                 ],
                 // backgroundColor: ["#22c55e", "#ef4444"],
-                backgroundColor: ["#3B82F6", "#6B7280"],
-                //  backgroundColor: ["#006B3C", "#A40000"],
-
+                //backgroundColor: ["#5c9660", "#de5d3e"],
+                backgroundColor: ["#3e99de", "#555f66"],
                 hoverOffset: 4,
+
             },
         ],
     };
@@ -268,17 +256,18 @@ const VpnDashboard = () => {
             },
         ],
     };
-    // Alerts Bar Chart
+    // Alerts Bar Chart (placeholder)
     const alertChart = {
-        labels: services.map((s) => s.service_name),
+        labels: services.map((s) => s.service_name), // X-axis
         datasets: [
             {
                 label: "Alerts per Service",
-                data: services.map((s) => alerts.filter((a) => a.service === s.service_name).length),
+                data: services.map(() => 0), // Y-axis = 0
                 backgroundColor: "#f43f5e",
             },
         ],
     };
+
 
 
     const renderServiceDetails = (service) => {
@@ -301,63 +290,69 @@ const VpnDashboard = () => {
         );
     };
 
-    const Sidebar = () => {
-        const headings = [
-            "Monitoring Health",
-            "Monitored Status (All VPN Services)",
-            "Active Alerts",
-            "List Monitored Services",
-            "System Metrics",
-            "OVPN Service Status",
-            "WireGuard Service Status",
-            "StrongSwan Service Status",
-            "Service Status Metrics",
-            "Monitored Status Chart",
-            "VPN Service Details"
-        ];
-        return (
-            <div className="w-64 h-screen bg-gray-100 dark:bg-gray-900 p-4 shadow-lg pt-18">
-                <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">VPN monitoring</h2>
-                <ul className="space-y-2">
-                    {headings.map((heading, idx) => (
-                        <li key={idx} className="font-medium text-gray-700 dark:text-gray-300">
-                            {heading}
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        )
-    };
+    const activeServices = status.filter(s => s.status === "active").length;
+    const totalServices = status.length;
+
     return (
 
 
-        <div className="flex p-4">
-            <Sidebar /> {/* Sidebar displayed on the left */}
-            <div className=" p-0">
-                {/* Your existing VPN Dashboard JSX */}
-            </div>
-
-
-
-
-            <div className="h-screen overflow-y-auto p-8 space-y-6 dark:bg-gray-900">
-                <div className="max-w-7xl mx-auto">
-                    <h1 className="text-blue-800 dark:text-blue-400 text-4xl font-extrabold mb-8 border-b pb-3">
+        <div className="flex flex-col min-h-screen">
+            <div className="min-h-screen w-full flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-2 md:p-4">
+                <div className="w-full max-w-6xl flex flex-col space-y-4">
+                    <h1 className="text-center text-blue-800 dark:text-blue-400 text-4xl font-extrabold border-b pb-3">
                         VPN Monitoring Dashboard
                     </h1>
 
+
+                    {/* KPI Section */}
+                    {/* <section className="mb-6">
+                        <h2 className="text-2xl font-bold mb-3">Key Performance Indicators</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <CircularMetricCard title="Total Log Volume" value={57} change={5.34} color="#60a5fa" />
+                            <CircularMetricCard title="Active Services" value={76} change={-1.1} color="#10b981" />
+                            <CircularMetricCard title="Database Health" value={34} change={10.1} color="#facc15" />
+                            <CircularMetricCard title="Error Rate" value={21} change={-15.75} color="#f87171" />
+                        </div>
+                    </section> */}
+
+
+
+
+
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10 relative">
+
+
+
                         <div
                             className="relative"
                             onMouseEnter={() => setHealthhovered(true)}
                             onMouseLeave={() => setHealthhovered(false)}
                         >
-                            <MetricCard
-                                icon={<Activity className="h-6 w-6 text-blue-500 dark:text-blue-400" />}
-                                title="Monitoring Health"
-                                value={health.status || "Unknown"}
-                                subtext={`Version: ${health.version || "N/A"}`}
-                            />
+                            <Card className="mb-4">
+                                <CardHeader className="flex items-center ">
+                                    <CardTitle className="flex items-center gap-2">
+                                        Monitoring Health
+                                        <Activity className="h-6 w-6 text-blue-500 dark:text-blue-400" />
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex items-center justify-between">
+                                        {/* Status Badge */}
+                                        <span>
+                                            {health ? (
+                                                <Badge className={`px-2 py-1 rounded ${health.status?.toLowerCase() === "healthy" ? "bg-green-600" : "bg-red-600"} text-white`}>
+                                                    {health.status}
+                                                </Badge>
+                                            ) : (
+                                                "-"
+                                            )}
+                                        </span>
+
+                                        {/* Version */}
+                                        <div>Version: {health?.version ?? '-'}</div>
+                                    </div>
+                                </CardContent>
+                            </Card>
                             {healthhovered && (
                                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">                                    <h4 className="font-semibold mb-2">Health Details</h4>
                                     <div className="flex items-center gap-2 mb-1">
@@ -392,6 +387,38 @@ const VpnDashboard = () => {
                                     .map(s => s.service_name)
                                     .join(", ") || "N/A"
                                     }`} />
+
+                            {/* 
+<Card className="mb-4">
+    <CardHeader className="flex items-center">
+        <CardTitle className="flex items-center gap-2">
+            Monitored Status (All VPN Services)
+            <Users className="h-6 w-6 text-blue-500" />
+        </CardTitle>
+    </CardHeader>
+
+    <CardContent>
+        <div className="flex items-center justify-between">
+           
+                            <div>
+                                <Badge className="bg-green-600 text-white px-2 py-1 rounded">
+                                    {`${status.filter(s => s.status?.toLowerCase() === "active").length} / ${status.length} Active`}
+                                </Badge>
+                            </div>
+
+                           
+                            <div className="text-sm text-gray-600 dark:text-gray-300 text-right">
+                                Active:{" "}
+                                {status
+                                    .filter(s => s.status?.toLowerCase() === "active")
+                                    .map(s => s.service_name)
+                                    .join(", ") || "N/A"}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card> */}
+
+
                             {/* Tooltip / Details box */}
                             {statushovered && status.length > 0 && (
                                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-80 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
@@ -419,13 +446,71 @@ const VpnDashboard = () => {
                             )}
                         </div>
 
+                        {/* Alerts Card with hover tooltip */}
+                        <div
+                            className="relative inline-block"
+                            onMouseEnter={() => setAlertshovered(true)}
+                            onMouseLeave={() => setAlertshovered(false)}
+                        >
+                            <Card className="mb-4">
+                                <CardHeader className="flex items-center">
+                                    <CardTitle className="flex items-center gap-2">
+                                        Active Alerts
+                                        <AlertTriangle className="h-6 w-6 text-red-500" />
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex items-center justify-between">
+                                        {/* Alert Count Badge */}
+                                        <Badge
+                                            className={`px-2 py-1 rounded ${alerts.length > 0 ? "bg-red-600 text-white" : "bg-green-600 text-white"
+                                                }`}
+                                        >
+                                            {alerts.length > 0 ? `${alerts.length} Active` : "No Alerts"}
+                                        </Badge>
 
-                        <MetricCard
-                            icon={<AlertTriangle className="h-6 w-6 text-red-500" />}
-                            title="Active Alerts"
-                            value={alerts.length}
-                            subtext="Current monitoring alerts"
-                        />
+                                        {/* Subtext */}
+                                        <div className="text-sm text-gray-600 dark:text-gray-300 text-right">
+                                            Current monitoring alerts
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Tooltip / Details box */}
+                            {alertshovered && alerts.length > 0 && (
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-80 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
+                                    <h4 className="font-semibold mb-2">Alert Details:</h4>
+                                    {alerts.map((a, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex flex-col gap-1 mb-2 p-2 rounded bg-red-900/30"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-red-400 font-bold">⚠</span>
+                                                <span>{a.message || "Unknown Alert"}</span>
+                                            </div>
+                                            <div className="text-sm ml-6">
+                                                <div>Service: {a.service || "N/A"}</div>
+                                                <div>Severity: {a.severity || "N/A"}</div>
+                                                <div>Time: {a.timestamp || "N/A"}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Show a simple hover box when there are no alerts */}
+                            {alertshovered && alerts.length === 0 && (
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-center">
+                                    <p className="text-sm ml-6">All systems healthy — no active alerts.</p>
+                                </div>
+                            )}
+                        </div>
+
+
+
+
                         {/* Services Metric Card with hover tooltip  */}
                         <div
                             className="relative inline-block"
@@ -464,118 +549,6 @@ const VpnDashboard = () => {
 
 
 
-                        {/* <MetricCard
-                            icon={<BarChart className="h-6 w-6 text-blue-500" />}
-                            title="System Metrics"
-                            value={metrics.length || "0"}
-                            subtext={metrics.length ? "All collected monitoring metrics" : "No metrics available"}
-                        /> */}
-                        {/* OVPN Metric Card with hover tooltip  */}
-                        {/* <div
-                            className="relative inline-block"
-                            onMouseEnter={() => setOvpnhovered(true)}
-                            onMouseLeave={() => setOvpnhovered(false)}
-                        > */}
-                        {/* <MetricCard
-                            icon={<Database className="h-6 w-6 text-green-500" />}
-                            title={`${ovpn.Name} Status`}
-                            value={ovpn.Status.toUpperCase()}
-                            subtext={`Connections: ${ovpn.Connections} | Uptime: ${(ovpn.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
-                        /> */}
-                        {/* Tooltip / Details Box */}
-                        {/* {ovpnhovered && ovpn && (
-                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
-                                    <h4 className="font-semibold mb-2">Details:</h4>
-                                    <div className="flex justify-between mb-1">
-                                        <span className>Name:</span> <span>{ovpn.Name}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-1">
-                                        <span className>Status:</span> <span className={ovpn.Status.toLowerCase() === "active" ? "text-green-400" : "text-gray-400"}>{ovpn.Status}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-1">
-                                        <span className>Connections:</span> <span>{ovpn.Connections}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-1">
-                                        <span className>Uptime (h):</span> <span>{(ovpn.Uptime / 1e9 / 60 / 60).toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className>Type:</span> <span>{ovpn.Type}</span>
-                                    </div>
-                                </div>
-                            )} */}
-                        {/* </div> */}
-
-                        {/* <div
-                        className="relative inline-block"
-                        onMouseEnter={() => setWireguardHovered(true)}
-                        onMouseLeave={() => setWireguardHovered(false)}
-                    >
-                        <MetricCard
-                            icon={<Database className="h-6 w-6 text-blue-500" />}
-                            title={`${wireguard.Name} Status`}
-                            value={wireguard.Status.toUpperCase()}
-                            subtext={`Connections: ${wireguard.Connections} | Uptime: ${(wireguard.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
-                        /> */}
-
-                        {/* Tooltip / Details Box */}
-                        {/* {wireguardHovered && wireguard && (
-                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
-                                <h4 className="font-semibold mb-2">Details:</h4>
-                                <div className="flex justify-between mb-1">
-                                    <span>Name:</span> <span>{wireguard.Name}</span>
-                                </div>
-                                <div className="flex justify-between mb-1">
-                                    <span>Status:</span> <span className={wireguard.Status.toLowerCase() === "active" ? "text-green-400" : "text-gray-400"}>{wireguard.Status}</span>
-                                </div>
-                                <div className="flex justify-between mb-1">
-                                    <span>Connections:</span> <span>{wireguard.Connections}</span>
-                                </div>
-                                <div className="flex justify-between mb-1">
-                                    <span>Uptime (h):</span> <span>{(wireguard.Uptime / 1e9 / 60 / 60).toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>Type:</span> <span>{wireguard.Type}</span>
-                                </div>
-                            </div>
-                        )} */}
-
-
-                        {/* </div> */}
-
-                        {/* <div
-                        className="relative inline-block"
-                        onMouseEnter={() => setStrongSwanHovered(true)}
-                        onMouseLeave={() => setStrongSwanHovered(false)}
-                    >
-                        <MetricCard
-                            icon={<Database className="h-6 w-6 text-purple-500" />}
-                            title={`${strongswan.Name} Status`}
-                            value={strongswan.Status.toUpperCase()}
-                            subtext={`Connections: ${strongswan.Connections} | Uptime: ${(strongswan.Uptime / 1e9 / 60 / 60).toFixed(2)} h`}
-                        /> */}
-
-                        {/* Tooltip / Details Box */}
-                        {/* {strongSwanHovered && strongswan && (
-                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
-                                <h4 className="font-semibold mb-2">Details:</h4>
-                                <div className="flex justify-between mb-1">
-                                    <span>Name:</span> <span>{strongswan.Name}</span>
-                                </div>
-                                <div className="flex justify-between mb-1">
-                                    <span>Status:</span> <span className={strongswan.Status.toLowerCase() === "active" ? "text-green-400" : "text-gray-400"}>{strongswan.Status}</span>
-                                </div>
-                                <div className="flex justify-between mb-1">
-                                    <span>Connections:</span> <span>{strongswan.Connections}</span>
-                                </div>
-                                <div className="flex justify-between mb-1">
-                                    <span>Uptime (h):</span> <span>{(strongswan.Uptime / 1e9 / 60 / 60).toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>Type:</span> <span>{strongswan.Type}</span>
-                                </div>
-                            </div>
-                        )}
-                    </div> */}
 
                     </div >
                     {/* Charts************************ */}
@@ -595,9 +568,15 @@ const VpnDashboard = () => {
                         </div> */}
 
 
+
+
+
+
+
+
                         {/* /////Status Donut////// */}
 
-                        <div className="shadow-xl rounded-xl p-4 h-64 md:h-96">
+                        {/* <div className="shadow-xl rounded-xl p-4 h-64 md:h-96">
                             <h3 className="font-semibold mb-2">Monitored Status</h3>
                             <Doughnut
                                 data={serviceStatusChart}
@@ -628,56 +607,143 @@ const VpnDashboard = () => {
                                 }}
                             />
                         </div>
+ */}
+
+
+
+                        {/* Status Badge */}
+                        <Card className="shadow-xl rounded-xl border border-gray-100 p-4">
+                            <CardHeader>
+                                <CardTitle className="text-xl font-semibold">Service Status</CardTitle>
+                                <CardDescription className="text-md">
+                                    {status.filter(s => s.status?.toLowerCase() === "active").length} of {status.length} Services Active
+                                </CardDescription>
+                            </CardHeader>
+
+                            <CardContent className="space-y-5">
+                                {status.map((service, i) => {
+                                    const isActive = service.status?.toLowerCase() === "active";
+
+                                    return (
+                                        <div key={i} className="space-y-1">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">{service.service_name}</span>
+                                                <span className="flex items-center gap-1">
+
+                                                    <span
+                                                        className={`px-2 py-1 rounded text-sm ${isActive ? "bg-blue-500 text-white" : "bg-gray-400 text-white"
+                                                            }`}
+                                                    >
+                                                        {isActive ? "Active" : "Inactive"}
+                                                    </span>
+                                                </span>
+                                            </div>
+
+                                            {/* Progress Bar */}
+                                            <div className="h-2 w-full bg-gray-200 rounded-full">
+                                                <div
+                                                    className={`${isActive ? "bg-blue-500" : "bg-gray-400"} h-full rounded-full transition-all`}
+                                                    style={{ width: isActive ? "100%" : "40%" }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </CardContent>
+                        </Card>
 
 
                         {/* Status  Bar Chart */}
 
-                        <div className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
+                        <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
                             <h3 className="font-semibold mb-4 text-center">Service Status Metrics</h3>
                             <div className="flex-1">
                                 <Bar data={chartData} options={chartOptions} />
                             </div>
-                        </div>
-
-
-
-
-
+                        </Card>
                     </div >
 
-                    <h2 className="text-2xl font-bold mb-4 text-indigo-600">List Services</h2>
-                    <div className="shadow-xl rounded-xl overflow-x-auto">
-                        <table className="w-full table-auto text-left border-collapse">
-                            <thead className="bg-gray-100 sticky top-0">
-                                <tr>
-                                    <th className="px-4 py-2">Name</th>
-                                    <th className="px-4 py-2">Type</th>
-                                    <th className="px-4 py-2">Enabled</th>
+                    <Card className="grid grid-cols-1 gap-6 mb-10 p-6">
+                        <h2 className="text-2xl font-bold mb-4 text-indigo-600">List Services</h2>
+
+                        {services.length ? (
+                            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {services.map((service, i) => (
+                                    <div
+                                        key={i}
+                                        className={`
+            flex items-center justify-center gap-2 px-4 py-2 rounded-full 
+            transition-all duration-200 shadow-sm cursor-default
+            ${service.enabled
+                                                ? "bg-gradient-to-r from-blue-400 to-blue-600 text-white hover:from-blue-500 hover:to-blue-700"
+                                                : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                            }
+          `}
+                                    >
+                                        {/* Icon */}
+                                        {service.enabled ? (
+                                            <span className="text-white">✔</span>
+                                        ) : (
+                                            <span className="text-gray-500 dark:text-gray-300">✖</span>
+                                        )}
+                                        <span className="font-medium">{service.name}</span>
+                                        <span className="text-sm opacity-80">{service.enabled ? "Enabled" : "Disabled"}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <span className="text-gray-500 w-full text-center">No services available</span>
+                        )}
+                    </Card>
+
+
+
+                    {/* Services Table */}
+                    <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600">VPN Service Details</h2>
+
+                    <div className="shadow-xl rounded-xl p-6 bg-white dark:bg-gray-800 overflow-x-auto">
+                        <table className="min-w-full border-collapse">
+                            <thead>
+                                <tr className="bg-indigo-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                    <th className="px-4 py-3 text-left font-semibold">Service</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Type</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Status</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Uptime (h)</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Connections</th>
+                                    <th className="px-4 py-3 text-left font-semibold">PID</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Last Check</th>
                                 </tr>
                             </thead>
+
                             <tbody>
-                                {services.length ? (
-                                    services.map((s, i) => (
-                                        <tr key={i} className="hover:bg-gray-50">
-                                            <td className="px-4 py-2">{s.name}</td>
-                                            <td className="px-4 py-2">{s.type}</td>
-                                            <td className="px-4 py-2">
+                                {[ovpn, wireguard, strongswan]
+                                    .filter(Boolean)
+                                    .map((vpn, i) => (
+                                        <tr
+                                            key={i}
+                                            className={`border-b border-gray-200 dark:border-gray-700 ${vpn.Status?.toLowerCase() === "active" ? "bg-green-50 dark:bg-green-900/20" : "bg-red-50 dark:bg-red-900/20"
+                                                }`}
+                                        >
+                                            <td className="px-4 py-3 font-medium flex items-center gap-2">
+                                                {vpn.Name}
+                                            </td>
+                                            <td className="px-4 py-3">{vpn.Type}</td>
+                                            <td className="px-4 py-3">
                                                 <span
-                                                    className={`px-2 py-1 rounded ${s.enabled ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                                                    className={`px-2 py-1 text-sm rounded text-white ${vpn.Status?.toLowerCase() === "active" ? "bg-green-600" : "bg-red-600"
                                                         }`}
                                                 >
-                                                    {s.enabled ? "Enabled" : "Disabled"}
+                                                    {vpn.Status.toUpperCase()}
                                                 </span>
                                             </td>
+                                            <td className="px-4 py-3">
+                                                {((vpn.Uptime / 1e9) / 60 / 60).toFixed(2)}
+                                            </td>
+                                            <td className="px-4 py-3">{vpn.Connections}</td>
+                                            <td className="px-4 py-3">{vpn.PID}</td>
+                                            <td className="px-4 py-3">{vpn.LastCheck}</td>
                                         </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={3} className="px-4 py-4 text-center">
-                                            No services available
-                                        </td>
-                                    </tr>
-                                )}
+                                    ))}
                             </tbody>
                         </table>
                     </div>
@@ -686,31 +752,113 @@ const VpnDashboard = () => {
 
 
 
+
+
+
+                    {/* Service Details Card */}
+                    {/* 
+                    <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600">VPN Service Details</h2>
+                    <div className="shadow-xl rounded-xl p-6 bg-white dark:bg-gray-800">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {ovpn && (
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-2">{ovpn.Name} ({ovpn.Type})</h3>
+                                    <DetailItem icon={<Database className="h-5 w-5 text-purple-500" />} label="Status" value={ovpn.Status.toUpperCase()} />
+                                    <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Uptime (h)" value={((ovpn.Uptime / 1e9) / 60 / 60).toFixed(2)} />
+                                    <DetailItem icon={<Users className="h-5 w-5 text-green-500" />} label="Connections" value={ovpn.Connections} />
+                                    <DetailItem icon={<Activity className="h-5 w-5 text-red-500" />} label="PID" value={ovpn.PID} />
+                                    <DetailItem icon={<Database className="h-5 w-5 text-indigo-500" />} label="Last Check" value={ovpn.LastCheck} />
+                                </div>
+                            )}
+
+                            {wireguard && (
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-2">{wireguard.Name} ({wireguard.Type})</h3>
+                                    <DetailItem icon={<Database className="h-5 w-5 text-purple-500" />} label="Status" value={wireguard.Status.toUpperCase()} />
+                                    <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Uptime (h)" value={((wireguard.Uptime / 1e9) / 60 / 60).toFixed(2)} />
+                                    <DetailItem icon={<Users className="h-5 w-5 text-green-500" />} label="Connections" value={wireguard.Connections} />
+                                    <DetailItem icon={<Activity className="h-5 w-5 text-red-500" />} label="PID" value={wireguard.PID} />
+                                    <DetailItem icon={<Database className="h-5 w-5 text-indigo-500" />} label="Last Check" value={wireguard.LastCheck} />
+                                </div>
+                            )}
+
+                            {strongswan && (
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-2">{strongswan.Name} ({strongswan.Type})</h3>
+                                    <DetailItem icon={<Database className="h-5 w-5 text-purple-500" />} label="Status" value={strongswan.Status.toUpperCase()} />
+                                    <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Uptime (h)" value={((strongswan.Uptime / 1e9) / 60 / 60).toFixed(2)} />
+                                    <DetailItem icon={<Users className="h-5 w-5 text-green-500" />} label="Connections" value={strongswan.Connections} />
+                                    <DetailItem icon={<Activity className="h-5 w-5 text-red-500" />} label="PID" value={strongswan.PID} />
+                                    <DetailItem icon={<Database className="h-5 w-5 text-indigo-500" />} label="Last Check" value={strongswan.LastCheck} />
+                                </div>
+                            )}
+                        </div>
+                    </div> */}
+
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6h-64 md:h-96 mb-10">
                         {/* System Metrics */}
-                        <div className="shadow-xl rounded-xl p-6">
-                            <h2 className="text-2xl font-bold mb-4 text-indigo-600">System Metrics</h2>
+                        <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">                            <h2 className="text-2xl font-bold mb-4 text-indigo-600">System Metrics</h2>
                             {/* <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"> */}
                             <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Timestamp" value={metrics.timestamp || "N/A"} />
                             <DetailItem icon={<BarChart className="h-5 w-5 text-green-500" />} label="Metrics Count" value={metrics.metrics?.length || 0} />
                             {/* </div> */}
-                        </div>
+                        </Card>
 
 
                         {/* Alerts per Service */}
-                        <div className="shadow-xl rounded-xl p-6 h-64 md:h-96">
-                            <h2 className="text-2xl font-bold mb-4 text-indigo-600">Alerts per Service</h2>
-                            <Bar data={alertChart} options={{ responsive: true, maintainAspectRatio: false }} />
-                        </div>
+                        <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
+                            <CardHeader>
+                                <CardTitle className="text-2xl font-bold mb-4 text-indigo-600">Alerts per Service</CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex-1">
+                                <div className="h-full w-full">
+                                    <Bar
+                                        data={alertChart}
+                                        options={{
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: { display: true, position: "top" },
+                                            },
+                                            scales: {
+                                                x: {
+                                                    ticks: {
+                                                        autoSkip: false,       // ensure all labels show
+                                                        maxRotation: 45,       // rotate labels if long
+                                                        minRotation: 0,
+                                                        font: { size: 10 },    // smaller font for long names
+                                                    },
+                                                    title: {
+                                                        display: true,
+                                                        text: "Services",      // label for x-axis
+                                                        font: { weight: "bold" },
+                                                    },
+                                                },
+                                                y: {
+                                                    beginAtZero: true,
+                                                    stepSize: 1,
+                                                    title: {
+                                                        display: true,
+                                                        text: "Number of Alerts", // label for y-axis
+                                                        font: { weight: "bold" },
+                                                    },
+                                                },
+                                            },
+                                        }}
+                                        className="h-full w-full"
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+
                     </div>
 
 
-                    <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600">VPN Service Details</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {renderServiceDetails(ovpn)}
-                        {renderServiceDetails(wireguard)}
-                        {renderServiceDetails(strongswan)}
-                    </div>
+
+
+
+
                 </div >
             </div >
         </div >
