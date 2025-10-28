@@ -1,4 +1,4 @@
-"use client";
+
 
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import { cva } from "class-variance-authority";

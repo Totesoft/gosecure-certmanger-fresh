@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { TrendingUp, TrendingDown, Search, Loader2, Users, AlertTriangle, Clock, BarChart, Database, Activity } from "lucide-react";
 import { Doughnut, Bar } from "react-chartjs-2";
 import { CheckCircle, XCircle } from "lucide-react"; // import icons
@@ -26,146 +26,6 @@ import {
     getStrongSwanService,
 } from "@/api/vpn-monitor-apis";
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
-import { Calendar } from "@/components/ui/calendar";
-import { subDays, startOfMonth, endOfMonth, startOfYear, format } from "date-fns";
-import DateRangePicker from "@/components/ui/DateRangePicker";
-import "chartjs-adapter-date-fns";
-// 1️⃣ /monitoring/health
-interface HealthResponse {
-    disk: any;
-    cpu: any;
-    memory: any;
-    metrics: HealthResponse | null;
-    status: string;        // "healthy"
-    timestamp: number;     // Unix timestamp
-    version: string;       // e.g. "1.0.0"
-}
-
-// 2️⃣ /monitoring/status
-interface ServiceStatus {
-    service_name: string;
-    status: string;        // "active" | "inactive"
-    pid: number;
-    uptime: string;
-    connections: number;
-    total_connections: number;
-    bytes_in: number;
-    bytes_out: number;
-    packets_in: number;
-    packets_out: number;
-    errors: number;
-    last_error: string;
-    version: string;
-    config_file: string;
-    log_file: string;
-    timestamp: string;     // ISO 8601
-}
-
-interface MonitoringStatusResponse {
-    agent: {
-        id: string;
-        name: string;
-        uptime: string;
-        version: string;
-    };
-    services: ServiceStatus[];
-    timestamp: string;     // ISO 8601
-}
-
-// 3️⃣ /monitoring/metrics
-interface MetricsResponse {
-    metrics: any[];        // Empty array or structured metrics if available
-    timestamp: string;
-}
-
-// 4️⃣ /monitoring/alerts
-interface MonitoringAlert {
-    level: any;
-    service: string;
-    id?: string;
-    message?: string;
-    severity?: string;     // e.g., "info" | "warning" | "critical"
-    timestamp?: string;    // ISO 8601
-}
-
-interface MonitoringAlertsResponse {
-    alerts: MonitoringAlert[];
-    timestamp: string;
-}
-
-// 5️⃣ /monitoring/services
-interface ServicesResponse {
-    service_name: any;
-    name: ReactNode;
-    type: string;
-    enabled: any;
-    services: {
-        config: {
-            config_file?: string;
-            log_file?: string;
-            status_file?: string;
-            interface?: string;
-        };
-        enabled: boolean;
-        name: string;
-        type: string;
-    }[];
-    timestamp: string;
-}
-
-// 6️⃣ /monitoring/services/openvpn
-interface OpenVPNServiceResponse {
-    service: {
-        Name: string;
-        Type: string;
-        Status: string;
-        PID: number;
-        Uptime: number;
-        Connections: number;
-        LastCheck: string;
-        Config: {
-            config_file: string;
-            log_file: string;
-            status_file: string;
-        };
-    };
-    timestamp: string;
-}
-
-// 7️⃣ /monitoring/services/wireguard
-interface WireGuardServiceResponse {
-    service: {
-        Name: string;
-        Type: string;
-        Status: string;
-        PID: number;
-        Uptime: number;
-        Connections: number;
-        LastCheck: string;
-        Config: {
-            interface: string;
-        };
-    };
-    timestamp: string;
-}
-
-// 8️⃣ /monitoring/services/strongswan
-interface StrongSwanServiceResponse {
-    service: {
-        Name: string;
-        Type: string;
-        Status: string;
-        PID: number;
-        Uptime: number;
-        Connections: number;
-        LastCheck: string;
-        Config: {
-            config_file: string;
-            log_file: string;
-        };
-    };
-    timestamp: string;
-}
 
 const MetricCard = ({ icon, title, value, subtext, className = "" }) => (
     <div
@@ -184,15 +44,8 @@ const MetricCard = ({ icon, title, value, subtext, className = "" }) => (
         <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">{subtext}</p>
     </div>
 );
-const DetailItem = ({
-    icon,
-    label,
-    value,
-}: {
-    icon?: React.ReactNode;
-    label: string;
-    value?: string | number | null;
-}) => (
+
+const DetailItem = ({ icon, label, value }) => (
     <div
         className="flex items-start space-x-3 p-3 rounded-lg 
                bg-white dark:bg-gray-800 
@@ -208,108 +61,71 @@ const DetailItem = ({
 );
 
 
-
 const VpnDashboard = () => {
-    const [health, setHealth] = useState<HealthResponse | null>(null);
-    const [status, setStatus] = useState<ServiceStatus[]>([]);
-    const [metrics, setMetrics] = useState<MetricsResponse | null>(null);
-    const [alerts, setAlerts] = useState<MonitoringAlert[]>([]);
-    const [services, setServices] = useState<ServicesResponse[]>([]);
-    const [ovpn, setOvpn] = useState<OpenVPNServiceResponse | null>(null);
-    const [wireguard, setWireguard] = useState<WireGuardServiceResponse | null>(null);
-    const [strongswan, setStrongSwan] = useState<StrongSwanServiceResponse | null>(null);
+    const [health, setHealth] = useState({});
+    const [status, setStatus] = useState({});
+    const [metrics, setMetrics] = useState({});
+    const [alerts, setAlerts] = useState([]);
+    const [services, setServices] = useState([]);
+    const [ovpn, setOvpn] = useState(null);
+    const [wireguard, setWireguard] = useState(null);
+    const [strongswan, setStrongSwan] = useState(null);
+
     const [healthhovered, setHealthhovered] = useState(false);
     const [statushovered, setStatushovered] = useState(false);
     const [serviceshovered, setServiceshovered] = useState(false);
     const [alertshovered, setAlertshovered] = useState(false);
-    const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
-        from: subDays(new Date(), 7),
-        to: new Date(),
-    });
-    const [triggerFetch, setTriggerFetch] = useState(0);
-    const [autoRefresh, setAutoRefresh] = useState(false);
-
-    // const getDateRangeParams = useCallback(() => ({
-    //     start: dateRange.from.toISOString(),
-    //     end: dateRange.to.toISOString(),
-    // }), [dateRange]);
 
 
 
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState(null);
+
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             setError(null);
 
-            try {
-                // Define endpoints
-                const endpoints = {
-                    health: getMonitoringHealth,
-                    status: getMonitoringStatus,
-                    metrics: () => getMonitoringMetrics(start, end),
-                    alerts: () => getMonitoringAlerts(start, end),
-                    services: getMonitoredServices,
-                    ovpn: getOpenVPNService,
-                    wireguard: getWireGuardService,
-                    strongswan: getStrongSwanService,
-                };
-                //  const { start, end } = getDateRangeParams();
-                const { from, to } = dateRange;
-                console.log("Fetching data for:", from, to);
+            const endpoints = {
+                health: getMonitoringHealth,
+                status: getMonitoringStatus,
+                metrics: getMonitoringMetrics,
+                alerts: getMonitoringAlerts,
+                services: getMonitoredServices,
+                ovpn: getOpenVPNService,
+                wireguard: getWireGuardService,
+                strongswan: getStrongSwanService,
+            };
 
-                // Use Promise.all for concurrent fetching
-                const results: Record<string, any> = {};
+            const results = {};
 
-                await Promise.all(
-                    Object.entries(endpoints).map(async ([key, apiFn]) => {
-                        try {
-                            const res = await apiFn();
-                            results[key] = res?.data || {};
-                        } catch (err) {
-                            console.error(`Failed to fetch ${key}:`, err);
-                            results[key] = { error: "Failed to load data" };
-                        }
-                    })
-                );
+            await Promise.all(
+                Object.entries(endpoints).map(async ([key, apiFn]) => {
+                    try {
+                        const res = await apiFn();
+                        results[key] = res?.data || {};
+                    } catch (err) {
+                        console.error(`Failed to fetch ${key}:`, err);
+                        results[key] = { error: "Failed to load data" };
+                    }
+                })
+            );
 
-                // Update states with proper fallbacks and types
-                setHealth(results.health as HealthResponse);
+            // Update states individually
+            setHealth(results.health || { status: "unknown" });
+            setStatus(Array.isArray(results.status?.services) ? results.status.services : []);
+            setMetrics(results.metrics || {});
+            setAlerts(Array.isArray(results.alerts?.alerts) ? results.alerts.alerts : []);
+            setServices(Array.isArray(results.services?.services) ? results.services.services : []);
+            setOvpn(results.ovpn?.service || {});
+            setWireguard(results.wireguard?.service || {});
+            setStrongSwan(results.strongswan?.service || {});
 
-                setStatus(
-                    Array.isArray(results.status?.services)
-                        ? (results.status.services as ServiceStatus[])
-                        : []
-                );
-
-                setMetrics(results.metrics as MetricsResponse);
-
-                setAlerts(
-                    Array.isArray(results.alerts?.alerts)
-                        ? (results.alerts.alerts as MonitoringAlert[])
-                        : []
-                );
-
-                setServices(
-                    Array.isArray(results.services?.services)
-                        ? (results.services.services as ServicesResponse[])
-                        : []
-                );
-
-                setOvpn(results.ovpn?.service as OpenVPNServiceResponse);
-                setWireguard(results.wireguard?.service as WireGuardServiceResponse);
-                setStrongSwan(results.strongswan?.service as StrongSwanServiceResponse);
-            } catch (err: any) {
-                console.error("Unexpected error:", err);
-                setError("Something went wrong while fetching data");
-            } finally {
-                setLoading(false);
-            }
+            setLoading(false);
         };
 
         fetchData();
-    }, [dateRange]);
+    }, []);
 
 
     if (loading)
@@ -335,10 +151,27 @@ const VpnDashboard = () => {
     // ✅ CHARTS CONFIGURATION
 
 
+    // Service Status Donut
+    const serviceStatusChart = {
+        labels: ["active", "inactive"],
+        datasets: [
+            {
+                data: [
+                    status.filter((s) => s.status?.toLowerCase() === "active").length,
+                    status.filter((s) => s.status?.toLowerCase() !== "active").length,
+                ],
+                // backgroundColor: ["#22c55e", "#ef4444"],
+                //backgroundColor: ["#5c9660", "#de5d3e"],
+                backgroundColor: ["#3e99de", "#555f66"],
+                hoverOffset: 4,
+
+            },
+        ],
+    };
     //Status chart barchart
 
     // Convert uptime string like "346h58m2.848122145s" → total hours
-    const convertToHours = (uptimeStr: string) => {
+    const convertToHours = (uptimeStr) => {
         if (!uptimeStr || uptimeStr === "0s") return 0;
 
         const hMatch = uptimeStr.match(/(\d+)h/);
@@ -369,7 +202,7 @@ const VpnDashboard = () => {
             legend: { position: "bottom" },
             tooltip: {
                 callbacks: {
-                    label: function (context: { dataIndex: any; }) {
+                    label: function (context) {
                         const index = context.dataIndex;
                         const service = status[index];
                         const uptime = convertToHours(service.uptime).toFixed(2);
@@ -394,6 +227,41 @@ const VpnDashboard = () => {
     };
 
 
+
+
+
+
+
+
+
+
+
+
+    // Metrics Bar Chart
+    const metricsChart = {
+        labels: metrics.metrics?.map((m) => m.name) || [],
+        datasets: [
+            {
+                label: "Metric Values",
+                data: metrics.metrics?.map((m) => m.value) || [],
+                backgroundColor: "#3b82f6", // blue
+            },
+        ],
+    };
+
+    // Services by Type Bar Chart
+    const servicesByTypeChart = {
+        labels: services.map((s) => s.name),
+        datasets: [
+            {
+                label: "Service Type",
+                data: services.map(() => 1), // simple count for each service
+                backgroundColor: services.map((s) =>
+                    s.enabled ? "#22c55e" : "#ef4444" // green if enabled, red if not
+                ),
+            },
+        ],
+    };
     // Alerts Bar Chart (placeholder)
     const alertChart = {
         labels: services.map((s) => s.service_name), // X-axis
@@ -408,7 +276,32 @@ const VpnDashboard = () => {
 
 
 
+    const renderServiceDetails = (service) => {
+        if (!service) return null;
+
+        return (
+            <div className="shadow-xl rounded-xl p-4 mb-6 bg-white dark:bg-gray-800">
+                <h3 className="font-semibold text-lg mb-4">{service.Name} ({service.Type})</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <DetailItem icon={<Database className="h-5 w-5 text-purple-500" />} label="Status" value={service.Status.toUpperCase()} />
+                    <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Uptime (h)" value={((service.Uptime / 1e9) / 60 / 60).toFixed(2)} />
+                    <DetailItem icon={<Users className="h-5 w-5 text-green-500" />} label="Connections" value={service.Connections} />
+                    <DetailItem icon={<Activity className="h-5 w-5 text-red-500" />} label="PID" value={service.PID} />
+                    <DetailItem icon={<Database className="h-5 w-5 text-indigo-500" />} label="Last Check" value={service.LastCheck} />
+                    {/* <DetailItem icon={<BarChart className="h-5 w-5 text-gray-500" />} label="Config File" value={service.Config?.config_file || "N/A"} />
+                    <DetailItem icon={<BarChart className="h-5 w-5 text-gray-500" />} label="Log File" value={service.Config?.log_file || "N/A"} />
+                    <DetailItem icon={<BarChart className="h-5 w-5 text-gray-500" />} label="Status File" value={service.Config?.status_file || "N/A"} /> */}
+                </div>
+            </div>
+        );
+    };
+
+    const activeServices = status.filter(s => s.status === "active").length;
+    const totalServices = status.length;
+
     return (
+
+
         <div className="flex flex-col min-h-screen">
             <div className="min-h-screen w-full flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-2 md:p-4">
                 <div className="w-full max-w-6xl flex flex-col space-y-4">
@@ -420,24 +313,15 @@ const VpnDashboard = () => {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={18} />
                             <input
                                 type="text"
-                                placeholder="Search ..."
+                                placeholder="Search for a command..."
                                 className="w-full pl-10 pr-4 py-2 rounded-xl text-base border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
                             />
                         </div>
-                        <div className="space-y-4">
-                            <h2 className="text-lg font-semibold">Select Date Range</h2>
-                            <DateRangePicker
-                                currentRange={dateRange}
-                                onChange={(range) => setDateRange(range)}
-                            />
-                            <p>
-                                Selected Range:{" "}
-                                {dateRange.from.toDateString()} - {dateRange.to.toDateString()}
-                            </p>
-                        </div>
-
-
                     </div>
+
+
+
+
                     {/* KPI Section */}
                     <section className="mb-6">
                         <h2 className="text-2xl font-bold mb-3 text-indigo-600 dark:text-indigo-400">
@@ -493,7 +377,14 @@ const VpnDashboard = () => {
                             />
                         </div>
                     </section>
+
+
+
+
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10 relative">
+
+
+
                         <div
                             className="relative"
                             onMouseEnter={() => setHealthhovered(true)}
@@ -528,11 +419,16 @@ const VpnDashboard = () => {
                                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">                                    <h4 className="font-semibold mb-2">Health Details</h4>
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-blue-400 font-bold">✔</span>
-                                        <span>Status: {health?.status || "N/A"}</span>
-                                        <span>Version: {health?.version || "N/A"}</span>
-                                        <span>Timestamp: {health?.timestamp || "N/A"}</span>
+                                        <span>Status: {health.status || "N/A"}</span>
                                     </div>
-
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-blue-400 font-bold">✔</span>
+                                        <span>Version: {health.version || "N/A"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-blue-400 font-bold">✔</span>
+                                        <span>Timestamp: {health.timestamp || "N/A"}</span>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -553,6 +449,38 @@ const VpnDashboard = () => {
                                     .map(s => s.service_name)
                                     .join(", ") || "N/A"
                                     }`} />
+
+                            {/* 
+<Card className="mb-4">
+    <CardHeader className="flex items-center">
+        <CardTitle className="flex items-center gap-2">
+            Monitored Status (All VPN Services)
+            <Users className="h-6 w-6 text-blue-500" />
+        </CardTitle>
+    </CardHeader>
+
+    <CardContent>
+        <div className="flex items-center justify-between">
+           
+                            <div>
+                                <Badge className="bg-green-600 text-white px-2 py-1 rounded">
+                                    {`${status.filter(s => s.status?.toLowerCase() === "active").length} / ${status.length} Active`}
+                                </Badge>
+                            </div>
+
+                           
+                            <div className="text-sm text-gray-600 dark:text-gray-300 text-right">
+                                Active:{" "}
+                                {status
+                                    .filter(s => s.status?.toLowerCase() === "active")
+                                    .map(s => s.service_name)
+                                    .join(", ") || "N/A"}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card> */}
+
+
                             {/* Tooltip / Details box */}
                             {statushovered && status.length > 0 && (
                                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-80 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
@@ -641,6 +569,10 @@ const VpnDashboard = () => {
                                 </div>
                             )}
                         </div>
+
+
+
+
                         {/* Services Metric Card with hover tooltip  */}
                         <div
                             className="relative inline-block"
@@ -676,10 +608,71 @@ const VpnDashboard = () => {
                                 </div>
                             )}
                         </div>
+
+
+
+
                     </div >
                     {/* Charts************************ */}
                     {/* //////Monitoring Health CheckCircle//// */}
                     < div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10" >
+
+                        {/* <div className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col justify-center items-center">
+                            <h3 className="font-semibold mb-4">Monitoring Health</h3>
+                            {health.status?.toLowerCase() === "healthy" ? (
+                                <CheckCircle className="h-16 w-16 text-green-500 mb-2" />
+                            ) : (
+                                <XCircle className="h-16 w-16 text-red-500 mb-2" />
+                            )}
+                            <span className={`text-2xl font-bold ${health.status?.toLowerCase() === "healthy" ? "text-green-600" : "text-red-600"}`}>
+                                {health.status ? health.status.toUpperCase() : "UNKNOWN"}
+                            </span>
+                        </div> */}
+
+
+
+
+
+
+
+
+                        {/* /////Status Donut////// */}
+
+                        {/* <div className="shadow-xl rounded-xl p-4 h-64 md:h-96">
+                            <h3 className="font-semibold mb-2">Monitored Status</h3>
+                            <Doughnut
+                                data={serviceStatusChart}
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function (context) {
+                                                    const index = context.dataIndex;
+                                                    const isActive = index === 0;
+                                                    const filtered = status.filter((s) =>
+                                                        isActive
+                                                            ? s.status?.toLowerCase() === "active"
+                                                            : s.status?.toLowerCase() !== "active"
+                                                    );
+                                                    const serviceNames =
+                                                        filtered.map((s) => s.service_name).join(", ") || "None";
+                                                    return `${context.label}: ${filtered.length} (${serviceNames})`;
+                                                },
+                                            },
+                                        },
+                                        legend: {
+                                            position: "bottom",
+                                        },
+                                    },
+                                }}
+                            />
+                        </div>
+ */}
+
+
+
                         {/* Status Badge */}
                         <Card className="shadow-xl rounded-xl border border-gray-100 p-4">
                             <CardHeader>
@@ -727,39 +720,44 @@ const VpnDashboard = () => {
                         <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
                             <h3 className="font-semibold mb-4 text-center">Service Status Metrics</h3>
                             <div className="flex-1">
-                                <Bar
-                                    data={chartData}
-                                    options={{
-                                        ...chartOptions,
-                                        plugins: {
-                                            legend: { display: false },
-                                            tooltip: { enabled: true },
-                                        },
-                                        scales: {
-                                            x: {
-                                                grid: { display: false },
-                                            },
-                                            y: {
-                                                beginAtZero: true,
-                                                grid: { color: "rgba(200, 200, 200, 0.2)" },
-                                            },
-                                        },
-                                        elements: {
-                                            bar: {
-                                                borderRadius: {
-                                                    topLeft: 10,
-                                                    topRight: 10,
-                                                    bottomLeft: 0,
-                                                    bottomRight: 0,
-                                                },
-                                                borderSkipped: false, // ensures both top corners are rounded
-                                            },
-                                        },
-                                    }}
-                                />
+                                <Bar data={chartData} options={chartOptions} />
                             </div>
                         </Card>
                     </div >
+
+                    {/* List Services */}
+                    {/* <Card className="grid grid-cols-1 gap-6 mb-10 p-6">
+                        <h2 className="text-2xl font-bold mb-4 text-indigo-600">List Services</h2>
+
+                        {services.length ? (
+                            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {services.map((service, i) => (
+                                    <div
+                                        key={i}
+                                        className={`flex items-center justify-center gap-2 px-4 py-2 rounded-full transition-all duration-200 shadow-sm cursor-default
+            ${service.enabled
+                                                ? "bg-gradient-to-r from-green-400 to-green-600 text-white hover:from-blue-500 hover:to-blue-700"
+                                                : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                            }
+          `}
+                                    >
+                                        {service.enabled ? (
+                                            <span className="text-white">✔</span>
+                                        ) : (
+                                            <span className="text-gray-500 dark:text-gray-300">✖</span>
+                                        )}
+                                        <span className="font-medium">{service.name}</span>
+                                        <span className="text-sm opacity-80">{service.enabled ? "Enabled" : "Disabled"}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <span className="text-gray-500 w-full text-center">No services available</span>
+                        )}
+                    </Card> */}
+
+
+
                     {/* Services Table */}
                     <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600 dark:text-indigo-400">
                         VPN Service Details
@@ -815,6 +813,54 @@ const VpnDashboard = () => {
                             </tbody>
                         </table>
                     </div>
+
+
+
+
+
+
+
+
+                    {/* Service Details Card */}
+                    {/* 
+                    <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600">VPN Service Details</h2>
+                    <div className="shadow-xl rounded-xl p-6 bg-white dark:bg-gray-800">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {ovpn && (
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-2">{ovpn.Name} ({ovpn.Type})</h3>
+                                    <DetailItem icon={<Database className="h-5 w-5 text-purple-500" />} label="Status" value={ovpn.Status.toUpperCase()} />
+                                    <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Uptime (h)" value={((ovpn.Uptime / 1e9) / 60 / 60).toFixed(2)} />
+                                    <DetailItem icon={<Users className="h-5 w-5 text-green-500" />} label="Connections" value={ovpn.Connections} />
+                                    <DetailItem icon={<Activity className="h-5 w-5 text-red-500" />} label="PID" value={ovpn.PID} />
+                                    <DetailItem icon={<Database className="h-5 w-5 text-indigo-500" />} label="Last Check" value={ovpn.LastCheck} />
+                                </div>
+                            )}
+
+                            {wireguard && (
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-2">{wireguard.Name} ({wireguard.Type})</h3>
+                                    <DetailItem icon={<Database className="h-5 w-5 text-purple-500" />} label="Status" value={wireguard.Status.toUpperCase()} />
+                                    <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Uptime (h)" value={((wireguard.Uptime / 1e9) / 60 / 60).toFixed(2)} />
+                                    <DetailItem icon={<Users className="h-5 w-5 text-green-500" />} label="Connections" value={wireguard.Connections} />
+                                    <DetailItem icon={<Activity className="h-5 w-5 text-red-500" />} label="PID" value={wireguard.PID} />
+                                    <DetailItem icon={<Database className="h-5 w-5 text-indigo-500" />} label="Last Check" value={wireguard.LastCheck} />
+                                </div>
+                            )}
+
+                            {strongswan && (
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-2">{strongswan.Name} ({strongswan.Type})</h3>
+                                    <DetailItem icon={<Database className="h-5 w-5 text-purple-500" />} label="Status" value={strongswan.Status.toUpperCase()} />
+                                    <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Uptime (h)" value={((strongswan.Uptime / 1e9) / 60 / 60).toFixed(2)} />
+                                    <DetailItem icon={<Users className="h-5 w-5 text-green-500" />} label="Connections" value={strongswan.Connections} />
+                                    <DetailItem icon={<Activity className="h-5 w-5 text-red-500" />} label="PID" value={strongswan.PID} />
+                                    <DetailItem icon={<Database className="h-5 w-5 text-indigo-500" />} label="Last Check" value={strongswan.LastCheck} />
+                                </div>
+                            )}
+                        </div>
+                    </div> */}
+
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6h-64 md:h-96 mb-10">
                         {/* System Metrics */}
                         <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">                            <h2 className="text-2xl font-bold mb-4 text-indigo-600">System Metrics</h2>
@@ -823,6 +869,7 @@ const VpnDashboard = () => {
                             <DetailItem icon={<BarChart className="h-5 w-5 text-green-500" />} label="Metrics Count" value={metrics.metrics?.length || 0} />
                             {/* </div> */}
                         </Card>
+
 
                         {/* Alerts per Service */}
                         <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
@@ -870,10 +917,18 @@ const VpnDashboard = () => {
                             </CardContent>
                         </Card>
 
+
                     </div>
+
+
+
+
+
+
                 </div >
             </div >
         </div >
+
     );
 };
 
