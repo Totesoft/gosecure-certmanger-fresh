@@ -33,7 +33,7 @@ import DateRangePicker from "@/components/ui/DateRangePicker";
 import "chartjs-adapter-date-fns";
 import { AnimatedChart } from "@/components/ui/Animatedchart";
 import type { start } from "repl";
-
+import { AnimatedHorzChart, AnimatedServiceChart, ServicesEnabledChart } from "@/components/ui/AnimatedHorzChart.tsx"
 
 
 
@@ -449,6 +449,8 @@ const VpnDashboard = () => {
     console.log('servicestatus', status)
     console.log("serviceeee", services)
 
+    const servicesEnabled = services.filter(s => s.enabled).length;
+    const servicesDisabled = services.filter(s => !s.enabled).length;
 
 
 
@@ -485,10 +487,10 @@ const VpnDashboard = () => {
                     {/* <section className="mb-6">
                         <h2 className="text-2xl font-bold mb-3 text-indigo-600 dark:text-indigo-400">
                             Key Performance Indicators
-                        </h2> */}
+                        </h2>
 
-                    {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            1️⃣ Service Status KPI */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"> */}
+                    {/* 1️⃣ Service Status KPI */}
                     {/* <CircularMetricCard
                                 title="Service Status"
                                 value={
@@ -537,8 +539,8 @@ const VpnDashboard = () => {
 
 
 
-                    {/* </div> */}
-                    {/* </section> */}
+                    {/* </div>
+                    </section> */}
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10 relative">
                         <div
                             className="relative"
@@ -725,38 +727,16 @@ const VpnDashboard = () => {
                     </div >
                     {/* Charts************************ */}
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 mb-10">
+                    {/* < div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"> */}
+                    < div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10" >
 
-                        {/* 1️⃣ Service Status KPI */}
-                        <Card className="shadow-xl rounded-xl border border-gray-100 p-4 h-80">
-                            <CircularMetricCard
-                                title="Service Status"
-                                value={
-                                    status.length
-                                        ? ((status.filter(s => s.status?.toLowerCase() === "active").length / status.length) * 100).toFixed(1)
-                                        : 0
-                                }
-                                change={0}
-                                color="#3CB371"
-                            />
-                        </Card>
 
-                        {/* 2️⃣ Uptime Chart */}
-                        <Card className="shadow-xl rounded-xl border border-gray-100 p-4 h-80">
-                            {status.length > 0 && (
-                                <AnimatedChart
-                                    title="Service Uptime (hours)"
-                                    data={prepareChartData(status)}
-                                    //   color="#6b7280"
-                                    color="#C0723D"
+                        <AnimatedServiceChart />
 
-                                    duration={2000}
-                                />
-                            )}
-                        </Card>
+                        {/* Status Badge */}
+                        {/* <Card className="shadow-xl rounded-xl border border-gray-100 p-4"> */}
 
-                        {/* 3️⃣ Service Status List */}
-                        <Card className="shadow-xl rounded-xl border border-gray-100 p-4 h-80 ">
+                        <Card className="shadow-xl rounded-xl border border-gray-100 p-4 w-64 Soverflow-y-auto">
                             <CardHeader>
                                 <CardTitle className="text-xl font-semibold">Service Status</CardTitle>
                                 <CardDescription className="text-md">
@@ -767,14 +747,16 @@ const VpnDashboard = () => {
                             <CardContent className="space-y-5">
                                 {status.map((service, i) => {
                                     const isActive = service.status?.toLowerCase() === "active";
+
                                     return (
                                         <div key={i} className="space-y-1">
                                             <div className="flex justify-between items-center">
                                                 <span className="font-medium">{service.service_name}</span>
+
                                                 <span
                                                     className="px-2 py-1 rounded text-sm text-white"
                                                     style={{
-                                                        backgroundColor: isActive ? "#C0723D" : "#9ca3af",
+                                                        backgroundColor: isActive ? "#C0723D" : "#9ca3af", // #9ca3af ≈ gray-400
                                                     }}
                                                 >
                                                     {isActive ? "Active" : "Inactive"}
@@ -784,12 +766,11 @@ const VpnDashboard = () => {
                                             {/* Progress Bar */}
                                             <div className="h-2 w-full bg-gray-200 rounded-full">
                                                 <div
-                                                    className="h-full rounded-full transition-all"
+                                                    className={`${isActive ? "bg-gray-400" : "bg-gray-400"} h-full rounded-full transition-all`}
                                                     style={{
+                                                        backgroundColor: isActive ? "#C0723D" : "#9ca3af", // gray-400 hex value
                                                         width: isActive ? "100%" : "40%",
-                                                        backgroundColor: isActive ? "#C0723D" : "#9ca3af",
-                                                    }}
-                                                ></div>
+                                                    }}></div>
                                             </div>
                                         </div>
                                     );
@@ -798,9 +779,37 @@ const VpnDashboard = () => {
                         </Card>
 
 
-                        {/* Status  Bar Chart */}
+                        <div className="w-[420px] h-[380px]">
+                            {status.length > 0 && (
+                                <AnimatedChart
+                                    title="Service Uptime (hours)"
+                                    data={prepareChartData(status)}
+                                    color="#6b7280"
+                                    duration={2000}
+                                />
+                            )}
+                        </div>
+                        {/* 2️⃣ Services Enabled KPI */}
+                        {/* // Example: Services Enabled KPI Card */}
+                        <CircularMetricCard
+                            title="Services Enabled"
+                            value={
+                                services?.length
+                                    ? (
+                                        (services.filter(s => s.enabled).length /
+                                            services.length) *
+                                        100
+                                    ).toFixed(1)
+                                    : 0
+                            }
+                            change={0}
+                            color="#C0723D" // brown ring fill color
+                        />
 
-                        {/* <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
+
+                        {/* Status  Bar Chart */}
+                        {/* 
+                        <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
                             <h3 className="font-semibold mb-4 text-center">Service Status Metrics</h3>
                             <div className="flex-1">
                                 <Bar
@@ -870,10 +879,11 @@ const VpnDashboard = () => {
                                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{vpn.Type}</td>
                                         <td className="px-4 py-3">
                                             <span
-                                                className={`px-2 py-1 text-sm rounded text-white ${vpn.Status?.toLowerCase() === "active"
-                                                    ? "bg-blue-600"
-                                                    : "bg-gray-500"
-                                                    }`}
+                                                className="px-2 py-1 text-sm rounded text-white"
+                                                style={{
+                                                    backgroundColor:
+                                                        vpn.Status?.toLowerCase() === "active" ? "#C0723D" : "#6b7280", // gray
+                                                }}
                                             >
                                                 {vpn.Status.toUpperCase()}
                                             </span>
