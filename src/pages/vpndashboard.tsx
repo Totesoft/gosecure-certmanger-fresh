@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import { TrendingUp, TrendingDown, Search, Loader2, Users, AlertTriangle, Clock, BarChart, Database, Activity } from "lucide-react";
 import { Doughnut, Bar } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 import { CheckCircle, XCircle } from "lucide-react"; // import icons
 import CircularMetricCard from "@/components/ui/CircularMetricCard";
 import {
@@ -26,10 +27,17 @@ import {
     getStrongSwanService,
 } from "@/api/vpn-monitor-apis";
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
-import { Calendar } from "@/components/ui/calendar";
+//import { Calendar } from "@/components/ui/calendar";
 import { subDays, startOfMonth, endOfMonth, startOfYear, format } from "date-fns";
 import DateRangePicker from "@/components/ui/DateRangePicker";
 import "chartjs-adapter-date-fns";
+import { AnimatedChart } from "@/components/ui/Animatedchart";
+import type { start } from "repl";
+
+
+
+
+
 // 1️⃣ /monitoring/health
 interface HealthResponse {
     disk: any;
@@ -228,16 +236,25 @@ const VpnDashboard = () => {
     });
     const [triggerFetch, setTriggerFetch] = useState(0);
     const [autoRefresh, setAutoRefresh] = useState(false);
-
-    // const getDateRangeParams = useCallback(() => ({
-    //     start: dateRange.from.toISOString(),
-    //     end: dateRange.to.toISOString(),
-    // }), [dateRange]);
-
-
-
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+
+    const sampleData = [
+        { name: "Mon", value: 30 },
+        { name: "Tue", value: 45 },
+        { name: "Wed", value: 32 },
+        { name: "Thu", value: 50 },
+        { name: "Fri", value: 42 },
+        { name: "Sat", value: 60 },
+        { name: "Sun", value: 38 },
+    ];
+
+
+
+
+
+
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -351,13 +368,14 @@ const VpnDashboard = () => {
 
         return hours + minutes / 60 + seconds / 3600;
     };
-    const chartData = {
+    const chartDData = {
         labels: status.map((s) => s.service_name),
         datasets: [
             {
                 label: "Uptime (hours)",
                 data: status.map((s) => convertToHours(s.uptime)),
                 backgroundColor: "#3CB371",
+
             },
         ],
     };
@@ -394,6 +412,26 @@ const VpnDashboard = () => {
     };
 
 
+
+    // const convertToHours = (uptimeStr: string) => {
+    //     if (!uptimeStr || uptimeStr === "0s") return 0;
+    //     const h = uptimeStr.match(/(\d+)h/);
+    //     const m = uptimeStr.match(/(\d+)m/);
+    //     const s = uptimeStr.match(/([\d.]+)s/);
+    //     return (
+    //         (h ? parseInt(h[1]) : 0) +
+    //         (m ? parseInt(m[1]) / 60 : 0) +
+    //         (s ? parseFloat(s[1]) / 3600 : 0)
+    //     );
+    // };
+    const prepareChartData = (services: ServiceStatus[]) => {
+        return services.map(s => ({
+            name: s.service_name,
+            value: convertToHours(s.uptime),   // y-axis
+            connections: s.connections,        // tooltip info
+        }));
+    };
+
     // Alerts Bar Chart (placeholder)
     const alertChart = {
         labels: services.map((s) => s.service_name), // X-axis
@@ -408,6 +446,14 @@ const VpnDashboard = () => {
 
 
 
+    console.log('servicestatus', status)
+    console.log("serviceeee", services)
+
+
+
+
+
+    ///Return****
     return (
         <div className="flex flex-col min-h-screen">
             <div className="min-h-screen w-full flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-2 md:p-4">
@@ -415,29 +461,26 @@ const VpnDashboard = () => {
                     <h1 className="text-center text-blue-800 dark:text-blue-400 text-4xl font-extrabold border-b pb-3">
                         VPN Monitoring Dashboard
                     </h1>
-                    <div className="flex justify-end items-center gap-3">
+                    <div className="flex flex-col md:flex-row justify-end items-center gap-3 w-full">
+                        {/* Search Input */}
                         <div className="relative w-full md:w-64">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={18} />
-                            <input
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" size={18} />
+                            <Input
                                 type="text"
                                 placeholder="Search ..."
                                 className="w-full pl-10 pr-4 py-2 rounded-xl text-base border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
                             />
                         </div>
-                        <div className="space-y-4">
-                            <h2 className="text-lg font-semibold">Select Date Range</h2>
+
+                        {/* Date Picker */}
+                        <div className="w-full md:w-72 mt-3 md:mt-0">
                             <DateRangePicker
                                 currentRange={dateRange}
                                 onChange={(range) => setDateRange(range)}
                             />
-                            <p>
-                                Selected Range:{" "}
-                                {dateRange.from.toDateString()} - {dateRange.to.toDateString()}
-                            </p>
                         </div>
-
-
                     </div>
+
                     {/* KPI Section */}
                     <section className="mb-6">
                         <h2 className="text-2xl font-bold mb-3 text-indigo-600 dark:text-indigo-400">
@@ -457,13 +500,6 @@ const VpnDashboard = () => {
                                 color="#10b981" // green
                             />
 
-                            {/* 2️⃣ Total Services */}
-                            <CircularMetricCard
-                                title="List Services"
-                                value={services.length || 0}
-                                change={0}
-                                color="#3b82f6" // blue
-                            />
 
                             {/* 3️⃣ Error Rate */}
                             <CircularMetricCard
@@ -491,6 +527,16 @@ const VpnDashboard = () => {
                                 change={0}
                                 color="#facc15" // yellow for system load
                             />
+                            {/* 2️⃣ Total Services */}
+                            <CircularMetricCard
+                                title="List Services"
+                                value={services.length || 0}
+                                change={0}
+                                color="#3b82f6" // blue
+                            />
+
+
+
                         </div>
                     </section>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10 relative">
@@ -678,8 +724,29 @@ const VpnDashboard = () => {
                         </div>
                     </div >
                     {/* Charts************************ */}
-                    {/* //////Monitoring Health CheckCircle//// */}
-                    < div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10" >
+
+                    < div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10" >
+
+                        <div >
+                            <AnimatedChart title="Weekly Usage" data={sampleData} color="#22c55e" />
+                        </div>
+
+                        <div >
+                            {status.length > 0 && (
+                                <AnimatedChart
+                                    title="Service Uptime (hours)"
+                                    data={prepareChartData(status)}
+                                    color="#6b7280"
+                                    duration={2000}
+                                />
+                            )}
+                        </div>
+
+
+
+
+
+                        {/* //////Monitoring Health //// */}
                         {/* Status Badge */}
                         <Card className="shadow-xl rounded-xl border border-gray-100 p-4">
                             <CardHeader>
@@ -728,7 +795,7 @@ const VpnDashboard = () => {
                             <h3 className="font-semibold mb-4 text-center">Service Status Metrics</h3>
                             <div className="flex-1">
                                 <Bar
-                                    data={chartData}
+                                    data={chartDData}
                                     options={{
                                         ...chartOptions,
                                         plugins: {
@@ -824,6 +891,10 @@ const VpnDashboard = () => {
                             {/* </div> */}
                         </Card>
 
+
+
+
+
                         {/* Alerts per Service */}
                         <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
                             <CardHeader>
@@ -871,6 +942,7 @@ const VpnDashboard = () => {
                         </Card>
 
                     </div>
+
                 </div >
             </div >
         </div >
