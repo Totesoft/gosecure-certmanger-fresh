@@ -482,14 +482,14 @@ const VpnDashboard = () => {
                     </div>
 
                     {/* KPI Section */}
-                    <section className="mb-6">
+                    {/* <section className="mb-6">
                         <h2 className="text-2xl font-bold mb-3 text-indigo-600 dark:text-indigo-400">
                             Key Performance Indicators
-                        </h2>
+                        </h2> */}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {/* 1️⃣ Service Status KPI */}
-                            <CircularMetricCard
+                    {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            1️⃣ Service Status KPI */}
+                    {/* <CircularMetricCard
                                 title="Service Status"
                                 value={
                                     status.length
@@ -498,11 +498,11 @@ const VpnDashboard = () => {
                                 }
                                 change={0}
                                 color="#10b981" // green
-                            />
+                            /> */}
 
 
-                            {/* 3️⃣ Error Rate */}
-                            <CircularMetricCard
+                    {/* 3️⃣ Error Rate */}
+                    {/* <CircularMetricCard
                                 title="Error Rate"
                                 value={
                                     alerts.length
@@ -511,10 +511,10 @@ const VpnDashboard = () => {
                                 }
                                 change={0}
                                 color="#ef4444" // red
-                            />
+                            /> */}
 
-                            {/* 4️⃣ System Metrics (from /metrics or health API) */}
-                            <CircularMetricCard
+                    {/* 4️⃣ System Metrics (from /metrics or health API) */}
+                    {/* <CircularMetricCard
                                 title="System Metrics"
                                 value={
                                     health && health.metrics
@@ -526,19 +526,19 @@ const VpnDashboard = () => {
                                 }
                                 change={0}
                                 color="#facc15" // yellow for system load
-                            />
-                            {/* 2️⃣ Total Services */}
-                            <CircularMetricCard
+                            /> */}
+                    {/* 2️⃣ Total Services */}
+                    {/* <CircularMetricCard
                                 title="List Services"
                                 value={services.length || 0}
                                 change={0}
                                 color="#3b82f6" // blue
-                            />
+                            /> */}
 
 
 
-                        </div>
-                    </section>
+                    {/* </div> */}
+                    {/* </section> */}
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10 relative">
                         <div
                             className="relative"
@@ -725,30 +725,38 @@ const VpnDashboard = () => {
                     </div >
                     {/* Charts************************ */}
 
-                    < div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10" >
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 mb-10">
 
-                        <div >
-                            <AnimatedChart title="Weekly Usage" data={sampleData} color="#22c55e" />
-                        </div>
+                        {/* 1️⃣ Service Status KPI */}
+                        <Card className="shadow-xl rounded-xl border border-gray-100 p-4 h-80">
+                            <CircularMetricCard
+                                title="Service Status"
+                                value={
+                                    status.length
+                                        ? ((status.filter(s => s.status?.toLowerCase() === "active").length / status.length) * 100).toFixed(1)
+                                        : 0
+                                }
+                                change={0}
+                                color="#3CB371"
+                            />
+                        </Card>
 
-                        <div >
+                        {/* 2️⃣ Uptime Chart */}
+                        <Card className="shadow-xl rounded-xl border border-gray-100 p-4 h-80">
                             {status.length > 0 && (
                                 <AnimatedChart
                                     title="Service Uptime (hours)"
                                     data={prepareChartData(status)}
-                                    color="#6b7280"
+                                    //   color="#6b7280"
+                                    color="#C0723D"
+
                                     duration={2000}
                                 />
                             )}
-                        </div>
+                        </Card>
 
-
-
-
-
-                        {/* //////Monitoring Health //// */}
-                        {/* Status Badge */}
-                        <Card className="shadow-xl rounded-xl border border-gray-100 p-4">
+                        {/* 3️⃣ Service Status List */}
+                        <Card className="shadow-xl rounded-xl border border-gray-100 p-4 h-80 ">
                             <CardHeader>
                                 <CardTitle className="text-xl font-semibold">Service Status</CardTitle>
                                 <CardDescription className="text-md">
@@ -759,27 +767,28 @@ const VpnDashboard = () => {
                             <CardContent className="space-y-5">
                                 {status.map((service, i) => {
                                     const isActive = service.status?.toLowerCase() === "active";
-
                                     return (
                                         <div key={i} className="space-y-1">
                                             <div className="flex justify-between items-center">
                                                 <span className="font-medium">{service.service_name}</span>
-                                                <span className="flex items-center gap-1">
-
-                                                    <span
-                                                        className={`px-2 py-1 rounded text-sm ${isActive ? "bg-green-500 text-white" : "bg-gray-400 text-white"
-                                                            }`}
-                                                    >
-                                                        {isActive ? "Active" : "Inactive"}
-                                                    </span>
+                                                <span
+                                                    className="px-2 py-1 rounded text-sm text-white"
+                                                    style={{
+                                                        backgroundColor: isActive ? "#C0723D" : "#9ca3af",
+                                                    }}
+                                                >
+                                                    {isActive ? "Active" : "Inactive"}
                                                 </span>
                                             </div>
 
                                             {/* Progress Bar */}
                                             <div className="h-2 w-full bg-gray-200 rounded-full">
                                                 <div
-                                                    className={`${isActive ? "bg-green-500" : "bg-gray-400"} h-full rounded-full transition-all`}
-                                                    style={{ width: isActive ? "100%" : "40%" }}
+                                                    className="h-full rounded-full transition-all"
+                                                    style={{
+                                                        width: isActive ? "100%" : "40%",
+                                                        backgroundColor: isActive ? "#C0723D" : "#9ca3af",
+                                                    }}
                                                 ></div>
                                             </div>
                                         </div>
@@ -791,7 +800,7 @@ const VpnDashboard = () => {
 
                         {/* Status  Bar Chart */}
 
-                        <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
+                        {/* <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
                             <h3 className="font-semibold mb-4 text-center">Service Status Metrics</h3>
                             <div className="flex-1">
                                 <Bar
@@ -825,7 +834,7 @@ const VpnDashboard = () => {
                                     }}
                                 />
                             </div>
-                        </Card>
+                        </Card> */}
                     </div >
                     {/* Services Table */}
                     <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600 dark:text-indigo-400">
