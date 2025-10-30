@@ -37,8 +37,12 @@ import ServiceConnectionsCard from "@/components/ui/ServiceConnectionsCard";
 import { AnimatedServiceDots } from "@/components/ui/AnimatedServicesDots";
 import ServiceStatusBadges from "@/components/ui/ServiceStatusBadges";
 import ServiceDetailsTable from "@/components/ui/ServiceDetailsTable";
-
-
+import SystemMetrics from "@/components/ui/SystemMetrics";
+import AlertChart from "@/components/ui/AlertChart";
+import HealthMetricCard from "@/components/ui/HealthMetricCard";
+import StatusMetricCard from "@/components/ui/StatusMetricCard";
+import AlertMetricsCard from "@/components/ui/AlertMetricsCard";
+import ListServicesMetricCard from "@/components/ui/ListServicesMetricCard";
 // 1️⃣ /monitoring/health
 interface HealthResponse {
     disk: any;
@@ -458,17 +462,16 @@ const VpnDashboard = () => {
 
     ///Return****
     return (
-
         <div className="flex flex-row gap-4 px-6 py-2 w-full overflow-x-auto">
-            {/* //<div className="flex-shrink-0 w-[280px]"> */}
-            {/* //      <div className="flex flex-col min-h-screen"> */}
             <div className="min-h-screen w-full flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-2 md:p-4">
-                <div className="w-full max-w-6xl flex flex-col space-y-4">
-                    <h1 className="text-center text-blue-800 dark:text-blue-400 text-4xl font-extrabold border-b pb-3">
+                <div className="w-full max-w-7xl flex flex-col space-y-6">
+                    {/* Dashboard Title */}
+                    <h1 className="text-center text-blue-800 dark:text-blue-400 text-4xl font-extrabold border-b pb-4">
                         VPN Monitoring Dashboard
                     </h1>
+
+                    {/* Search + Date Picker Row */}
                     <div className="flex flex-col md:flex-row justify-end items-center gap-3 w-full">
-                        {/* Search Input */}
                         <div className="relative w-full md:w-64">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" size={18} />
                             <Input
@@ -477,269 +480,28 @@ const VpnDashboard = () => {
                                 className="w-full pl-10 pr-4 py-2 rounded-xl text-base border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
                             />
                         </div>
-
-                        {/* Date Picker */}
                         <div className="w-full md:w-72 mt-3 md:mt-0">
-                            <DateRangePicker
-                                currentRange={dateRange}
-                                onChange={(range) => setDateRange(range)}
-                            />
+                            <DateRangePicker currentRange={dateRange} onChange={(range) => setDateRange(range)} />
                         </div>
                     </div>
 
-                    {/* KPI Section */}
-                    <section className="mb-6">
-                        <h2 className="text-2xl font-bold mb-3 text-indigo-600 dark:text-indigo-400">
-                            Key Performance Indicators
-                        </h2>
+                    {/* === Top Metrics Section === */}
+                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                        <HealthMetricCard health={health} />
+                        <StatusMetricCard status={status} />
+                        <AlertMetricsCard alerts={alerts} />
+                        <ListServicesMetricCard services={services} />
+                    </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {/* 1️⃣ Service Status KPI */}
-                            {/* <CircularMetricCard
-                                title="Service Status"
-                                value={
-                                    status.length
-                                        ? ((status.filter(s => s.status?.toLowerCase() === "active").length / status.length) * 100).toFixed(1)
-                                        : 0
-                                }
-                                change={0}
-                                color="#10b981" // green
-                            /> */}
+                    {/* === Service Connections Section === */}
+                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-4">
+                        <ServiceConnectionsCard data={{ service: ovpn, timestamp: ovpn?.timestamp }} />
+                        <ServiceConnectionsCard data={{ service: wireguard, timestamp: wireguard?.timestamp }} />
+                        <ServiceConnectionsCard data={{ service: strongswan, timestamp: strongswan?.timestamp }} />
+                    </div>
 
-
-                            {/* 3️⃣ Error Rate */}
-                            {/* <CircularMetricCard
-                                title="Error Rate"
-                                value={
-                                    alerts.length
-                                        ? ((alerts.filter(a => a.level?.toLowerCase() === "error").length / alerts.length) * 100).toFixed(1)
-                                        : 0
-                                }
-                                change={0}
-                                color="#ef4444" // red
-                            /> */}
-
-                            {/* 4️⃣ System Metrics (from /metrics or health API) */}
-                            {/* <CircularMetricCard
-                                title="System Metrics"
-                                value={
-                                    health && health.metrics
-                                        ? (
-                                            (health.metrics.cpu + health.metrics.memory + health.metrics.disk) /
-                                            3
-                                        ).toFixed(1)
-                                        : 0
-                                }
-                                change={0}
-                                color="#facc15" // yellow for system load
-                            /> */}
-                            {/* 2️⃣ Total Services */}
-                            {/* <CircularMetricCard
-                                title="List Services"
-                                value={services.length || 0}
-                                change={0}
-                                color="#3b82f6" // blue
-                            /> */}
-
-
-
-
-
-                        </div>
-                    </section>
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10 relative">
-                        <div
-                            className="relative"
-                            onMouseEnter={() => setHealthhovered(true)}
-                            onMouseLeave={() => setHealthhovered(false)}
-                        >
-                            <Card className="mb-4">
-                                <CardHeader className="flex items-center ">
-                                    <CardTitle className="flex items-center gap-2">
-                                        Monitoring Health
-                                        <Activity className="h-6 w-6 text-blue-500 dark:text-blue-400" />
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="flex items-center justify-between">
-                                        {/* Status Badge */}
-                                        <span>
-                                            {health ? (
-                                                <Badge className={`px-2 py-1 rounded ${health.status?.toLowerCase() === "healthy" ? "bg-green-600" : "bg-red-600"} text-white`}>
-                                                    {health.status}
-                                                </Badge>
-                                            ) : (
-                                                "-"
-                                            )}
-                                        </span>
-
-                                        {/* Version */}
-                                        <div>Version: {health?.version ?? '-'}</div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                            {healthhovered && (
-                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">                                    <h4 className="font-semibold mb-2">Health Details</h4>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-blue-400 font-bold">✔</span>
-                                        <span>Status: {health?.status || "N/A"}</span>
-                                        <span>Version: {health?.version || "N/A"}</span>
-                                        <span>Timestamp: {health?.timestamp || "N/A"}</span>
-                                    </div>
-
-                                </div>
-                            )}
-                        </div>
-
-
-                        {/* Status Metric Card with hover tooltip  */}
-                        <div
-                            className="relative"
-                            onMouseEnter={() => setStatushovered(true)}
-                            onMouseLeave={() => setStatushovered(false)}
-                        >
-                            <MetricCard
-                                icon={<Users className="h-6 w-6 text-blue-500" />}
-                                title="Monitored Status (All VPN Services)"
-                                value={`${status.filter(s => s.status?.toLowerCase() === "active").length} / ${status.length} Active`}
-                                subtext={`Active: ${status
-                                    .filter(s => s.status?.toLowerCase() === "active")
-                                    .map(s => s.service_name)
-                                    .join(", ") || "N/A"
-                                    }`} />
-                            {/* Tooltip / Details box */}
-                            {statushovered && status.length > 0 && (
-                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-80 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
-                                    <h4 className="font-semibold mb-2">Service Status Details:</h4>
-                                    {status.map((s) => (
-                                        <div
-                                            key={s.service_name}
-                                            className={`flex flex-col gap-1 mb-2 p-2 rounded ${s.status?.toLowerCase() === "active" ? "bg-blue-900/30" : "bg-gray-700/30"}`}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <span className={s.status?.toLowerCase() === "active" ? "text-green-400 font-bold" : "text-gray-400 font-bold"}>
-                                                    {s.status?.toLowerCase() === "active" ? "✔" : "✖"}
-                                                </span>
-                                                <span className={s.status?.toLowerCase() === "active" ? "text-green-400" : "text-gray-400"}>
-                                                    {s.service_name} ({s.status})
-                                                </span>
-                                            </div>
-                                            <div className="text-sm ml-6">
-                                                <div>Connections: {s.connections || 0}</div>
-                                                <div>Uptime: {s.uptime || "0s"}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Alerts Card with hover tooltip */}
-                        <div
-                            className="relative inline-block"
-                            onMouseEnter={() => setAlertshovered(true)}
-                            onMouseLeave={() => setAlertshovered(false)}
-                        >
-                            <Card className="mb-4">
-                                <CardHeader className="flex items-center">
-                                    <CardTitle className="flex items-center gap-2">
-                                        Active Alerts
-                                        <AlertTriangle className="h-6 w-6 text-red-500" />
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="flex items-center justify-between">
-                                        {/* Alert Count Badge */}
-                                        <Badge
-                                            className={`px-2 py-1 rounded ${alerts.length > 0 ? "bg-red-600 text-white" : "bg-green-600 text-white"
-                                                }`}
-                                        >
-                                            {alerts.length > 0 ? `${alerts.length} Active` : "No Alerts"}
-                                        </Badge>
-
-                                        {/* Subtext */}
-                                        <div className="text-sm text-gray-600 dark:text-gray-300 text-right">
-                                            Current monitoring alerts
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Tooltip / Details box */}
-                            {alertshovered && alerts.length > 0 && (
-                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-80 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
-                                    <h4 className="font-semibold mb-2">Alert Details:</h4>
-                                    {alerts.map((a, index) => (
-                                        <div
-                                            key={index}
-                                            className="flex flex-col gap-1 mb-2 p-2 rounded bg-red-900/30"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-red-400 font-bold">⚠</span>
-                                                <span>{a.message || "Unknown Alert"}</span>
-                                            </div>
-                                            <div className="text-sm ml-6">
-                                                <div>Service: {a.service || "N/A"}</div>
-                                                <div>Severity: {a.severity || "N/A"}</div>
-                                                <div>Time: {a.timestamp || "N/A"}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Show a simple hover box when there are no alerts */}
-                            {alertshovered && alerts.length === 0 && (
-                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-center">
-                                    <p className="text-sm ml-6">All systems healthy — no active alerts.</p>
-                                </div>
-                            )}
-                        </div>
-                        {/* Services Metric Card with hover tooltip  */}
-                        <div
-                            className="relative inline-block"
-                            onMouseEnter={() => setServiceshovered(true)}
-                            onMouseLeave={() => setServiceshovered(false)}
-                        >
-                            <MetricCard
-                                icon={<Users className="h-6 w-6 text-purple-500" />}
-                                title="List Monitored Services"
-                                value={services.length}
-                                subtext={`Enabled: ${services.filter(s => s.enabled).length} | ${services.map(s => s.name).join(", ")}`}
-                            />
-
-                            {/* Tooltip / Details box */}
-                            {serviceshovered && services.length > 0 && (
-                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
-                                    <h4 className="font-semibold mb-2">Service Details:</h4>
-                                    {services.map((s) => (
-                                        <div
-                                            key={s.name}
-                                            className="flex flex-col mb-2 p-2 rounded bg-gray-700/30"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-bold">{s.enabled ? "✔" : "✖"}</span>
-                                                <span>{s.name}</span>
-                                            </div>
-                                            <div className="ml-6 text-sm">
-                                                <div>Enabled: {s.enabled ? "Yes" : "No"}</div>
-                                                <div>Type: {s.type || "N/A"}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        <ServiceConnectionsCard data={{ service: ovpn, timestamp: ovpn.timestamp }} />
-                        <ServiceConnectionsCard data={{ service: wireguard, timestamp: wireguard.timestamp }} />
-                        <ServiceConnectionsCard data={{ service: strongswan, timestamp: strongswan.timestamp }} />
-
-                    </div >
-                    {/* Charts************************ */}
-
-                    {/* < div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"> */}
-                    <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+                    {/* === Charts Section === */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
                         <div className="h-[380px]">
                             {status.length > 0 && (
                                 <AnimatedChart
@@ -750,125 +512,31 @@ const VpnDashboard = () => {
                                 />
                             )}
                         </div>
-
-                        {/* <div className="h-[380px]">
-                            <AnimatedServiceChart />
-                        </div> */}
                         <div className="h-[380px]">
                             <AnimatedServiceDots />
                         </div>
-
-
-
-                        {/* Status Badge */}
-                        <ServiceStatusBadges status={status} />
-
-
-                        {/* Status  Bar Chart */}
-                        {/* 
-                        <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
-                            <h3 className="font-semibold mb-4 text-center">Service Status Metrics</h3>
-                            <div className="flex-1">
-                                <Bar
-                                    data={chartDData}
-                                    options={{
-                                        ...chartOptions,
-                                        plugins: {
-                                            legend: { display: false },
-                                            tooltip: { enabled: true },
-                                        },
-                                        scales: {
-                                            x: {
-                                                grid: { display: false },
-                                            },
-                                            y: {
-                                                beginAtZero: true,
-                                                grid: { color: "rgba(200, 200, 200, 0.2)" },
-                                            },
-                                        },
-                                        elements: {
-                                            bar: {
-                                                borderRadius: {
-                                                    topLeft: 10,
-                                                    topRight: 10,
-                                                    bottomLeft: 0,
-                                                    bottomRight: 0,
-                                                },
-                                                borderSkipped: false, // ensures both top corners are rounded
-                                            },
-                                        },
-                                    }}
-                                />
-                            </div>
-                        </Card> */}
-                    </div >
-                    {/* Services Table */}
-                    <ServiceDetailsTable ovpn={ovpn} wireguard={wireguard} strongswan={strongswan} />
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6h-64 md:h-96 mb-10">
-                        {/* System Metrics */}
-                        <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">                            <h2 className="text-2xl font-bold mb-4 text-indigo-600">System Metrics</h2>
-                            {/* <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"> */}
-                            <DetailItem icon={<Clock className="h-5 w-5 text-blue-500" />} label="Timestamp" value={metrics.timestamp || "N/A"} />
-                            <DetailItem icon={<BarChart className="h-5 w-5 text-green-500" />} label="Metrics Count" value={metrics.metrics?.length || 0} />
-                            {/* </div> */}
-                        </Card>
-
-
-
-
-
-                        {/* Alerts per Service */}
-                        <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
-                            <CardHeader>
-                                <CardTitle className="text-2xl font-bold mb-4 text-indigo-600">Alerts per Service</CardTitle>
-                            </CardHeader>
-                            <CardContent className="flex-1">
-                                <div className="h-full w-full">
-                                    <Bar
-                                        data={alertChart}
-                                        options={{
-                                            responsive: true,
-                                            maintainAspectRatio: false,
-                                            plugins: {
-                                                legend: { display: true, position: "top" },
-                                            },
-                                            scales: {
-                                                x: {
-                                                    ticks: {
-                                                        autoSkip: false,       // ensure all labels show
-                                                        maxRotation: 45,       // rotate labels if long
-                                                        minRotation: 0,
-                                                        font: { size: 10 },    // smaller font for long names
-                                                    },
-                                                    title: {
-                                                        display: true,
-                                                        text: "Services",      // label for x-axis
-                                                        font: { weight: "bold" },
-                                                    },
-                                                },
-                                                y: {
-                                                    beginAtZero: true,
-                                                    stepSize: 1,
-                                                    title: {
-                                                        display: true,
-                                                        text: "Number of Alerts", // label for y-axis
-                                                        font: { weight: "bold" },
-                                                    },
-                                                },
-                                            },
-                                        }}
-                                        className="h-full w-full"
-                                    />
-                                </div>
-                            </CardContent>
-                        </Card>
-
                     </div>
 
-                </div >
-            </div >
-        </div >
+                    {/* === Status Badges === */}
+                    <div className="mt-6">
+                        <ServiceStatusBadges status={status} />
+                    </div>
+
+                    {/* === Service Details Table === */}
+                    <div className="mt-10">
+                        <ServiceDetailsTable ovpn={ovpn} wireguard={wireguard} strongswan={strongswan} />
+                    </div>
+
+                    {/* === Metrics and Alerts Charts === */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
+                        <SystemMetrics metrics={metrics} DetailItem={DetailItem} />
+                        <AlertChart alertChart={alertChart} />
+                    </div>
+                </div>
+            </div>
+        </div>
     );
+
 };
 
 export default VpnDashboard;
