@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import { TrendingUp, TrendingDown, Search, Loader2, Users, AlertTriangle, Clock, BarChart, Database, Activity } from "lucide-react";
 import { Doughnut, Bar } from "react-chartjs-2";
@@ -33,9 +32,11 @@ import DateRangePicker from "@/components/ui/DateRangePicker";
 import "chartjs-adapter-date-fns";
 import { AnimatedChart } from "@/components/ui/Animatedchart";
 import type { start } from "repl";
-import { AnimatedHorzChart, AnimatedServiceChart, ServicesEnabledChart } from "@/components/ui/AnimatedHorzChart.tsx"
-
-
+import { AnimatedServiceChart } from "@/components/ui/AnimatedVertChart.tsx"
+import ServiceConnectionsCard from "@/components/ui/ServiceConnectionsCard";
+import { AnimatedServiceDots } from "@/components/ui/AnimatedServicesDots";
+import ServiceStatusBadges from "@/components/ui/ServiceStatusBadges";
+import ServiceDetailsTable from "@/components/ui/ServiceDetailsTable";
 
 
 // 1️⃣ /monitoring/health
@@ -457,7 +458,10 @@ const VpnDashboard = () => {
 
     ///Return****
     return (
-        <div className="flex flex-col min-h-screen">
+
+        <div className="flex flex-row gap-4 px-6 py-2 w-full overflow-x-auto">
+            {/* //<div className="flex-shrink-0 w-[280px]"> */}
+            {/* //      <div className="flex flex-col min-h-screen"> */}
             <div className="min-h-screen w-full flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-2 md:p-4">
                 <div className="w-full max-w-6xl flex flex-col space-y-4">
                     <h1 className="text-center text-blue-800 dark:text-blue-400 text-4xl font-extrabold border-b pb-3">
@@ -484,14 +488,14 @@ const VpnDashboard = () => {
                     </div>
 
                     {/* KPI Section */}
-                    {/* <section className="mb-6">
+                    <section className="mb-6">
                         <h2 className="text-2xl font-bold mb-3 text-indigo-600 dark:text-indigo-400">
                             Key Performance Indicators
                         </h2>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"> */}
-                    {/* 1️⃣ Service Status KPI */}
-                    {/* <CircularMetricCard
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {/* 1️⃣ Service Status KPI */}
+                            {/* <CircularMetricCard
                                 title="Service Status"
                                 value={
                                     status.length
@@ -503,8 +507,8 @@ const VpnDashboard = () => {
                             /> */}
 
 
-                    {/* 3️⃣ Error Rate */}
-                    {/* <CircularMetricCard
+                            {/* 3️⃣ Error Rate */}
+                            {/* <CircularMetricCard
                                 title="Error Rate"
                                 value={
                                     alerts.length
@@ -515,8 +519,8 @@ const VpnDashboard = () => {
                                 color="#ef4444" // red
                             /> */}
 
-                    {/* 4️⃣ System Metrics (from /metrics or health API) */}
-                    {/* <CircularMetricCard
+                            {/* 4️⃣ System Metrics (from /metrics or health API) */}
+                            {/* <CircularMetricCard
                                 title="System Metrics"
                                 value={
                                     health && health.metrics
@@ -529,8 +533,8 @@ const VpnDashboard = () => {
                                 change={0}
                                 color="#facc15" // yellow for system load
                             /> */}
-                    {/* 2️⃣ Total Services */}
-                    {/* <CircularMetricCard
+                            {/* 2️⃣ Total Services */}
+                            {/* <CircularMetricCard
                                 title="List Services"
                                 value={services.length || 0}
                                 change={0}
@@ -539,8 +543,10 @@ const VpnDashboard = () => {
 
 
 
-                    {/* </div>
-                    </section> */}
+
+
+                        </div>
+                    </section>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10 relative">
                         <div
                             className="relative"
@@ -724,62 +730,17 @@ const VpnDashboard = () => {
                                 </div>
                             )}
                         </div>
+
+                        <ServiceConnectionsCard data={{ service: ovpn, timestamp: ovpn.timestamp }} />
+                        <ServiceConnectionsCard data={{ service: wireguard, timestamp: wireguard.timestamp }} />
+                        <ServiceConnectionsCard data={{ service: strongswan, timestamp: strongswan.timestamp }} />
+
                     </div >
                     {/* Charts************************ */}
 
                     {/* < div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"> */}
-                    < div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10" >
-
-
-                        <AnimatedServiceChart />
-
-                        {/* Status Badge */}
-                        {/* <Card className="shadow-xl rounded-xl border border-gray-100 p-4"> */}
-
-                        <Card className="shadow-xl rounded-xl border border-gray-100 p-4 w-64 Soverflow-y-auto">
-                            <CardHeader>
-                                <CardTitle className="text-xl font-semibold">Service Status</CardTitle>
-                                <CardDescription className="text-md">
-                                    {status.filter(s => s.status?.toLowerCase() === "active").length} of {status.length} Services Active
-                                </CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="space-y-5">
-                                {status.map((service, i) => {
-                                    const isActive = service.status?.toLowerCase() === "active";
-
-                                    return (
-                                        <div key={i} className="space-y-1">
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-medium">{service.service_name}</span>
-
-                                                <span
-                                                    className="px-2 py-1 rounded text-sm text-white"
-                                                    style={{
-                                                        backgroundColor: isActive ? "#C0723D" : "#9ca3af", // #9ca3af ≈ gray-400
-                                                    }}
-                                                >
-                                                    {isActive ? "Active" : "Inactive"}
-                                                </span>
-                                            </div>
-
-                                            {/* Progress Bar */}
-                                            <div className="h-2 w-full bg-gray-200 rounded-full">
-                                                <div
-                                                    className={`${isActive ? "bg-gray-400" : "bg-gray-400"} h-full rounded-full transition-all`}
-                                                    style={{
-                                                        backgroundColor: isActive ? "#C0723D" : "#9ca3af", // gray-400 hex value
-                                                        width: isActive ? "100%" : "40%",
-                                                    }}></div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </CardContent>
-                        </Card>
-
-
-                        <div className="w-[420px] h-[380px]">
+                    <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+                        <div className="h-[380px]">
                             {status.length > 0 && (
                                 <AnimatedChart
                                     title="Service Uptime (hours)"
@@ -789,22 +750,18 @@ const VpnDashboard = () => {
                                 />
                             )}
                         </div>
-                        {/* 2️⃣ Services Enabled KPI */}
-                        {/* // Example: Services Enabled KPI Card */}
-                        <CircularMetricCard
-                            title="Services Enabled"
-                            value={
-                                services?.length
-                                    ? (
-                                        (services.filter(s => s.enabled).length /
-                                            services.length) *
-                                        100
-                                    ).toFixed(1)
-                                    : 0
-                            }
-                            change={0}
-                            color="#C0723D" // brown ring fill color
-                        />
+
+                        {/* <div className="h-[380px]">
+                            <AnimatedServiceChart />
+                        </div> */}
+                        <div className="h-[380px]">
+                            <AnimatedServiceDots />
+                        </div>
+
+
+
+                        {/* Status Badge */}
+                        <ServiceStatusBadges status={status} />
 
 
                         {/* Status  Bar Chart */}
@@ -846,61 +803,7 @@ const VpnDashboard = () => {
                         </Card> */}
                     </div >
                     {/* Services Table */}
-                    <h2 className="text-2xl font-bold mt-10 mb-4 text-indigo-600 dark:text-indigo-400">
-                        VPN Service Details
-                    </h2>
-
-                    <div className="shadow-xl rounded-xl p-6 bg-white dark:bg-gray-800 overflow-x-auto transition-colors duration-300">
-                        <table className="min-w-full border-collapse">
-                            <thead>
-                                <tr className="bg-indigo-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                    <th className="px-4 py-3 text-left font-semibold">Service</th>
-                                    <th className="px-4 py-3 text-left font-semibold">Type</th>
-                                    <th className="px-4 py-3 text-left font-semibold">Status</th>
-                                    <th className="px-4 py-3 text-left font-semibold">Uptime (h)</th>
-                                    <th className="px-4 py-3 text-left font-semibold">Connections</th>
-                                    <th className="px-4 py-3 text-left font-semibold">PID</th>
-                                    <th className="px-4 py-3 text-left font-semibold">Last Check</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {[ovpn, wireguard, strongswan].filter(Boolean).map((vpn, i) => (
-                                    <tr
-                                        key={i}
-                                        className={`border-b border-gray-200 dark:border-gray-700 transition-colors duration-200 ${vpn.Status?.toLowerCase() === "active"
-                                            ? "bg-blue-50 dark:bg-blue-900/20"
-                                            : "bg-gray-50 dark:bg-gray-900/30"
-                                            }`}
-                                    >
-                                        <td className="px-4 py-3 font-medium flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                                            {vpn.Name}
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{vpn.Type}</td>
-                                        <td className="px-4 py-3">
-                                            <span
-                                                className="px-2 py-1 text-sm rounded text-white"
-                                                style={{
-                                                    backgroundColor:
-                                                        vpn.Status?.toLowerCase() === "active" ? "#C0723D" : "#6b7280", // gray
-                                                }}
-                                            >
-                                                {vpn.Status.toUpperCase()}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
-                                            {((vpn.Uptime / 1e9) / 60 / 60).toFixed(2)}
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
-                                            {vpn.Connections}
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-800 dark:text-gray-200">{vpn.PID}</td>
-                                        <td className="px-4 py-3 text-gray-800 dark:text-gray-200">{vpn.LastCheck}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <ServiceDetailsTable ovpn={ovpn} wireguard={wireguard} strongswan={strongswan} />
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6h-64 md:h-96 mb-10">
                         {/* System Metrics */}
                         <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">                            <h2 className="text-2xl font-bold mb-4 text-indigo-600">System Metrics</h2>

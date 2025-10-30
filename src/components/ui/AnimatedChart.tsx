@@ -50,7 +50,7 @@ export function AnimatedChart({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
         >
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-smp-4 h-80">
+            <div className="p-6 shadow-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <div>
                     <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         {title}
