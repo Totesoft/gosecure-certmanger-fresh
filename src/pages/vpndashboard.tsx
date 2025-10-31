@@ -487,45 +487,77 @@ const VpnDashboard = () => {
 
                     {/* === Top Metrics Section === */}
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                        {/* <div className="flex flex-row gap-6 overflow-x-auto pb-2"> */}
                         <HealthMetricCard health={health} />
                         <StatusMetricCard status={status} />
                         <AlertMetricsCard alerts={alerts} />
                         <ListServicesMetricCard services={services} />
                     </div>
 
-                    {/* === Service Connections Section === */}
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-4">
-                        <ServiceConnectionsCard data={{ service: ovpn, timestamp: ovpn?.timestamp }} />
-                        <ServiceConnectionsCard data={{ service: wireguard, timestamp: wireguard?.timestamp }} />
-                        <ServiceConnectionsCard data={{ service: strongswan, timestamp: strongswan?.timestamp }} />
+
+
+
+                    {/* === Combined Charts + Connections + Status Section === */}
+                    <div className="grid grid-cols-[0.6fr_1.6fr_0.8fr] gap-8 mt-10 items-start">
+
+
+
+                        <div className="flex flex-col lg:justify-end justify-start h-full">
+                            <ServiceStatusBadges status={status} />
+                        </div>
+
+
+
+
+
+
+
+
+                        {/* === Middle Column: Charts stacked vertically === */}
+                        <div className="flex flex-col gap-6 w-full">
+                            <div className="h-[380px]">
+                                {status.length > 0 && (
+                                    <AnimatedChart
+                                        title="Service Uptime (hours)"
+                                        data={prepareChartData(status)}
+                                        color="#6b7280"
+                                        duration={2000}
+                                    />
+                                )}
+                            </div>
+                            <div className="h-[380px]">
+                                <AnimatedServiceDots />
+                            </div>
+                        </div>
+
+                        {/* === Left Column: Service Connections (Slim) === */}
+                        <div className="flex flex-col gap-6 w-full">
+                            <h1 className="text-center text-blue-800 dark:text-blue-400 text-2xl font-extrabold border-b pb-4">
+                                Service Connections
+                            </h1>
+                            <ServiceConnectionsCard data={{ service: ovpn, timestamp: ovpn?.timestamp }} />
+                            <ServiceConnectionsCard data={{ service: wireguard, timestamp: wireguard?.timestamp }} />
+                            <ServiceConnectionsCard data={{ service: strongswan, timestamp: strongswan?.timestamp }} />
+                        </div>
+
+
+
+                        {/* === Right Column: Status Badges matching chart height === */}
+                        {/* <div className="flex flex-col justify-between h-[780px]">
+                            <ServiceStatusBadges status={status} />
+                        </div> */}
+
+
                     </div>
 
-                    {/* === Charts Section === */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
-                        <div className="h-[380px]">
-                            {status.length > 0 && (
-                                <AnimatedChart
-                                    title="Service Uptime (hours)"
-                                    data={prepareChartData(status)}
-                                    color="#6b7280"
-                                    duration={2000}
-                                />
-                            )}
-                        </div>
-                        <div className="h-[380px]">
-                            <AnimatedServiceDots />
-                        </div>
-                    </div>
 
-                    {/* === Status Badges === */}
-                    <div className="mt-6">
-                        <ServiceStatusBadges status={status} />
-                    </div>
+
+
 
                     {/* === Service Details Table === */}
-                    <div className="mt-10">
+                    {/* <div className="mt-10">
                         <ServiceDetailsTable ovpn={ovpn} wireguard={wireguard} strongswan={strongswan} />
-                    </div>
+                    </div> */}
 
                     {/* === Metrics and Alerts Charts === */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
@@ -534,7 +566,7 @@ const VpnDashboard = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 
 };

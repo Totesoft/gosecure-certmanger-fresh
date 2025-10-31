@@ -13,7 +13,7 @@ interface ServiceStatusMetricsCardProps {
 
 export default function ServiceStatusBadges({ status }: ServiceStatusMetricsCardProps) {
     return (
-        <Card className="shadow-xl rounded-xl border border-gray-100 p-4 w-64 overflow-y-auto">
+        <Card className="shadow-xl rounded-xl border border-gray-100 p-4 overflow-y-auto h-full flex flex-col">
             <CardHeader>
                 <CardTitle className="text-xl font-semibold">Service Status</CardTitle>
                 <CardDescription className="text-md">
@@ -21,7 +21,7 @@ export default function ServiceStatusBadges({ status }: ServiceStatusMetricsCard
                 </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-5 flex-1">
                 {status.map((service, i) => {
                     const isActive = service.status?.toLowerCase() === "active";
 

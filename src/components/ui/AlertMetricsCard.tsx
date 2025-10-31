@@ -1,5 +1,5 @@
+"use client";
 import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent, Badge } from "@totesoft/ui-kit";
 import { AlertTriangle } from "lucide-react";
 
 interface Alert {
@@ -13,59 +13,56 @@ interface AlertMetricsCardProps {
     alerts?: Alert[];
 }
 
-const MetricCard: React.FC<{ icon: React.ReactNode; title: string; value: string; subtext: string }> = ({
-    icon,
-    title,
-    value,
-    subtext,
-}) => (
-    <div className="border-t-primary p-4 rounded-xl hover:shadow-xl transition border-gray-100">
-        <div className="flex justify-between items-center mb-2">
-            <h3 className="font-semibold uppercase text-sm">{title}</h3>
-            {icon}
-        </div>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-sm mt-1">{subtext}</p>
-    </div>
-);
-
-const AlertMetricsCard: React.FC<AlertMetricsCardProps> = ({ alerts = [] }) => {
+export default function AlertMetricsCard({ alerts = [] }: AlertMetricsCardProps) {
     const [alertshovered, setAlertshovered] = useState(false);
+
+    const alertCount = alerts.length;
+    const hasAlerts = alertCount > 0;
+
+    // Dynamic border color: red if alerts exist, gray if none
+    const borderColor = hasAlerts ? "border-t-red-500" : "border-t-gray-400";
 
     return (
         <div
-            className="relative inline-block"
+            className="relative"
             onMouseEnter={() => setAlertshovered(true)}
             onMouseLeave={() => setAlertshovered(false)}
         >
-            <Card className="mb-4">
-                <CardHeader className="flex items-center">
-                    <CardTitle className="flex items-center gap-2">
-                        Active Alerts
-                        <AlertTriangle className="h-6 w-6 text-red-500" />
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-between">
-                        <Badge
-                            className={`px-2 py-1 rounded ${alerts.length > 0 ? "bg-red-600 text-white" : "bg-green-600 text-white"
-                                }`}
-                        >
-                            {alerts.length > 0 ? `${alerts.length} Active` : "No Alerts"}
-                        </Badge>
-                        <div className="text-sm text-gray-600 dark:text-gray-300 text-right">
-                            Current monitoring alerts
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Card Container */}
+            <div
+                // className={`border-t-4 ${borderColor} p-5 rounded-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 h-full min-h-[150px] flex flex-col justify-between`}
 
-            {/* Tooltip with alert details */}
-            {alertshovered && alerts.length > 0 && (
+                className={`border-t-4 ${borderColor} p-5 rounded-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 h-full min-h-[150px] flex flex-col justify-between`}
+            >
+
+                {/* Header */}
+                <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-extrabold text-lg tracking-wide text-gray-800 dark:text-gray-100">
+                        Active Alerts
+                    </h3>
+                    <AlertTriangle
+                        className={`h-7 w-7 ${hasAlerts ? "text-red-500" : "text-gray-400"}`}
+                    />
+                </div>
+
+                {/* Value and Subtext */}
+                <div className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-1">
+                    {`${alertCount} Alerts`}
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {hasAlerts ? "Requires attention" : "All systems healthy"}
+                </p>
+            </div>
+
+            {/* Tooltip - Alerts */}
+            {alertshovered && hasAlerts && (
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-80 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
-                    <h4 className="font-semibold mb-2">Alert Details:</h4>
+                    <h4 className="font-semibold mb-2">Alert Details</h4>
                     {alerts.map((a, index) => (
-                        <div key={index} className="flex flex-col gap-1 mb-2 p-2 rounded bg-red-900/30">
+                        <div
+                            key={index}
+                            className="flex flex-col gap-1 mb-2 p-2 rounded bg-red-900/30"
+                        >
                             <div className="flex items-center gap-2">
                                 <span className="text-red-400 font-bold">⚠</span>
                                 <span>{a.message || "Unknown Alert"}</span>
@@ -80,14 +77,12 @@ const AlertMetricsCard: React.FC<AlertMetricsCardProps> = ({ alerts = [] }) => {
                 </div>
             )}
 
-            {/* Tooltip when no alerts */}
-            {alertshovered && alerts.length === 0 && (
+            {/* Tooltip - No Alerts */}
+            {alertshovered && !hasAlerts && (
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-center">
-                    <p className="text-sm ml-6">All systems healthy — no active alerts.</p>
+                    <p className="text-sm">All systems healthy — no active alerts.</p>
                 </div>
             )}
         </div>
     );
-};
-
-export default AlertMetricsCard;
+}

@@ -21,10 +21,9 @@ export function AnimatedServiceDots() {
                 const res = await fetch("/api/monitoring/services");
                 const results = await res.json();
 
-                // Your JSON has results.services (array)
                 const formatted = (results.services || []).map((svc: any, i: number) => ({
-                    x: i + 1,                     // position
-                    y: svc.enabled ? 1 : 0,       // enabled status
+                    x: i + 1,
+                    y: svc.enabled ? 1 : 0,
                     name: svc.name,
                     type: svc.type,
                     enabled: svc.enabled,
@@ -39,7 +38,6 @@ export function AnimatedServiceDots() {
         fetchServices();
     }, []);
 
-    // Sequential animation reveal
     useEffect(() => {
         let i = 0;
         const interval = setInterval(() => {
@@ -50,33 +48,26 @@ export function AnimatedServiceDots() {
         return () => clearInterval(interval);
     }, [servicesData]);
 
-    // const greyPalette = ["#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb"];
-    const bluePalette = [
-        // "#1d4ed8", // royal blue
-        // "#3b82f6", // bright blue
-        "#60a5fa", // soft sky blue
-        "#93c5fd", // light sky blue
-        "#bfdbfe", // pale blue
-    ];
+    const bluePalette = ["#60a5fa", "#93c5fd", "#bfdbfe"];
 
     return (
-        <Card className="mx-10 p-6 shadow-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <Card className="mx-10 p-6 shadow-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-full flex flex-col">
             <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Services Enabled
             </CardTitle>
-            <CardContent>
-                <div className="h-72">
+            <CardContent className="flex-1 h-full">
+                <div className="w-full h-full">
                     <ResponsiveContainer width="100%" height="100%">
-                        <ScatterChart
-                            margin={{ top: 20, right: 20, bottom: 10, left: 10 }}
-                        >
+                        <ScatterChart margin={{ top: 20, right: 20, bottom: 10, left: 10 }}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis
                                 dataKey="x"
-                                tickFormatter={(v) =>
-                                    visibleData[v - 1]?.name || ""
-                                }
-                                label={{ value: "Service", position: "insideBottom", offset: -5 }}
+                                tickFormatter={(v) => visibleData[v - 1]?.name || ""}
+                                label={{
+                                    value: "Service",
+                                    position: "insideBottom",
+                                    offset: -5,
+                                }}
                             />
                             <YAxis
                                 dataKey="y"
@@ -107,8 +98,6 @@ export function AnimatedServiceDots() {
                                         fill={
                                             entry.enabled
                                                 ? bluePalette[index % bluePalette.length]
-                                                // ? greyPalette[index % greyPalette.length]
-
                                                 : "#60a5fa"
                                         }
                                     >
