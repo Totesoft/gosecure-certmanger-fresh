@@ -11,7 +11,7 @@ export default function AlertChart({ alertChart }: AlertChartProps) {
     return (
         <Card className="shadow-xl rounded-xl p-4 flex flex-col h-full">
             <CardHeader className="pb-2">
-                <CardTitle className="text-2xl font-bold text-indigo-600">
+                <CardTitle className="text-2xl font-bold text-blue-800 dark:text-blue-400">
                     Alerts per Service
                 </CardTitle>
             </CardHeader>

@@ -20,7 +20,7 @@ interface SystemMetricsProps {
 export default function SystemMetrics({ metrics, DetailItem }: SystemMetricsProps) {
     return (
         <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
-            <h2 className="text-2xl font-bold mb-4 text-indigo-600">System Metrics</h2>
+            <h2 className="text-2xl font-bold mb-4 text-blue-800 dark:text-blue-400">System Metrics</h2>
 
             <DetailItem
                 icon={<Clock className="h-5 w-5 text-blue-500" />}

@@ -37,7 +37,7 @@ export default function AlertMetricsCard({ alerts = [] }: AlertMetricsCardProps)
 
                 {/* Header */}
                 <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-extrabold text-lg tracking-wide text-gray-800 dark:text-gray-100">
+                    <h3 className="font-extrabold text-lg tracking-wide text-blue-800 dark:text-blue-400">
                         Active Alerts
                     </h3>
                     <AlertTriangle

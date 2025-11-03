@@ -100,7 +100,7 @@ const ListServicesMetricCard: React.FC<ListServicesMetricCardProps> = ({ service
             >
                 {/* Header */}
                 <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-extrabold text-lg tracking-wide text-gray-800 dark:text-gray-100">
+                    <h3 className="font-extrabold text-lg tracking-wide text-blue-800 dark:text-blue-400">
                         List Monitored Services
                     </h3>
                     <Users className="h-7 w-7 text-purple-500 dark:text-purple-400" />

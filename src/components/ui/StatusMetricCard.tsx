@@ -39,11 +39,10 @@ export default function StatusMetricCard({ status }: StatusMetricCardProps) {
                 // className={`border-t-4 ${borderColor} p-5 rounded-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 h-full`}
 
 
-                className="relative border-t-4 border-t-gray-400 p-5 rounded-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-            >
+                className="h-full flex flex-col justify-between border-t-4 border-t-gray-400 p-5 rounded-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"            >
                 {/* Header */}
                 <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-extrabold text-lg tracking-wide text-gray-800 dark:text-gray-100">
+                    <h3 className="font-extrabold text-lg tracking-wide text-blue-800 dark:text-blue-400">
                         Monitored Status (All VPN Services)
                     </h3>
                     <Users className="h-7 w-7 text-blue-500 dark:text-blue-400" />

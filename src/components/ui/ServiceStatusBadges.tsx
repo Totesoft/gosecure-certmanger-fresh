@@ -15,7 +15,7 @@ export default function ServiceStatusBadges({ status }: ServiceStatusMetricsCard
     return (
         <Card className="shadow-xl rounded-xl border border-gray-100 p-4 overflow-y-auto h-full flex flex-col">
             <CardHeader>
-                <CardTitle className="text-xl font-semibold">Service Status</CardTitle>
+                <CardTitle className="text-2xl font-bold text-blue-800 dark:text-blue-400">Service Status</CardTitle>
                 <CardDescription className="text-md">
                     {status.filter(s => s.status?.toLowerCase() === "active").length} of {status.length} Services Active
                 </CardDescription>

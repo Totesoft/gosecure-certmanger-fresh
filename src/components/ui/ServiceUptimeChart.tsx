@@ -55,7 +55,7 @@ export function AnimatedChart({
             className="h-full"
         >
             <Card className="p-6 shadow-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-full flex flex-col">
-                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                <CardTitle className="text-2xl font-bold text-blue-800 dark:text-blue-400">
                     {title}
                 </CardTitle>
 
