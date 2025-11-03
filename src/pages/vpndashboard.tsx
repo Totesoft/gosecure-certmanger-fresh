@@ -447,17 +447,14 @@ const VpnDashboard = () => {
     ///Return****
     ///Return****
     return (
-
         <div className="min-h-screen w-full flex flex-col bg-gray-100 dark:bg-gray-900 px-25 py-5 space-y-8">
-
-
             <div className="min-h-screen w-full flex flex-col bg-gray-100 dark:bg-gray-900 p-6 space-y-8">
                 {/* === Dashboard Header === */}
                 <h1 className="text-center text-blue-800 dark:text-blue-400 text-4xl font-extrabold border-b pb-4">
                     VPN Monitoring Dashboard
                 </h1>
 
-                {/* Search + Date Picker Row */}
+                {/* === Search + Date Picker === */}
                 <div className="flex flex-col md:flex-row justify-end items-center gap-3 w-full">
                     <div className="relative w-full md:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" size={18} />
@@ -470,56 +467,55 @@ const VpnDashboard = () => {
                     <div className="w-full md:w-72 mt-3 md:mt-0">
                         <DateRangePicker currentRange={dateRange} onChange={(range) => setDateRange(range)} />
                     </div>
-
                 </div>
 
+                {/* === Main Content Grid === */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-stretch">
 
-
-                {/* === Top: Metric Cards Row === */}
-                {/* <div className="flex flex-col md:flex-row justify-between gap-6 w-full"> */}
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-
-                    <HealthMetricCard health={health} className="flex-1" />
-                    <StatusMetricCard status={status} className="flex-1" />
-                    <AlertMetricsCard alerts={alerts} className="flex-1" />
-                    <ListServicesMetricCard services={services} className="flex-1" />
-                </div>
-
-                {/* === Middle Row: Responsive Columns === */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full items-stretch">
-                    {/* Left Column */}
-                    <div className="flex flex-col gap-6">
-                        <ServiceStatusBadges status={status} />
-                        <AlertChart alertChart={alertChart} />
+                    {/* LEFT COLUMN - Metric Cards */}
+                    <div className="lg:col-span-3 flex flex-col gap-6">
+                        <HealthMetricCard health={health} />
+                        <StatusMetricCard status={status} />
+                        <AlertMetricsCard alerts={alerts} />
+                        <ListServicesMetricCard services={services} />
                     </div>
 
-                    {/* Center Column */}
-                    <div className="flex flex-col gap-6">
-                        <AnimatedChart />
-                        <AnimatedServiceDots />
-                    </div>
+                    {/* RIGHT MAIN SECTION */}
+                    <div className="lg:col-span-9 flex flex-col gap-8">
 
-                    {/* Right Column */}
-                    <div className="flex flex-col gap-6 h-full">
-                        <h2 className="text-center text-blue-800 dark:text-blue-400 text-2xl font-extrabold border-b pb-2">
-                            Service Connections
-                        </h2>
-                        <div className="flex flex-col gap-4 flex-grow">
-                            <ServiceConnectionsCard data={{ service: ovpn, timestamp: ovpn?.timestamp }} />
-                            <ServiceConnectionsCard data={{ service: wireguard, timestamp: wireguard?.timestamp }} />
-                            <ServiceConnectionsCard data={{ service: strongswan, timestamp: strongswan?.timestamp }} />
+                        {/* === Top: Service Connections === */}
+                        <div>
+                            <h2 className="text-center text-blue-800 dark:text-blue-400 text-2xl font-extrabold border-b pb-2 mb-4">
+                                Service Connections
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <ServiceConnectionsCard data={{ service: ovpn, timestamp: ovpn?.timestamp }} />
+                                <ServiceConnectionsCard data={{ service: wireguard, timestamp: wireguard?.timestamp }} />
+                                <ServiceConnectionsCard data={{ service: strongswan, timestamp: strongswan?.timestamp }} />
+                            </div>
+                        </div>
+
+                        {/* === Middle: Status Badges + Alerts + Charts === */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+                            {/* Left side under connections */}
+                            <div className="flex flex-col gap-6">
+                                <ServiceStatusBadges status={status} />
+                                <AlertChart alertChart={alertChart} />
+                            </div>
+
+                            {/* Charts - Center & Right */}
+                            <div className="lg:col-span-2 flex flex-col gap-6">
+                                <AnimatedChart />
+                                <AnimatedServiceDots />
+                            </div>
                         </div>
                     </div>
                 </div>
+
                 {/* === Bottom: System Metrics === */}
-                {/* <div className="mt-8 border border-gray-300 dark:border-gray-700 rounded-xl p-4 bg-white dark:bg-gray-800"> */}
                 <SystemMetrics metrics={metrics} DetailItem={DetailItem} />
-                {/* </div> */}
-            </div >
-
+            </div>
         </div>
-
-
     );
 
 };
