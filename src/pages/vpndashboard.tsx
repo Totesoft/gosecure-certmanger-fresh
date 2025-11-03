@@ -180,23 +180,7 @@ interface StrongSwanServiceResponse {
     timestamp: string;
 }
 
-const MetricCard = ({ icon, title, value, subtext, className = "" }) => (
-    <div
-        className={`bg-white dark:bg-gray-800 
-                border border-gray-200 dark:border-gray-700 
-                text-gray-900 dark:text-gray-100 
-                rounded-xl p-4 shadow-md 
-                hover:shadow-xl hover:-translate-y-1 transition-all duration-300
-                ${className}`}
-    >
-        <div className="flex justify-between items-center mb-2">
-            <h3 className="font-semibold uppercase text-sm">{title}</h3>
-            {icon}
-        </div>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">{subtext}</p>
-    </div>
-);
+
 const DetailItem = ({
     icon,
     label,
@@ -461,110 +445,74 @@ const VpnDashboard = () => {
 
 
     ///Return****
+    ///Return****
     return (
-        <div className="flex flex-row gap-4 px-6 py-2 w-full overflow-x-auto">
-            <div className="min-h-screen w-full flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-2 md:p-4">
-                <div className="w-full max-w-7xl flex flex-col space-y-6">
-                    {/* Dashboard Title */}
-                    <h1 className="text-center text-blue-800 dark:text-blue-400 text-4xl font-extrabold border-b pb-4">
-                        VPN Monitoring Dashboard
-                    </h1>
+        <div className="min-h-screen w-full flex flex-col bg-gray-100 dark:bg-gray-900 p-6 space-y-8">
+            {/* === Dashboard Header === */}
+            <h1 className="text-center text-blue-800 dark:text-blue-400 text-4xl font-extrabold border-b pb-4">
+                VPN Monitoring Dashboard
+            </h1>
 
-                    {/* Search + Date Picker Row */}
-                    <div className="flex flex-col md:flex-row justify-end items-center gap-3 w-full">
-                        <div className="relative w-full md:w-64">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" size={18} />
-                            <Input
-                                type="text"
-                                placeholder="Search ..."
-                                className="w-full pl-10 pr-4 py-2 rounded-xl text-base border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
-                            />
-                        </div>
-                        <div className="w-full md:w-72 mt-3 md:mt-0">
-                            <DateRangePicker currentRange={dateRange} onChange={(range) => setDateRange(range)} />
-                        </div>
-                    </div>
-
-                    {/* === Top Metrics Section === */}
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                        {/* <div className="flex flex-row gap-6 overflow-x-auto pb-2"> */}
-                        <HealthMetricCard health={health} />
-                        <StatusMetricCard status={status} />
-                        <AlertMetricsCard alerts={alerts} />
-                        <ListServicesMetricCard services={services} />
-                    </div>
-
-
-
-
-                    {/* === Combined Charts + Connections + Status Section === */}
-                    <div className="grid grid-cols-[0.6fr_1.6fr_0.8fr] gap-8 mt-10 items-start">
-
-
-
-                        <div className="flex flex-col lg:justify-end justify-start h-full">
-                            <ServiceStatusBadges status={status} />
-                        </div>
-
-
-
-
-
-
-
-
-                        {/* === Middle Column: Charts stacked vertically === */}
-                        <div className="flex flex-col gap-6 w-full">
-                            <div className="h-[380px]">
-                                {status.length > 0 && (
-                                    <AnimatedChart
-                                        title="Service Uptime (hours)"
-                                        data={prepareChartData(status)}
-                                        color="#6b7280"
-                                        duration={2000}
-                                    />
-                                )}
-                            </div>
-                            <div className="h-[380px]">
-                                <AnimatedServiceDots />
-                            </div>
-                        </div>
-
-                        {/* === Left Column: Service Connections (Slim) === */}
-                        <div className="flex flex-col gap-6 w-full">
-                            <h1 className="text-center text-blue-800 dark:text-blue-400 text-2xl font-extrabold border-b pb-4">
-                                Service Connections
-                            </h1>
-                            <ServiceConnectionsCard data={{ service: ovpn, timestamp: ovpn?.timestamp }} />
-                            <ServiceConnectionsCard data={{ service: wireguard, timestamp: wireguard?.timestamp }} />
-                            <ServiceConnectionsCard data={{ service: strongswan, timestamp: strongswan?.timestamp }} />
-                        </div>
-
-
-
-                        {/* === Right Column: Status Badges matching chart height === */}
-                        {/* <div className="flex flex-col justify-between h-[780px]">
-                            <ServiceStatusBadges status={status} />
-                        </div> */}
-
-
-                    </div>
-
-
-
-
-
-                    {/* === Service Details Table === */}
-                    {/* <div className="mt-10">
-                        <ServiceDetailsTable ovpn={ovpn} wireguard={wireguard} strongswan={strongswan} />
-                    </div> */}
-
-                    {/* === Metrics and Alerts Charts === */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
-                        <SystemMetrics metrics={metrics} DetailItem={DetailItem} />
-                        <AlertChart alertChart={alertChart} />
-                    </div>
+            {/* Search + Date Picker Row */}
+            <div className="flex flex-col md:flex-row justify-end items-center gap-3 w-full">
+                <div className="relative w-full md:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" size={18} />
+                    <Input
+                        type="text"
+                        placeholder="Search ..."
+                        className="w-full pl-10 pr-4 py-2 rounded-xl text-base border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                    />
                 </div>
+                <div className="w-full md:w-72 mt-3 md:mt-0">
+                    <DateRangePicker currentRange={dateRange} onChange={(range) => setDateRange(range)} />
+                </div>
+
+            </div>
+
+
+
+            {/* === Top: Metric Cards Row === */}
+            {/* <div className="flex flex-col md:flex-row justify-between gap-6 w-full"> */}
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+
+                <HealthMetricCard health={health} className="flex-1" />
+                <StatusMetricCard status={status} className="flex-1" />
+                <AlertMetricsCard alerts={alerts} className="flex-1" />
+                <ListServicesMetricCard services={services} className="flex-1" />
+            </div>
+
+            {/* === Middle Row: Responsive Columns === */}
+            <div className="flex flex-col lg:flex-row gap-8 w-full">
+                {/* Left Column */}
+                <div className="flex flex-col justify-between w-full lg:w-1/4 gap-6">
+                    <ServiceStatusBadges status={status} />
+                    <AlertChart alertChart={alertChart} />
+                </div>
+
+                {/* Center Column */}
+                <div className="flex flex-col gap-6 w-full lg:w-2/4">
+                    <AnimatedChart />
+                    <AnimatedServiceDots />
+                </div>
+
+                {/* Right Column */}
+                <div className="flex flex-col w-full lg:w-1/4 gap-6">
+                    <h2 className="text-center text-blue-800 dark:text-blue-400 text-2xl font-extrabold border-b pb-2">
+                        Service Connections
+                    </h2>
+                    <ServiceConnectionsCard data={{ service: ovpn, timestamp: ovpn?.timestamp }} />
+                    <ServiceConnectionsCard data={{ service: wireguard, timestamp: wireguard?.timestamp }} />
+                    <ServiceConnectionsCard data={{ service: strongswan, timestamp: strongswan?.timestamp }} />
+                </div>
+            </div>
+
+
+
+
+
+            {/* === Bottom: System Metrics === */}
+            <div className="mt-8 border border-gray-300 dark:border-gray-700 rounded-xl p-4 bg-white dark:bg-gray-800">
+                <SystemMetrics metrics={metrics} DetailItem={DetailItem} />
             </div>
         </div >
     );

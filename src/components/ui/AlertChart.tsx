@@ -9,15 +9,15 @@ interface AlertChartProps {
 
 export default function AlertChart({ alertChart }: AlertChartProps) {
     return (
-        <Card className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col">
-            <CardHeader>
-                <CardTitle className="text-2xl font-bold mb-4 text-indigo-600">
+        <Card className="shadow-xl rounded-xl p-4 flex flex-col h-full">
+            <CardHeader className="pb-2">
+                <CardTitle className="text-2xl font-bold text-indigo-600">
                     Alerts per Service
                 </CardTitle>
             </CardHeader>
 
-            <CardContent className="flex-1">
-                <div className="h-full w-full">
+            <CardContent className="flex-1 overflow-hidden">
+                <div className="w-full h-full relative">
                     <Bar
                         data={alertChart}
                         options={{
@@ -50,7 +50,7 @@ export default function AlertChart({ alertChart }: AlertChartProps) {
                                 },
                             },
                         }}
-                        className="h-full w-full"
+                        className="absolute inset-0"
                     />
                 </div>
             </CardContent>

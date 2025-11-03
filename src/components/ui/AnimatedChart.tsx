@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import {
     AreaChart,
     Area,
@@ -10,25 +9,27 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@totesoft/ui-kit";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardTitle } from "@totesoft/ui-kit";
 
 interface AnimatedChartProps {
     title?: string;
-    data: { name: string; value: number }[];
+    data?: { name: string; value: number }[];
     color?: string;
-    duration?: number; // total animation time in ms
+    duration?: number;
 }
 
 export function AnimatedChart({
-    title = "Performance",
-    data,
+    title = "Service Uptime (hours)",
+    data = [],
     color = "#6b7280",
     duration = 2000,
 }: AnimatedChartProps) {
     const [visibleData, setVisibleData] = useState<typeof data>([]);
 
-    // progressively reveal points
     useEffect(() => {
+        if (!data || data.length === 0) return;
+
         let index = 0;
         setVisibleData([data[0]]);
 
@@ -44,63 +45,69 @@ export function AnimatedChart({
         return () => clearInterval(interval);
     }, [data, duration]);
 
+    const hasData = data && data.length > 0;
+
     return (
         <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
+            className="h-full"
         >
-            <div className="p-6 shadow-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <div>
-                    <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        {title}
-                    </CardTitle>
-                </div>
-                <CardContent>
-                    <div className="h-64 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={visibleData}>
-                                <defs>
-                                    <linearGradient id="fillColor" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#6b7280" stopOpacity={0.8} />
-                                        <stop offset="100%" stopColor="#6b7280" stopOpacity={0.1} />
-                                    </linearGradient>
-                                </defs>
+            <Card className="p-6 shadow-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-full flex flex-col">
+                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    {title}
+                </CardTitle>
 
-                                <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-                                <XAxis dataKey="name" stroke="#888" />
-                                <YAxis stroke="#888" />
-                                {/* <Tooltip /> */}
-                                <Tooltip
-                                    content={({ active, payload }) => {
-                                        if (active && payload && payload.length) {
-                                            const { name, value, connections } = payload[0].payload;
-                                            return (
-                                                <div className="bg-gray-800 text-white p-2 rounded-md shadow-md text-sm">
-                                                    <div><strong>{name}</strong></div>
-                                                    <div>Uptime: {value.toFixed(2)} h</div>
-                                                    <div>Connections: {connections}</div>
-                                                </div>
-                                            );
-                                        }
-                                        return null;
-                                    }}
-                                />
-
-                                <Area
-                                    type="monotone"
-                                    dataKey="value"
-                                    stroke="#6b7280"
-                                    strokeWidth={2}
-                                    fill="url(#fillColor)"
-                                    isAnimationActive={false}
-                                />
-
-                            </AreaChart>
-                        </ResponsiveContainer>
+                <CardContent className="flex-1 h-full">
+                    <div className="w-full h-full">
+                        {hasData ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={visibleData}>
+                                    <defs>
+                                        <linearGradient id="fillColor" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor={color} stopOpacity={0.8} />
+                                            <stop offset="100%" stopColor={color} stopOpacity={0.1} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
+                                    <XAxis dataKey="name" stroke="#888" />
+                                    <YAxis stroke="#888" />
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                const { name, value, connections } = payload[0].payload;
+                                                return (
+                                                    <div className="bg-gray-800 text-white p-2 rounded-md shadow-md text-sm">
+                                                        <div><strong>{name}</strong></div>
+                                                        <div>Uptime: {value?.toFixed(2)} h</div>
+                                                        {connections !== undefined && (
+                                                            <div>Connections: {connections}</div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="value"
+                                        stroke={color}
+                                        strokeWidth={2}
+                                        fill="url(#fillColor)"
+                                        isAnimationActive={false}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                                <p>No data available</p>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
-            </div>
+            </Card>
         </motion.div>
     );
 }
