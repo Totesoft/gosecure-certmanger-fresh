@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@totesoft/ui-kit";
 
 interface ServiceStatus {

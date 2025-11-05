@@ -14,15 +14,15 @@ import { Card, CardContent, CardTitle } from "@totesoft/ui-kit";
 
 interface AnimatedChartProps {
     title?: string;
-    data?: { name: string; value: number }[];
+    data?: { name: string; value: number; connections?: number }[];
     color?: string;
     duration?: number;
 }
 
-export function AnimatedChart({
+export function AnimatedServiceUptimeChart({
     title = "Service Uptime (hours)",
     data = [],
-    color = "#6b7280",
+    color = "#3B82F6", // blue tone
     duration = 2000,
 }: AnimatedChartProps) {
     const [visibleData, setVisibleData] = useState<typeof data>([]);
@@ -31,18 +31,34 @@ export function AnimatedChart({
         if (!data || data.length === 0) return;
 
         let index = 0;
-        setVisibleData([data[0]]);
+        let animationInterval: any;
+        let refreshInterval: any;
 
-        const interval = setInterval(() => {
-            index++;
-            if (index < data.length) {
-                setVisibleData(data.slice(0, index + 1));
-            } else {
-                clearInterval(interval);
-            }
-        }, duration / data.length);
+        const startAnimation = () => {
+            index = 0;
+            setVisibleData([data[0]]);
+            clearInterval(animationInterval);
 
-        return () => clearInterval(interval);
+            animationInterval = setInterval(() => {
+                index++;
+                if (index < data.length) {
+                    setVisibleData(data.slice(0, index + 1));
+                } else {
+                    clearInterval(animationInterval);
+                }
+            }, duration / data.length);
+        };
+
+        // run immediately
+        startAnimation();
+
+        // repeat every 3 seconds
+        refreshInterval = setInterval(startAnimation, 3000);
+
+        return () => {
+            clearInterval(animationInterval);
+            clearInterval(refreshInterval);
+        };
     }, [data, duration]);
 
     const hasData = data && data.length > 0;
@@ -94,7 +110,7 @@ export function AnimatedChart({
                                         type="monotone"
                                         dataKey="value"
                                         stroke={color}
-                                        strokeWidth={2}
+                                        strokeWidth={3}
                                         fill="url(#fillColor)"
                                         isAnimationActive={false}
                                     />
