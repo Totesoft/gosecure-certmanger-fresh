@@ -31,9 +31,14 @@ export default function ServiceConnectionsChart() {
                         <XAxis dataKey="name" />
                         <YAxis />
                         <Tooltip formatter={(value) => `${value} connections`} />
-                        <Bar dataKey="connections" fill="#3B82F6" radius={[10, 10, 0, 0]}>
-                            <LabelList dataKey="connections" position="top" fill="#000" style={{ fontSize: '16px' }} />
-                        </Bar>
+                        <Bar dataKey="connections" fill="#4a52bd" radius={[60, 60, 0, 0]}>
+                            <LabelList
+                                dataKey="connections"
+                                position="top"
+                                fill="#000"
+
+                                style={{ fontWeight: "bold", fontSize: 32 }}
+                            />                        </Bar>
                     </BarChart>
                 </ResponsiveContainer>
             </CardContent>

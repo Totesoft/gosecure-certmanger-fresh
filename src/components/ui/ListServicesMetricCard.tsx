@@ -95,7 +95,7 @@ const ListServicesMetricCard: React.FC<ListServicesMetricCardProps> = ({ service
             {/* Unified Metric Card Design */}
             <div
                 // className={`relative border-t-4 ${borderColor} p-5 rounded-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 h-full min-h-[150px]`}
-                className="relative border-t-4 border-t-gray-400 p-5 rounded-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                className="h-full relative border-t-4 border-t-gray-400 p-5 rounded-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
 
             >
                 {/* Header */}
@@ -111,7 +111,7 @@ const ListServicesMetricCard: React.FC<ListServicesMetricCardProps> = ({ service
                     {services.length > 0 ? `${services.length} Services` : "0 Services"}
                 </div>
 
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-xl font-semibold text-gray-600 dark:text-gray-400">
                     Enabled: {enabledCount} / {services.length}
                 </p>
 

@@ -30,20 +30,27 @@ export default function ServiceStatusBadges({ status }: ServiceStatusMetricsCard
                             <div className="flex justify-between items-center">
                                 <span className="font-medium">{service.service_name}</span>
                                 <span
-                                    className="px-2 py-1 rounded text-sm text-white"
+                                    className="px-2 py-1 rounded text-sm text-white 800"
                                     style={{
-                                        backgroundColor: isActive ? "#C0723D" : "#9ca3af",
+                                        //                 backgroundColor: isActive ? "#C0723D" : "#9ca3af",
+                                        //  backgroundColor: isActive ? "#4281f5" : "#70bab6",
+                                        backgroundColor: isActive ? "#4a52bd" : "#9ca3af",
+
                                     }}
                                 >
                                     {isActive ? "Active" : "Inactive"}
                                 </span>
                             </div>
 
-                            <div className="h-2 w-full bg-gray-200 rounded-full">
+                            <div className="h-2 w-full rounded-full">
                                 <div
                                     className="h-full rounded-full transition-all"
                                     style={{
-                                        backgroundColor: isActive ? "#C0723D" : "#9ca3af",
+                                        //     backgroundColor: isActive ? "#4281f5" : "#70bab6",
+                                        // backgroundColor: isActive ? "#4281f5" : "#9ca3af",//blue red
+                                        // backgroundColor: isActive ? "#C0723D" : "#f4e1d3",
+                                        backgroundColor: isActive ? "#4a52bd" : "#9ca3af",
+
                                         width: isActive ? "100%" : "40%",
                                     }}
                                 ></div>

@@ -53,7 +53,7 @@ export function AnimatedServiceUptimeChart({
         startAnimation();
 
         // repeat every 3 seconds
-        refreshInterval = setInterval(startAnimation, 3000);
+        refreshInterval = setInterval(startAnimation, 8000);
 
         return () => {
             clearInterval(animationInterval);

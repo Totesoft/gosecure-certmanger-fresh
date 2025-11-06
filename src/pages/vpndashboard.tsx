@@ -35,6 +35,8 @@ import type { start } from "repl";
 //import { AnimatedServiceChart } from "@/components/ui/AnimatedVertChart.tsx"
 import ServiceConnectionsCard from "@/components/ui/ServiceConnectionsCard";
 import { AnimatedServiceDots } from "@/components/ui/AnimatedServicesDots";
+//import AnimatedServiceDots from "@/components/ui/AnimatedServicesDots";
+
 import { AnimatedServiceUptimeChart } from "@/components/ui/AnimatedServiceUptimeChart";
 
 import ServiceStatusBadges from "@/components/ui/ServiceStatusBadges";
@@ -289,7 +291,7 @@ const VpnDashboard = () => {
 
     const dummyuptimeData = [
         { name: "Wireguard", value: 0 },
-        { name: "OpenVPN", value: 1 },
+        { name: "OpenVPN", value: 700 },
         { name: "StrongSwan", value: 0 },
     ];
     const dummyConnectionsData = [
@@ -558,80 +560,106 @@ const VpnDashboard = () => {
 
 
     return (
-        <div className="min-h-screen w-full flex flex-col bg-gray-100 dark:bg-gray-900 p-20 space-y-10">
+        // <div className="min-h-screen w-full flex flex-col bg-gray-100 dark:bg-gray-900 p-20 space-y-10">
+        //    <div className="min-h-screen w-full flex flex-col bg-[#f4e1d3] p-20 space-y-10">
+        <div className="min-h-screen w-full flex flex-col bg-[#e4e5f2] p-28 space-y-14">
 
             {/* === Header === */}
             <div className="flex flex-col space-y-6">
-                <h1 className="text-center text-blue-800 dark:text-blue-400 text-4xl font-extrabold border-b pb-4">
-                    VPN Monitoring Dashboard
-                </h1>
 
-                {/* Search + Date Picker */}
-                <div className="flex flex-col md:flex-row justify-end items-center gap-4 w-full">
-                    <div className="relative w-full md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" size={18} />
-                        <Input
-                            type="text"
-                            placeholder="Search ..."
-                            className="w-full pl-10 pr-4 py-2 rounded-xl text-base border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
-                        />
+                {/* Title strip */}
+                {/* <div className="w-full bg-[#C0723D] py-6 rounded-xl shadow-md"> */}
+                <div className="w-full bg-[#1b2067] py-6 rounded-xl shadow-md">
+
+                    <h1 className="text-center text-white text-4xl font-extrabold tracking-wide">
+                        VPN Monitoring Dashboard
+                    </h1>
+                </div>
+                <div className="flex justify-between items-center">
+
+                    <h2 className="text-left text-indigo-800 text-2xl font-extrabold tracking-wide">
+                        <span className="whitespace-nowrap">Agent: Anchor VPN</span>
+
+                    </h2>
+                    {/* Search + Date Picker */}
+                    <div className="flex flex-col md:flex-row justify-end items-center gap-4 w-full">
+
+                        <div className="relative w-full md:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" size={18} />
+                            <Input
+                                type="text"
+                                placeholder="Search ..."
+                                className="w-full pl-10 pr-4 py-2 rounded-xl text-base border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                            />
+                        </div>
+                        <div className="w-full md:w-72 mt-3 md:mt-0">
+                            <DateRangePicker currentRange={dateRange} onChange={(range) => setDateRange(range)} />
+                        </div>
                     </div>
-                    <div className="w-full md:w-72 mt-3 md:mt-0">
-                        <DateRangePicker currentRange={dateRange} onChange={(range) => setDateRange(range)} />
-                    </div>
+
                 </div>
             </div>
 
             {/* === Metric Cards (Top Row) === */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* <div className="bg-[#f4e1d3] rounded-xl shadow p-4"> */}
                 <HealthMetricCard health={dummyHealthData} />
+                {/* </div> */}
+                {/* <div className="bg-[#f4e1d3] rounded-xl shadow p-4"> */}
                 <StatusMetricCard status={dummyStatusData} />
+                {/* </div> */}
+                {/* <div className="bg-[#f4e1d3] rounded-xl shadow p-4"> */}
                 <AlertMetricsCard alerts={alerts} />
+                {/* </div> */}
+                {/* <div className="bg-[#e4e5f2] rounded-xl shadow p-4"> */}
                 <ListServicesMetricCard services={dummyServices} />
+                {/* </div> */}
             </div>
 
             {/* === Main 3-Column Layout === */}
             <div className="flex flex-col lg:flex-row gap-8 items-stretch">
 
-                {/* LEFT COLUMN — Status & Alerts */}
-                <div className="w-full lg:w-1/4 flex flex-col gap-6 justify-between">
+                {/* LEFT COLUMN — Smaller Width (Status & Alerts) */}
+                <div className="w-full lg:w-1/6 flex flex-col gap-6 justify-between">
                     <ServiceStatusBadges status={dummyStatusData} />
                     <AlertChart alertChart={alertChart} />
                 </div>
 
-                {/* CENTER COLUMN — Animated Charts */}
-                <div className="w-full lg:w-1/2 flex flex-col justify-center gap-8">
-                    <div className="h-[320px]">
+                {/* CENTER COLUMN — Uptime + Dots */}
+                <div className="w-full lg:w-2/5 flex flex-col justify-between gap-8">
+                    <div className="flex-1 min-h-[300px]">
                         <AnimatedServiceUptimeChart
                             title="VPN Service Uptime (hours)"
                             data={dummyuptimeData}
                             color="#3B82F6"
-                            duration={2500}
+                            duration={4000}
                         />
                     </div>
-
-                    <div >
+                    <div className="flex-1 ">
                         <AnimatedServiceDots />
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN — Enlarged Connections Chart */}
-                <div className="w-full lg:w-1/4 flex flex-col gap-6">
-                    <h2 className="text-center text-blue-800 dark:text-blue-400 text-2xl font-extrabold border-b pb-2">
-                        Service Connections
-                    </h2>
+                {/* RIGHT COLUMN — Aligned with Center (Connections + Metrics) */}
+                <div className="w-full lg:w-2/5 flex flex-col justify-between gap-8">
+                    <div className="flex-1 min-h-[300px]">
+                        <h2 className="text-center text-blue-800 dark:text-blue-400 text-2xl font-extrabold border-b pb-2">
+                            Service Connections
+                        </h2>
+                        <div className="h-full">
+                            <ServiceConnectionsChart />
+                        </div>
+                    </div>
 
-                    <div className="flex-1 h-[600px]">
-                        <ServiceConnectionsChart />
+                    <div className="flex-1 gap-8 mt-6">
+                        <SystemMetrics metrics={metrics} DetailItem={DetailItem} />
                     </div>
                 </div>
             </div>
 
-            {/* === Bottom Section: System Metrics === */}
-            <div className="mt-8">
-                <SystemMetrics metrics={metrics} DetailItem={DetailItem} />
-            </div>
         </div>
+
+
     );
 
 };

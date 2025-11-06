@@ -67,7 +67,7 @@ export default function AlertMetricsCard({ alerts = [] }: AlertMetricsCardProps)
                                 <span className="text-red-400 font-bold">⚠</span>
                                 <span>{a.message || "Unknown Alert"}</span>
                             </div>
-                            <div className="text-sm ml-6">
+                            <div className="text-xl ml-6">
                                 <div>Service: {a.service || "N/A"}</div>
                                 <div>Severity: {a.severity || "N/A"}</div>
                                 <div>Time: {a.timestamp || "N/A"}</div>
@@ -80,7 +80,7 @@ export default function AlertMetricsCard({ alerts = [] }: AlertMetricsCardProps)
             {/* Tooltip - No Alerts */}
             {alertshovered && !hasAlerts && (
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-center">
-                    <p className="text-sm">All systems healthy — no active alerts.</p>
+                    <p className="text-xl  text-white dark:text-gray-400">All systems healthy — no active alerts.</p>
                 </div>
             )}
         </div>

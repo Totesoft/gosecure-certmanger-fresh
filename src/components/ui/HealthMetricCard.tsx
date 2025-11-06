@@ -44,7 +44,7 @@ export default function HealthMetricCard({ health }: HealthMetricCardProps) {
                     {health?.status || "Unknown"}
                 </div>
 
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-xl text-gray-600 dark:text-gray-400">
                     Version: {health?.version || "-"}
                 </p>
             </div>
