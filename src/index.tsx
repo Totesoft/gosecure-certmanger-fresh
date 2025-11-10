@@ -9,8 +9,10 @@ import UserCert from "@/pages/UserCert";
 import RootCADetail from '@/pages/CertViewer-form';
 import CertmanagerDashboard from './pages/CertmanagerDashboard';
 import Home from './pages/Home';
-import VPNMonitoring from './pages/VPNmonitoring';
+//import VPNMonitoring from './pages/VPNmonitoring';
 
+import RootCAlistAdmn from './pages/rootCAlistadmn';
+import VPNDashboard from './pages/vpndashboard'
 
 
 export const routes: RouteObject[] = [
@@ -21,9 +23,12 @@ export const routes: RouteObject[] = [
   { path: "/certs/intermediate", element: <IntermediateCert /> },
 
   { path: "/certs/user", element: <UserCert /> },
-  { path: "/certs/rootca", element: <RootCADetail /> }
-   { path: "/certs/certdashboard", element: <CertmanagerDashboard /> }
-   { path: "/certs/vpnmonitoring", element: <VPNMonitoring /> }
+  { path: "/certs/rootca", element: <RootCADetail /> },
+  { path: "/certs/certdashboard", element: <CertmanagerDashboard /> },
+  //  { path: "/certs/vpnmonitoring", element: <VPNMonitoring /> },
+  { path: "/certs/vpndashboard", element: <VPNDashboard /> },
+
+  { path: "/certs/rootCAlistadmn", element: <RootCAlistAdmn /> }
 
 
 ];

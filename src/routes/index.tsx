@@ -16,6 +16,8 @@ import TestAPI from "@/pages/testapipage";
 //import VPNmonitoring from "@/pages/VPNmonitoring";
 import VPNDashboard from "@/pages/vpndashboard"
 import API from "@/pages/Home";
+import rootCAlist from "@/pages/rootCAlist";
+import RootCAlistAdmn from "@/pages/rootCAlistAdmn";
 
 function NotFound() {
   return (
@@ -44,9 +46,11 @@ export default function CertsRoutes() {
       <Route path="/certs/testapi" element={<TestAPI />} />
       <Route path="/certdashboard" element={<CertmanagerDashboard />} />
       {/* <Route path="/vpnmonitoring" element={<VPNmonitoring />} /> */}
-      <Route path="/vpndashboard" element={<VPNDashboard />} />
-
       {/* <Route path="/certs/home" element={<API />} /> */}
+
+      <Route path="/vpndashboard" element={<VPNDashboard />} />
+      <Route path="/rootCAlistAdmn" element={<RootCAlistAdmn />} />
+
 
 
       <Route path="/certs/rootca" element={<RootCADetail cert={{

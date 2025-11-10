@@ -1,70 +1,65 @@
-import React from "react";
-import { Activity, CheckCircle, XCircle } from "lucide-react";
-import { Bar } from "react-chartjs-2";
+"use client";
+import React, { useState } from "react";
+import { Activity } from "lucide-react";
 
-// Reusable MetricCard
-export const MetricCard = ({ icon, title, value, subtext }) => (
-    <div className="border-t-primary p-4 rounded-xl hover:shadow-xl transition border-gray-100">
-        <div className="flex justify-between items-center mb-2">
-            <h3 className="font-semibold uppercase text-sm">{title}</h3>
-            {icon}
-        </div>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-sm mt-1">{subtext}</p>
-    </div>
-);
+interface HealthData {
+    status?: string;
+    version?: string;
+    timestamp?: string;
+}
 
-// Centered health chart + status
-export const HealthStatusCard = ({ health }) => {  // <-- renamed to match usage
-    const isHealthy = health.status?.toLowerCase() === "healthy";
+interface HealthMetricCardProps {
+    health: HealthData | null;
+}
+
+export default function HealthMetricCard({ health }: HealthMetricCardProps) {
+    const [hovered, setHovered] = useState(false);
+
+    const borderColor =
+        health?.status?.toLowerCase() === "healthy"
+            ? "border-t-green-500"
+            : "border-t-red-500";
+
     return (
-        <div className="shadow-xl rounded-xl p-4 h-64 md:h-95 flex flex-col justify-center items-center mt-4">
-            <h3 className="font-semibold mb-4">Monitoring Health</h3>
-            {isHealthy ? (
-                <CheckCircle className="h-16 w-16 text-green-500 mb-2" />
-            ) : (
-                <XCircle className="h-16 w-16 text-red-500 mb-2" />
-            )}
-            <span className={`text-2xl font-bold ${isHealthy ? "text-green-600" : "text-red-600"}`}>
-                {health.status ? health.status.toUpperCase() : "UNKNOWN"}
-            </span>
+        <div
+            className="relative"
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
+            {/* Metric Card */}
+            <div
+                // className={`border-t-4 ${borderColor} p-5 rounded-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 h-full`}
+                className="h-full flex flex-col justify-between border-t-4 border-t-gray-400 p-5 rounded-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+            >
+                {/* Title Row */}
+                <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-extrabold text-lg tracking-wide text-blue-800 dark:text-blue-400">
+                        Monitoring Health
+                    </h3>
+                    <Activity className="h-7 w-7 text-blue-500 dark:text-blue-400" />
+                </div>
 
-            {/* Health Chart */}
-            <div className="w-full mt-4 h-24">
-                <Bar
-                    data={{
-                        labels: ["Healthy", "Unhealthy"],
-                        datasets: [
-                            {
-                                data: [isHealthy ? 1 : 0, isHealthy ? 0 : 1],
-                                backgroundColor: ["#22c55e", "#ef4444"],
-                                hoverOffset: 4,
-                            },
-                        ],
-                    }}
-                    options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-                    }}
-                />
+                {/* Main Content */}
+                <div className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-1">
+                    {health?.status || "Unknown"}
+                </div>
+
+                <p className="text-xl text-gray-600 dark:text-gray-400">
+                    Version: {health?.version || "-"}
+                </p>
             </div>
+
+            {/* Hover Tooltip */}
+            {hovered && (
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-gray-800 text-white p-4 rounded-lg shadow-lg z-50 text-left">
+                    <h4 className="font-semibold mb-2">Health Details</h4>
+                    <div className="space-y-1 text-sm">
+                        <div>Status: {health?.status || "N/A"}</div>
+                        <div>Version: {health?.version || "N/A"}</div>
+                        <div>Timestamp: {health?.timestamp || "N/A"}</div>
+                    </div>
+                </div>
+            )}
         </div>
     );
-};
-
-// Default export combining both
-export const HealthMetricCard = ({ health, hovered, setHovered }) => (
-    <>
-        <MetricCard
-            icon={<Activity className="h-6 w-6 text-blue-500" />}
-            title="Monitoring Health"
-            value={health.status || "Unknown"}
-            subtext={`Version: ${health.version || "N/A"}`}
-        />
-        <HealthStatusCard health={health} />
-    </>
-);
-
-export default HealthMetricCard; // <-- fixed to match actual component
+}

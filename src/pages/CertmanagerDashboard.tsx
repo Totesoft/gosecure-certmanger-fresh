@@ -6,7 +6,7 @@ export default function CertmanagerDashboard() {
         <div className="min-h-screen flex bg-gray-200">
             {/* Sidebar */}
             <div className="w-64 bg-gray-300 p-6 flex flex-col gap-4">
-                <h2 className="text-xl font-bold mb-4">CertManager</h2>
+                <h2 className="text-xl font-bold mb-4">UserCert Dashboard</h2>
 
                 <Link to="/">
                     <Button variant="destructive" size="lg" className="w-full shadow-md hover:shadow-lg transition">
@@ -14,13 +14,13 @@ export default function CertmanagerDashboard() {
                     </Button>
                 </Link>
 
-                <Link to="/ovpn">
+                {/* <Link to="/ovpn">
                     <Button variant="destructive" size="lg" className="w-full shadow-md hover:shadow-lg transition">
                         OVPN
                     </Button>
-                </Link>
+                </Link> */}
 
-                <Link to="/root">
+                <Link to="/rootCAlistAdmn">
                     <Button variant="destructive" size="lg" className="w-full shadow-md hover:shadow-lg transition">
                         Root CA List
                     </Button>

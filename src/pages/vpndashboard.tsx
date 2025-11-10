@@ -28,26 +28,26 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
 //import { Calendar } from "@/components/ui/calendar";
 import { subDays, startOfMonth, endOfMonth, startOfYear, format } from "date-fns";
-import DateRangePicker from "@/components/ui/DateRangePicker";
+import DateRangePicker from "../components/vpnmonitoring/DateRangePicker";;
 import "chartjs-adapter-date-fns";
 
 import type { start } from "repl";
 //import { AnimatedServiceChart } from "@/components/ui/AnimatedVertChart.tsx"
-import ServiceConnectionsCard from "@/components/ui/ServiceConnectionsCard";
-import { AnimatedServiceDots } from "@/components/ui/AnimatedServicesDots";
-//import AnimatedServiceDots from "@/components/ui/AnimatedServicesDots";
+import ServiceConnectionsCard from "../components/vpnmonitoring/ServiceConnectionsCard";
+//import { AnimatedServiceDots } from "@/components/ui/AnimatedServicesDots";
+import AnimatedServiceDots from "../components/vpnmonitoring/AnimatedServicesDots";
 
-import { AnimatedServiceUptimeChart } from "@/components/ui/AnimatedServiceUptimeChart";
+import { AnimatedServiceUptimeChart } from "../components/vpnmonitoring/AnimatedServiceUptimeChart";
 
-import ServiceStatusBadges from "@/components/ui/ServiceStatusBadges";
-import ServiceDetailsTable from "@/components/ui/ServiceDetailsTable";
-import SystemMetrics from "@/components/ui/SystemMetrics";
-import AlertChart from "@/components/ui/AlertChart";
-import HealthMetricCard from "@/components/ui/HealthMetricCard";
-import StatusMetricCard from "@/components/ui/StatusMetricCard";
-import AlertMetricsCard from "@/components/ui/AlertMetricsCard";
-import ListServicesMetricCard from "@/components/ui/ListServicesMetricCard";
-import ServiceConnectionsChart from "@/components/ui/dummyServiceConnectionschart";
+import ServiceStatusBadges from "../components/vpnmonitoring/ServiceStatusBadges";
+import ServiceDetailsTable from "../components/vpnmonitoring/ServiceDetailsTable";
+import SystemMetrics from "../components/vpnmonitoring/SystemMetrics";
+import AlertChart from "../components/vpnmonitoring/AlertChart";
+import HealthMetricCard from "../components/vpnmonitoring//HealthMetricCard";
+import StatusMetricCard from "../components/vpnmonitoring/StatusMetricCard";
+import AlertMetricsCard from "../components/vpnmonitoring/AlertMetricsCard";
+import ListServicesMetricCard from "../components/vpnmonitoring/ListServicesMetricCard";
+//import ServiceConnectionsChart from "@/components/ui/dummyServiceConnectionschart";
 // 1️⃣ /monitoring/health
 interface HealthResponse {
     disk: any;
@@ -244,121 +244,121 @@ const VpnDashboard = () => {
         { name: "Sun", value: 38 },
     ];
 
-    const dummyStatusData = [
-        {
-            service_name: "OVPN",
-            status: "Active",
-            connections: 128,
-            uptime: "23h 45m",
-        },
-        {
-            service_name: "Strongswan",
-            status: "Inactive",
-            connections: 0,
-            uptime: "0s",
-        },
-        {
-            service_name: "Wireguard",
-            status: "Inactive",
-            connections: 0,
-            uptime: "0s",
-        },
-    ];
+    // const dummyStatusData = [
+    //     {
+    //         service_name: "OVPN",
+    //         status: "Active",
+    //         connections: 128,
+    //         uptime: "23h 45m",
+    //     },
+    //     {
+    //         service_name: "Strongswan",
+    //         status: "Inactive",
+    //         connections: 0,
+    //         uptime: "0s",
+    //     },
+    //     {
+    //         service_name: "Wireguard",
+    //         status: "Inactive",
+    //         connections: 0,
+    //         uptime: "0s",
+    //     },
+    // ];
 
-    const dummyHealthData = {
-        status: "Healthy",
-        version: "1.0.0",
-        timestamp: "2025-11-01T14:32:45Z",
-    };
+    // const dummyHealthData = {
+    //     status: "Healthy",
+    //     version: "1.0.0",
+    //     timestamp: "2025-11-01T14:32:45Z",
+    // };
 
-    const dummyServices = [
-        {
-            name: "OpenVPN",
-            enabled: true,
-            type: "VPN",
-        },
-        {
-            name: "WireGuard",
-            enabled: true,
-            type: "VPN",
-        },
-        {
-            name: "StrongSwan",
-            enabled: true,
-            type: "IPSec",
-        },]
+    // const dummyServices = [
+    //     {
+    //         name: "OpenVPN",
+    //         enabled: true,
+    //         type: "VPN",
+    //     },
+    //     {
+    //         name: "WireGuard",
+    //         enabled: true,
+    //         type: "VPN",
+    //     },
+    //     {
+    //         name: "StrongSwan",
+    //         enabled: true,
+    //         type: "IPSec",
+    //     },]
 
 
-    const dummyuptimeData = [
-        { name: "Wireguard", value: 0 },
-        { name: "OpenVPN", value: 700 },
-        { name: "StrongSwan", value: 0 },
-    ];
-    const dummyConnectionsData = [
-        {
-            name: "OpenVPN",
-            connections: 1,
-        },
-        {
-            name: "WireGuard",
-            connections: 3,
-        },
-        {
-            name: "StrongSwan",
-            connections: 2,
-        },
-    ];
-    const dummyServiceData1 = {
-        service: {
-            Name: "OpenVPN",
-            Type: "VPN",
-            Status: "Active",
-            PID: 2456,
-            Uptime: 48200,
-            Connections: 1,
-            LastCheck: "2025-11-01T12:30:00Z",
-            Config: {
-                Port: 1194,
-                Protocol: "UDP",
-                Encryption: "AES-256-CBC",
-            },
-        },
-        timestamp: "2025-11-01T12:31:00Z",
-    };
-    const dummyServiceData2 = {
-        service: {
-            Name: "Strongswan",
-            Type: "VPN",
-            Status: "Inactive",
-            PID: 0,
-            Uptime: 0,
-            Connections: 0,
-            LastCheck: "2025-11-01T12:30:00Z",
-            Config: {
-                Port: 0,
-                Protocol: "0",
-                Encryption: "AES-256-CBC",
-            },
-        },
-        timestamp: "2025-11-01T12:31:00Z",
-    };
-    const dummyServiceData3 = {
-        service: {
-            Name: "Wireguard",
-            Type: "VPN",
-            Status: "Inactive",
-            PID: 0,
-            Uptime: 0,
-            Connections: 0,
-            LastCheck: "2025-11-01T12:30:00Z",
-            Config: {
-                Port: 0,
-                Protocol: "0",
-                Encryption: "AES-256-CBC",
-            },
-        },
-        timestamp: "2025-11-01T12:31:00Z",
-    };
+    // const dummyuptimeData = [
+    //     { name: "Wireguard", value: 0 },
+    //     { name: "OpenVPN", value: 700 },
+    //     { name: "StrongSwan", value: 0 },
+    // ];
+    // const dummyConnectionsData = [
+    //     {
+    //         name: "OpenVPN",
+    //         connections: 1,
+    //     },
+    //     {
+    //         name: "WireGuard",
+    //         connections: 3,
+    //     },
+    //     {
+    //         name: "StrongSwan",
+    //         connections: 2,
+    //     },
+    // ];
+    // const dummyServiceData1 = {
+    //     service: {
+    //         Name: "OpenVPN",
+    //         Type: "VPN",
+    //         Status: "Active",
+    //         PID: 2456,
+    //         Uptime: 48200,
+    //         Connections: 1,
+    //         LastCheck: "2025-11-01T12:30:00Z",
+    //         Config: {
+    //             Port: 1194,
+    //             Protocol: "UDP",
+    //             Encryption: "AES-256-CBC",
+    //         },
+    //     },
+    //     timestamp: "2025-11-01T12:31:00Z",
+    // };
+    // const dummyServiceData2 = {
+    //     service: {
+    //         Name: "Strongswan",
+    //         Type: "VPN",
+    //         Status: "Inactive",
+    //         PID: 0,
+    //         Uptime: 0,
+    //         Connections: 0,
+    //         LastCheck: "2025-11-01T12:30:00Z",
+    //         Config: {
+    //             Port: 0,
+    //             Protocol: "0",
+    //             Encryption: "AES-256-CBC",
+    //         },
+    //     },
+    //     timestamp: "2025-11-01T12:31:00Z",
+    // };
+    // const dummyServiceData3 = {
+    //     service: {
+    //         Name: "Wireguard",
+    //         Type: "VPN",
+    //         Status: "Inactive",
+    //         PID: 0,
+    //         Uptime: 0,
+    //         Connections: 0,
+    //         LastCheck: "2025-11-01T12:30:00Z",
+    //         Config: {
+    //             Port: 0,
+    //             Protocol: "0",
+    //             Encryption: "AES-256-CBC",
+    //         },
+    //     },
+    //     timestamp: "2025-11-01T12:31:00Z",
+    // };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -600,28 +600,19 @@ const VpnDashboard = () => {
                 </div>
             </div>
 
-            {/* === Metric Cards (Top Row) === */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* <div className="bg-[#f4e1d3] rounded-xl shadow p-4"> */}
-                <HealthMetricCard health={dummyHealthData} />
-                {/* </div> */}
-                {/* <div className="bg-[#f4e1d3] rounded-xl shadow p-4"> */}
-                <StatusMetricCard status={dummyStatusData} />
-                {/* </div> */}
-                {/* <div className="bg-[#f4e1d3] rounded-xl shadow p-4"> */}
+            {/* {/* ===Top Metrics Section ===  */}
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {/* <div className="flex flex-row gap-6 overflow-x-auto pb-2"> */}            <HealthMetricCard health={health} />
+                <StatusMetricCard status={status} />
                 <AlertMetricsCard alerts={alerts} />
-                {/* </div> */}
-                {/* <div className="bg-[#e4e5f2] rounded-xl shadow p-4"> */}
-                <ListServicesMetricCard services={dummyServices} />
-                {/* </div> */}
+                <ListServicesMetricCard services={services} />
             </div>
-
             {/* === Main 3-Column Layout === */}
             <div className="flex flex-col lg:flex-row gap-8 items-stretch">
 
                 {/* LEFT COLUMN — Smaller Width (Status & Alerts) */}
                 <div className="w-full lg:w-1/6 flex flex-col gap-6 justify-between">
-                    <ServiceStatusBadges status={dummyStatusData} />
+                    <ServiceStatusBadges status={status} />
                     <AlertChart alertChart={alertChart} />
                 </div>
 
@@ -629,10 +620,11 @@ const VpnDashboard = () => {
                 <div className="w-full lg:w-2/5 flex flex-col justify-between gap-8">
                     <div className="flex-1 min-h-[300px]">
                         <AnimatedServiceUptimeChart
-                            title="VPN Service Uptime (hours)"
-                            data={dummyuptimeData}
-                            color="#3B82F6"
-                            duration={4000}
+                            title="Service Uptime (hours)"
+                            data={prepareChartData(status)}
+                            color="#6b7280"
+                            duration={2000}
+
                         />
                     </div>
                     <div className="flex-1 ">
@@ -647,7 +639,10 @@ const VpnDashboard = () => {
                             Service Connections
                         </h2>
                         <div className="h-full">
-                            <ServiceConnectionsChart />
+                            <ServiceConnectionsCard data={{ service: ovpn, timestamp: ovpn?.timestamp }} />
+                            <ServiceConnectionsCard data={{ service: wireguard, timestamp: wireguard?.timestamp }} />
+                            <ServiceConnectionsCard data={{ service: strongswan, timestamp: strongswan?.timestamp }} />
+                            {/* <ServiceConnectionsChart /> */}
                         </div>
                     </div>
 
