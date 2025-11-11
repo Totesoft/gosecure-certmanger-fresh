@@ -1,112 +1,142 @@
-// components/DashboardSummary.tsx
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Card, CardHeader, CardContent } from "@totesoft/ui-kit";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@totesoft/ui-kit";
 
-interface Certificate {
+interface Cert {
     id: string;
-    common_name: string;
-    serial_number: string;
-    valid_until: string;
-    is_active: boolean;
+    commonName: string;
+    serialNumber: string;
+    issuer: string;
+    validFrom: string;
+    validTo: string;
 }
 
-interface Intermediate {
-    id: string;
-    issued_certificates?: Certificate[];
-    valid_until: string;
-    is_active: boolean;
-}
-
-interface DashboardSummaryProps {
-    orgId: string;
-}
-
-const daysRemaining = (date: string) => {
-    const diff = new Date(date).getTime() - Date.now();
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
-};
-
-export default function Userdashboard({ orgId }: DashboardSummaryProps) {
-    const [certs, setCerts] = useState<Certificate[]>([]);
-    const [intermediates, setIntermediates] = useState<Record<string, Intermediate[]>>({});
+const UserDashboard: React.FC = () => {
+    const [activeTab, setActiveTab] = useState("dashboard");
+    const [orgId, setOrgId] = useState("");
+    const [certs, setCerts] = useState<Cert[]>([]);
+    const [dashboardData, setDashboardData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (!orgId) return;
+    const handleOrgIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setOrgId(e.target.value);
+    };
+
+    const fetchData = async () => {
         setLoading(true);
+        try {
+            const response = await fetch("/api/fetch-dashboard-data"); // example endpoint
+            const data = await response.json();
 
-        const fetchData = async () => {
-            try {
-                const [rootRes, interRes, certRes] = await Promise.all([
-                    fetch(`/api/rootcas?orgId=${orgId}`),
-                    fetch(`/api/intermediates?orgId=${orgId}`),
-                    fetch(`/api/certs?orgId=${orgId}`)
-                ]);
-
-                const [rootData, interData, certData] = await Promise.all([
-                    rootRes.json(),
-                    interRes.json(),
-                    certRes.json()
-                ]);
-
-                setCerts(rootData || []);
-                setIntermediates(interData || {});
-                // You can store certData separately if needed
-            } catch (err) {
-                console.error("Error loading dashboard:", err);
-            } finally {
-                setLoading(false);
+            // Ensure it's an array before setting
+            if (Array.isArray(data.rootData)) {
+                setDashboardData(data.rootData);
+            } else if (data.rootData) {
+                setDashboardData([data.rootData]);
+            } else {
+                setDashboardData([]);
             }
-        };
 
+            if (Array.isArray(data.certs)) {
+                setCerts(data.certs);
+            } else if (data.certs) {
+                setCerts([data.certs]);
+            } else {
+                setCerts([]);
+            }
+        } catch (error) {
+            console.error("Error fetching dashboard data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchData();
-    }, [orgId]);
+    }, []);
 
-    const totalRoot = certs.length;
-    const totalIntermediate = Object.values(intermediates).flat().length;
-    const totalIssued = Object.values(intermediates)
-        .flat()
-        .flatMap((i) => i.issued_certificates || []).length;
-    const totalExpiring =
-        certs.filter((r) => daysRemaining(r.valid_until) <= 10 && r.is_active).length +
-        Object.values(intermediates)
-            .flat()
-            .filter((i) => daysRemaining(i.valid_until) <= 10 && i.is_active).length;
-
-    if (loading) {
-        return <div className="text-gray-600 mt-4">Loading dashboard...</div>;
-    }
-
-    return (
-        <div className="mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 bg-white border rounded shadow-sm text-center">
-                    <div className="text-sm text-gray-600">Root CAs</div>
-                    <div className="text-2xl font-bold text-blue-700 mt-2">{totalRoot}</div>
-                </div>
-                <div className="p-4 bg-white border rounded shadow-sm text-center">
-                    <div className="text-sm text-gray-600">Intermediate CAs</div>
-                    <div className="text-2xl font-bold text-blue-700 mt-2">{totalIntermediate}</div>
-                </div>
-                <div className="p-4 bg-white border rounded shadow-sm text-center">
-                    <div className="text-sm text-gray-600">Issued Certificates</div>
-                    <div className="text-2xl font-bold text-blue-700 mt-2">{totalIssued}</div>
-                </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 bg-white border rounded shadow-sm text-center">
-                    <div className="text-sm text-gray-600">Expiring Soon (≤10 days)</div>
-                    <div className="text-2xl font-bold text-red-600 mt-2">{totalExpiring}</div>
-                </div>
-                <div className="p-4 bg-white border rounded shadow-sm text-center">
-                    <div className="text-sm text-gray-600">Organization</div>
-                    <div className="text-2xl font-bold text-blue-700 mt-2">{orgId}</div>
-                </div>
-                <div className="p-4 bg-white border rounded shadow-sm text-center">
-                    <div className="text-sm text-gray-600">Last Update</div>
-                    <div className="text-xs text-gray-600 mt-2">{new Date().toLocaleString()}</div>
-                </div>
-            </div>
+    const renderCertCards = (certs: Cert[]) => (
+        <div className="flex flex-wrap justify-center gap-4">
+            {certs.map((cert) => (
+                <Card key={cert.id} className="w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 border border-gray-200 shadow-md">
+                    <CardHeader>
+                        <h3 className="text-lg font-semibold text-blue-700">ID: {cert.id}</h3>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col space-y-1 text-sm text-gray-700">
+                            <p><strong>Common Name:</strong> {cert.commonName}</p>
+                            <p><strong>Serial No:</strong> {cert.serialNumber}</p>
+                            <p><strong>Issuer:</strong> {cert.issuer}</p>
+                            <p><strong>Valid From:</strong> {cert.validFrom}</p>
+                            <p><strong>Valid To:</strong> {cert.validTo}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
         </div>
     );
-}
+
+    const renderDashboardCards = (data: any[]) => (
+        <div className="flex flex-wrap justify-center gap-4">
+            {data.map((item, idx) => (
+                <Card key={idx} className="w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 border border-gray-200 shadow-md">
+                    <CardHeader>
+                        <h3 className="text-lg font-semibold text-green-700">Dashboard Item</h3>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col space-y-1 text-sm text-gray-700">
+                            {Object.entries(item).map(([key, value]) => (
+                                <p key={key}><strong>{key}:</strong> {String(value)}</p>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
+
+    return (
+        <div className="p-6">
+            <div className="flex justify-center mb-4">
+                <input
+                    type="text"
+                    value={orgId}
+                    onChange={handleOrgIdChange}
+                    placeholder="Enter Org ID"
+                    className="border border-gray-300 rounded px-3 py-1 w-40 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                />
+            </div>
+
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="flex justify-center mb-6 space-x-4">
+                    <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                    <TabsTrigger value="certs">Certificates</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="dashboard">
+                    <h2 className="text-2xl font-semibold mb-4 text-green-700 text-center">Dashboard Overview</h2>
+                    {loading ? (
+                        <p className="text-center text-gray-600">Loading...</p>
+                    ) : dashboardData.length > 0 ? (
+                        renderDashboardCards(dashboardData)
+                    ) : (
+                        <p className="text-gray-600 text-center">No dashboard data available.</p>
+                    )}
+                </TabsContent>
+
+                <TabsContent value="certs">
+                    <h2 className="text-2xl font-semibold mb-4 text-blue-700 text-center">My Certificates</h2>
+                    {loading ? (
+                        <p className="text-center text-gray-600">Loading...</p>
+                    ) : certs.length > 0 ? (
+                        renderCertCards(certs)
+                    ) : (
+                        <p className="text-gray-600 text-center">No certificates found for your account.</p>
+                    )}
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
+};
+
+export default UserDashboard;

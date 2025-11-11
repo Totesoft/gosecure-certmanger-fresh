@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Userdashboard from "./UserDashboard";
+//import Userdashboard from "./UserDashboard";
 interface Certificate {
     id: string;
     common_name: string;
@@ -329,7 +329,7 @@ export default function AnchorVPNUserDashboard(): JSX.Element {
                         <input
                             type="text"
                             value={orgId}
-                            onChange={handleOrgIdChange}
+                            onChange={(e) => setOrgId(e.target.value)}
                             className="border border-gray-300 rounded px-3 py-1 w-40 focus:ring-2 focus:ring-blue-400 focus:outline-none"
                         />
                     </div>
@@ -367,7 +367,7 @@ export default function AnchorVPNUserDashboard(): JSX.Element {
 
                 {!loading && !error && (
                     <>
-                        {/* {activeTab === "dashboard" && renderDashboard()} */}
+
                         {activeTab === "certs" && (
                             <>
                                 <h2 className="text-2xl font-semibold mb-4 text-blue-700 text-center">My Certificates</h2>
