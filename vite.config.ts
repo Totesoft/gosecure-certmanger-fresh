@@ -42,12 +42,14 @@ export default defineConfig({
       },
       exposes: {
         "./routes": "./src/routes/index.tsx",
-        "./RootCert": "./src/pages/RootCert",
-        "./IntermediateCert": "./src/pages/IntermediateCert",
-        "./UserCert": "./src/pages/UserCert",
+        // "./RootCert": "./src/pages/RootCert",
+        // "./IntermediateCert": "./src/pages/IntermediateCert",
+        // "./UserCert": "./src/pages/UserCert",
         "./testapi": "./src/pages/testapipage",
-        "./Home": "./src/pages/Home",
+        // "./Home": "./src/pages/Home",
+        "./vpndashboard": "./src/pages/vpndashboard",
         "./certdashboard": "./src/pages/CertmanagerDashboard",
+
       },
       shared: {
         react: { singleton: true } as any,

@@ -19,7 +19,7 @@ interface IntermediateCA extends Certificate {
     issued_certificates?: Certificate[];
 }
 
-export default function UserDashboard(): JSX.Element {
+export default function AnchorVPNUserDashboard(): JSX.Element {
     const [activeTab, setActiveTab] = useState<"certs" | "alerts">("certs");
     const [certs, setCerts] = useState<Certificate[]>([]);
     const [intermediates, setIntermediates] = useState<
@@ -367,8 +367,8 @@ export default function UserDashboard(): JSX.Element {
 
     return (
         <div className="min-h-screen bg-gray-100 font-sans">
-            {/* Header: Use px-4/8 for padding but keep it full width */}
-            <header className="bg-blue-100 text-blue-800 py-10 px-4 sm:px-8 shadow-sm border-b border-blue-200 text-center">
+            {/* Header */}
+            <header className="bg-blue-100 text-blue-800 py-10 px-8 shadow-sm border-b border-blue-200 text-center">
                 <h1 className="text-3xl font-bold">GoSecure - AnchorVPN</h1>
                 <p className="text-blue-700 font-bold text-lg mt-2">User Certificate Management</p>
             </header>
@@ -376,9 +376,8 @@ export default function UserDashboard(): JSX.Element {
             <hr className="my-0" />
 
             {/* Organisation Input + Tabs */}
-            {/* Removed max-w-6xl for full width, increased padding control */}
             <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
-                <div className="mx-auto px-4 sm:px-8 pt-4"> {/* Increased side padding for small screens, kept on all others */}
+                <div className="max-w-6xl mx-auto px-8 pt-4">
                     <div className="flex items-center space-x-4 mb-4">
                         <label className="text-gray-700 font-lg font-bold">Organization ID:</label>
                         <input
@@ -386,7 +385,7 @@ export default function UserDashboard(): JSX.Element {
                             placeholder="Enter Org ID"
                             value={orgId}
                             onChange={handleOrgIdChange}
-                            className="border border-gray-300 rounded-lg px-3 py-2 w-40 text-xl font-boldfocus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            className="border border-gray-300 rounded-lg px-3 py-2 w-40 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         />
                     </div>
 
@@ -414,8 +413,8 @@ export default function UserDashboard(): JSX.Element {
             </div>
 
             {/* Main Content */}
-            {/* Removed max-w-7xl and mx-auto for full-width content area */}
-            <main className="mt-8 px-4 sm:px-8 pb-12">
+            {/* Removed max-w-6xl from main to allow full-width expansion of two-column grid items */}
+            <main className="max-w-7xl mx-auto mt-8 px-4 pb-12">
                 <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl border border-gray-200">
                     {loading && <p className="text-center text-blue-600 font-medium py-10">Loading Certificates...</p>}
                     {error && <p className="text-red-700 bg-red-100 border-l-4 border-red-500 p-4 rounded-md mb-6 font-medium">Error: {error}</p>}

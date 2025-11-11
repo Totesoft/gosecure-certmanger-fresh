@@ -11,7 +11,7 @@ export default function CertsHome() {
 
     <div className="flex justify-center mt-32">
       <div className="flex flex-col gap-4 bg-background dark:bg-background-dark p-6 rounded-lg">
-        <Button variant="destructive">
+        {/* <Button variant="destructive">
           <Link to="/certs/root">Root CAForm</Link>
         </Button>
         <Button variant="destructive">
@@ -22,17 +22,17 @@ export default function CertsHome() {
         </Button>
         <Button variant="destructive">
           <Link to="/certs/rootca">RootCAdetail</Link>
-        </Button>
+        </Button> */}
         <Button variant="destructive">
 
-          <Link to="/certs/testapi">testAPI</Link>
+          <Link to="/certs/testapi">TestAPI</Link>
         </Button>
         {/* <Button variant="destructive">
           <Link to="/certs/home">API</Link>
         </Button> */}
         <Button variant="destructive">
 
-          <Link to="/certdashboard">CertDashboard</Link>
+          <Link to="/certdashboard">UserCertmanager</Link>
         </Button>
         <Button variant="destructive">
           <Link to="/vpndashboard">VPNDashboard</Link>

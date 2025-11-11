@@ -1,23 +1,20 @@
 import { Routes, Route, Link } from "react-router-dom";
 import CertsHome from "../pages/CertsHome";
 import CertmanagerDashboard from "@/pages/CertmanagerDashboard";
-import OvpnGenerator from "@/pages/vpn";
-
+// import OvpnGenerator from "@/pages/vpn";
 //import RootCADetail from "@/pages/rootcadetail-form";
 //import RootCADetail from "@/features/certs/forms/rootcadetail-form";
-
-import Home from "@/pages/Home";
-
-import RootCADetail from "@/pages/CertViewer-form";
-import RootCert from "@/pages/RootCert";
-import IntermediateCert from "@/pages/IntermediateCert";
-import UserCert from "@/pages/UserCert";
+// import Home from "@/pages/Home";
+// import RootCADetail from "@/pages/CertViewer-form";
+// import RootCert from "@/pages/RootCert";
+// import IntermediateCert from "@/pages/IntermediateCert";
+// import UserCert from "@/pages/UserCert";
 import TestAPI from "@/pages/testapipage";
 //import VPNmonitoring from "@/pages/VPNmonitoring";
 import VPNDashboard from "@/pages/vpndashboard"
-import API from "@/pages/Home";
-import rootCAlist from "@/pages/rootCAlist";
-import RootCAlistAdmn from "@/pages/rootCAlistAdmn";
+// import API from "@/pages/Home";
+// import rootCAlist from "@/pages/rootCAlist";
+// import RootCAlistAdmn from "@/pages/rootCAlistAdmn";
 
 function NotFound() {
   return (
@@ -40,32 +37,29 @@ export default function CertsRoutes() {
       {/* <Route path="/root-ca" element={<RootCAPage />} />
       <Route path="/intermediate-ca" element={<IntermediateCAPage />} />
       <Route path="/user-ca" element={<UserCertForm />} /> */}
-      <Route path="/certs/root" element={<RootCert />} />
+      {/* <Route path="/certs/root" element={<RootCert />} />
       <Route path="/certs/intermediate" element={<IntermediateCert />} />
-      <Route path="/certs/user" element={<UserCert />} />
+      <Route path="/certs/user" element={<UserCert />} /> */}
       <Route path="/certs/testapi" element={<TestAPI />} />
       <Route path="/certdashboard" element={<CertmanagerDashboard />} />
       {/* <Route path="/vpnmonitoring" element={<VPNmonitoring />} /> */}
       {/* <Route path="/certs/home" element={<API />} /> */}
 
       <Route path="/vpndashboard" element={<VPNDashboard />} />
-      <Route path="/rootCAlistAdmn" element={<RootCAlistAdmn />} />
-
-
-
-      <Route path="/certs/rootca" element={<RootCADetail cert={{
-        subject_cn: "",
-        subject_o: undefined,
-        subject_ou: undefined,
-        issuer_cn: "",
-        issuer_o: undefined,
-        issuer_ou: undefined,
-        not_before: "",
-        not_after: "",
-        sha256_fingerprint: "",
-        public_key_sha256: "",
-        pem_cert: ""
-      }} />} />
+      {/* <Route path="/rootCAlistAdmn" element={<RootCAlistAdmn />} /> */}
+      {/* <Route path="/certs/rootca" element={<RootCADetail cert={{ */}
+      {/* subject_cn: "",
+      subject_o: undefined,
+      subject_ou: undefined,
+      issuer_cn: "",
+      issuer_o: undefined,
+      issuer_ou: undefined,
+      not_before: "",
+      not_after: "",
+      sha256_fingerprint: "",
+      public_key_sha256: "",
+      pem_cert: ""
+      }} />} /> */}
 
 
 
