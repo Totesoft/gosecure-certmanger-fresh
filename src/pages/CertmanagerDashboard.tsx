@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Clock } from 'lucide-react'; // Using lucide-react for icons
+import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Clock, Download } from "lucide-react";
 
 // The specific API base URL provided
 const API_BASE_URL = "https://pre-prod.be.anchorvpn.net/api/v1";
@@ -20,7 +20,7 @@ interface IntermediateCA extends Certificate {
 }
 
 export default function UserDashboard(): JSX.Element {
-    const [activeTab, setActiveTab] = useState<"certs" | "alerts">("certs");
+    const [activeTab, setActiveTab] = useState<"certs" | "alerts" | "download" | "help">("certs");
     const [certs, setCerts] = useState<Certificate[]>([]);
     const [intermediates, setIntermediates] = useState<
         Record<string, IntermediateCA[]>
@@ -35,6 +35,14 @@ export default function UserDashboard(): JSX.Element {
     >({});
     const [error, setError] = useState<string | null>(null);
     const [orgId, setOrgId] = useState(() => localStorage.getItem("orgId") || "1");
+
+
+    // For download tab
+    const [downloadType, setDownloadType] = useState("root");
+    const [certIdToDownload, setCertIdToDownload] = useState("");
+    const [downloading, setDownloading] = useState(false);
+    const [downloadMessage, setDownloadMessage] = useState("");
+
 
     // Helper function to fetch root CAs (certs)
     const fetchCerts = async (): Promise<void> => {
@@ -168,150 +176,206 @@ export default function UserDashboard(): JSX.Element {
         };
     };
 
-    // Cards renderer (horizontal layout)
+
+
+    // --- Download Handler ---
+    const handleDownload = async () => {
+        if (!certIdToDownload.trim()) {
+            setDownloadMessage("Please enter a certificate ID.");
+            return;
+        }
+        setDownloading(true);
+        setDownloadMessage("");
+        try {
+            const url = `${API_BASE_URL}/certificates/${certIdToDownload}/download/`;
+            const res = await axios.get(url, { responseType: "blob" });
+            const blob = new Blob([res.data], { type: "application/x-x509-ca-cert" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `${certIdToDownload}.crt`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setDownloadMessage("Certificate downloaded successfully.");
+        } catch (err: any) {
+            console.error("Download failed", err);
+            setDownloadMessage("Failed to download certificate. Check the ID.");
+        } finally {
+            setDownloading(false);
+        }
+    };
+
+
+    // Cards renderer (unified layout, large text, dark/light/blue mode compatible)
     const renderCertCards = (data: Certificate[]) => {
         return (
-            <div className="space-y-4">
-                {data.map((rootCa) => {
-                    const remaining = daysRemaining(rootCa.valid_until);
-                    const isExpanded = expandedRows.has(rootCa.id);
-                    const intermediateList = intermediates[rootCa.id];
-                    const { text, icon, className } = getStatusStyles(rootCa.is_active, remaining);
-                    const commonName = rootCa.common_name.replace("Test Root CA", "Root CA").replace("Test Organization Root CA Renewed", "Org Root CA");
+            <div
+                className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 transition-colors w-full"
+            >
+                {data.length === 0 ? (
+                    <p className="text-lg text-gray-500 dark:text-gray-400 italic">
+                        No certificates found.
+                    </p>
+                ) : (
+                    data.map((rootCa) => {
+                        const remaining = daysRemaining(rootCa.valid_until);
+                        const isExpanded = expandedRows.has(rootCa.id);
+                        const intermediateList = intermediates[rootCa.id];
+                        const { text, className } = getStatusStyles(rootCa.is_active, remaining);
+                        const commonName = rootCa.common_name
+                            .replace("Test Root CA", "Root CA")
+                            .replace("Test Organization Root CA Renewed", "Org Root CA");
 
-
-                    return (
-                        <div
-                            key={rootCa.id}
-                            className={`bg-white rounded-xl shadow-lg transition-shadow duration-300 overflow-hidden ${isExpanded ? 'shadow-xl' : ''}`}
-                        >
-                            {/* Root CA Header */}
-                            <div className={`p-4 border-l-4 ${rootCa.is_active ? 'border-blue-600' : 'border-gray-400'} flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleRow(rootCa.id)}>
-                                <div className="flex flex-col md:flex-row md:items-center md:gap-x-6 gap-y-2 flex-grow">
-                                    <span className="font-extrabold text-lg text-blue-800 flex items-center">
-                                        <span className="hidden md:inline text-sm font-semibold mr-2 text-gray-400">ID:</span> {rootCa.id}
-                                    </span>
-                                    <span className="text-gray-700 font-semibold truncate max-w-xs md:max-w-none">
-                                        {commonName}
-                                    </span>
-                                    <div className={`inline-flex items-center text-xs font-bold px-3 py-1 rounded-full ${className} ml-auto md:ml-0`}>
-                                        {icon}
-                                        <span>{text}</span>
-                                    </div>
-                                    <span className={`text-sm font-medium ml-auto md:ml-0 ${remaining <= 30 ? 'text-red-500' : 'text-green-600'}`}>
-                                        {remaining} days left
-                                    </span>
-                                </div>
-                                <button
-                                    className="text-blue-600 hover:text-blue-800 ml-4 p-1 rounded-full hover:bg-blue-100 transition-colors"
-                                    aria-label={isExpanded ? "Collapse Root CA" : "Expand Root CA"}
-                                    onClick={(e) => { e.stopPropagation(); toggleRow(rootCa.id); }} // Stop propagation to prevent double-toggle
+                        return (
+                            <div key={rootCa.id} className="mb-6 w-full">
+                                {/* Root CA Row */}
+                                <div
+                                    className={`p-5 rounded-xl cursor-pointer flex justify-between items-center hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors w-full ${isExpanded ? 'bg-blue-100 dark:bg-gray-800' : 'bg-white dark:bg-gray-900'
+                                        }`}
+                                    onClick={() => toggleRow(rootCa.id)}
                                 >
-                                    {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                                </button>
-                            </div>
-
-                            {/* Intermediate CAs */}
-                            {isExpanded && (
-                                <div className="p-4 pt-0 border-t border-gray-100 bg-gray-50">
-                                    <div className="py-2 text-sm font-bold text-gray-600">
-                                        Intermediate CAs
+                                    <div className="flex flex-col md:flex-row md:items-center md:gap-x-8 gap-y-2 flex-grow w-full">
+                                        <span className="font-extrabold text-2xl text-blue-800 dark:text-blue-300 flex items-center">
+                                            ID: {rootCa.id}
+                                        </span>
+                                        <span className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                                            {commonName}
+                                        </span>
+                                        <div
+                                            className={`inline-flex items-center text-base font-bold px-4 py-1 rounded-full ${className} ml-auto md:ml-0`}
+                                        >
+                                            {text}
+                                        </div>
+                                        <span
+                                            className={`text-lg font-medium ml-auto md:ml-0 ${remaining <= 30 ? 'text-red-500' : 'text-green-600'
+                                                }`}
+                                        >
+                                            {remaining} days left
+                                        </span>
                                     </div>
-                                    {loadingIntermediates[rootCa.id] ? (
-                                        <p className="text-gray-500 text-sm p-2">Loading intermediates...</p>
-                                    ) : intermediateList && intermediateList.length > 0 ? (
-                                        <div className="space-y-3 pl-4 border-l-2 border-gray-200">
-                                            {intermediateList.map((int) => {
+                                    <button
+                                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 ml-4 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-gray-700 transition-colors"
+                                        aria-label={isExpanded ? "Collapse Root CA" : "Expand Root CA"}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleRow(rootCa.id);
+                                        }}
+                                    >
+                                        {isExpanded ? <ChevronUp size={26} /> : <ChevronDown size={26} />}
+                                    </button>
+                                </div>
+
+                                {/* Intermediate + Leaf Section */}
+                                {isExpanded && (
+                                    <div className="ml-10 mt-4 border-l-4 border-blue-300 dark:border-gray-600 pl-6 pr-6 w-full">
+                                        {loadingIntermediates[rootCa.id] ? (
+                                            <p className="text-lg text-gray-500 dark:text-gray-400">
+                                                Loading intermediates...
+                                            </p>
+                                        ) : intermediateList && intermediateList.length > 0 ? (
+                                            intermediateList.map((int) => {
                                                 const intRemaining = daysRemaining(int.valid_until);
                                                 const isIntExpanded = expandedIntermediates.has(int.id);
                                                 const intStatus = getStatusStyles(int.is_active, intRemaining);
                                                 return (
-                                                    <div
-                                                        key={int.id}
-                                                        className="border border-gray-100 rounded-lg p-3 bg-white shadow-sm"
-                                                    >
+                                                    <div key={int.id} className="mb-4 w-full">
                                                         {/* Intermediate Row */}
-                                                        <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleIntermediate(int.id)}>
-                                                            <div className="flex flex-col md:flex-row md:items-center md:gap-x-4 flex-grow text-sm">
-                                                                <span className="font-bold text-gray-800">
-                                                                    <span className="hidden md:inline text-xs font-medium mr-1 text-gray-400">ID:</span> {int.id}
+                                                        <div
+                                                            className="flex justify-between items-center py-3 px-5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors w-full"
+                                                            onClick={() => toggleIntermediate(int.id)}
+                                                        >
+                                                            <div className="flex flex-col md:flex-row md:items-center md:gap-x-6 flex-grow w-full">
+                                                                <span className="font-bold text-xl text-gray-800 dark:text-gray-100">
+                                                                    ID: {int.id}
                                                                 </span>
-                                                                <span className="text-gray-600 truncate max-w-xs md:max-w-none">
+                                                                <span className="text-lg text-gray-700 dark:text-gray-300">
                                                                     {int.common_name}
                                                                 </span>
-                                                                <div className={`inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full ${intStatus.className} ml-auto md:ml-0`}>
-                                                                    {intStatus.icon}
-                                                                    <span>{intStatus.text}</span>
+                                                                <div
+                                                                    className={`inline-flex items-center text-sm font-bold px-3 py-1 rounded-full ${intStatus.className} ml-auto md:ml-0`}
+                                                                >
+                                                                    {intStatus.text}
                                                                 </div>
-                                                                <span className={`text-xs font-medium ml-auto md:ml-0 ${intRemaining <= 30 ? 'text-red-500' : 'text-green-600'}`}>
+                                                                <span
+                                                                    className={`text-lg font-medium ml-auto md:ml-0 ${intRemaining <= 30
+                                                                        ? 'text-red-500'
+                                                                        : 'text-green-600'
+                                                                        }`}
+                                                                >
                                                                     {intRemaining} days left
                                                                 </span>
                                                             </div>
-
                                                             <button
-                                                                className="text-blue-600 hover:text-blue-800 ml-4 p-1 rounded-full hover:bg-blue-100 transition-colors"
-                                                                aria-label={isIntExpanded ? "Collapse intermediate" : "Expand intermediate"}
-                                                                onClick={(e) => { e.stopPropagation(); toggleIntermediate(int.id); }}
+                                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 ml-4 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-gray-700 transition-colors"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleIntermediate(int.id);
+                                                                }}
                                                             >
-                                                                {isIntExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                                                {isIntExpanded ? <ChevronUp size={22} /> : <ChevronDown size={22} />}
                                                             </button>
                                                         </div>
 
-                                                        {/* Issued Certificates for Intermediate */}
+                                                        {/* Leaf Certificates */}
                                                         {isIntExpanded && (
-                                                            <div className="mt-3 pl-4 border-l-2 border-gray-100">
+                                                            <div className="ml-8 mt-2 border-l-2 border-gray-300 dark:border-gray-600 pl-5 pr-6 w-full">
                                                                 {int.issued_certificates && int.issued_certificates.length > 0 ? (
-                                                                    <div className="space-y-2 text-sm text-gray-700 pt-2">
-                                                                        <div className="text-xs font-bold text-gray-500 mb-1">Issued Certificates ({int.issued_certificates.length})</div>
-                                                                        {int.issued_certificates.map((leaf) => {
-                                                                            const leafDays = daysRemaining(leaf.valid_until);
-                                                                            const leafStatus = getStatusStyles(leaf.is_active, leafDays);
-                                                                            return (
-                                                                                <div
-                                                                                    key={leaf.id}
-                                                                                    className="p-2 border-b border-gray-50 last:border-b-0 flex justify-between items-center"
-                                                                                >
-                                                                                    <div className="flex flex-col gap-1">
-                                                                                        <div className="font-semibold text-gray-700 truncate max-w-xs">
-                                                                                            {leaf.common_name}
-                                                                                        </div>
-                                                                                        <div className="text-xs text-gray-500">
-                                                                                            ID: {leaf.id} | Serial: {leaf.serial_number}
-                                                                                        </div>
+                                                                    int.issued_certificates.map((leaf) => {
+                                                                        const leafDays = daysRemaining(leaf.valid_until);
+                                                                        const leafStatus = getStatusStyles(leaf.is_active, leafDays);
+                                                                        return (
+                                                                            <div
+                                                                                key={leaf.id}
+                                                                                className="w-full px-6 py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-md"
+                                                                            >
+                                                                                <div>
+                                                                                    <div className="font-semibold text-lg text-gray-800 dark:text-gray-200">
+                                                                                        {leaf.common_name}
                                                                                     </div>
-                                                                                    <div className="flex flex-col items-end gap-1">
-                                                                                        <div className={`inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full ${leafStatus.className}`}>
-                                                                                            {leafStatus.text}
-                                                                                        </div>
-                                                                                        <span className={`text-xs font-medium ${leafDays <= 30 ? 'text-red-500' : 'text-green-600'}`}>
-                                                                                            {leafDays} days left
-                                                                                        </span>
+                                                                                    <div className="text-lg text-gray-500 dark:text-gray-400">
+                                                                                        ID: {leaf.id}
                                                                                     </div>
                                                                                 </div>
-                                                                            );
-                                                                        })}
-                                                                    </div>
+
+                                                                                <div className="flex flex-col items-end pr-2">
+                                                                                    <div
+                                                                                        className={`inline-flex items-center text-sm font-bold px-3 py-1 rounded-full ${leafStatus.className}`}
+                                                                                    >
+                                                                                        {leafStatus.text}
+                                                                                    </div>
+                                                                                    <span
+                                                                                        className={`text-sm font-medium ${leafDays <= 30
+                                                                                            ? 'text-red-500'
+                                                                                            : 'text-green-600'
+                                                                                            }`}
+                                                                                    >
+                                                                                        {leafDays} days left
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        );
+                                                                    })
                                                                 ) : (
-                                                                    <p className="text-xs italic text-gray-400 p-2">
-                                                                        No issued certificates found for this intermediate.
+                                                                    <p className="text-sm italic text-gray-400 dark:text-gray-500">
+                                                                        No issued certificates found.
                                                                     </p>
                                                                 )}
                                                             </div>
                                                         )}
                                                     </div>
                                                 );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-gray-400 italic p-2">
-                                            No intermediate CAs found.
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
+                                            })
+                                        ) : (
+                                            <p className="text-lg italic text-gray-500 dark:text-gray-400">
+                                                No intermediate CAs found.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })
+                )}
             </div>
         );
     };
@@ -365,88 +429,158 @@ export default function UserDashboard(): JSX.Element {
         );
     };
 
+
+
+
+
+
+
+    // --- Download tab UI ---
+    const renderDownloadTab = () => (
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 max-w-xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-blue-700 dark:text-blue-300 mb-6">Download Certificate</h2>
+
+            <div className="space-y-5">
+                <div>
+                    <label className="block text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">
+                        Select Certificate Type
+                    </label>
+                    <select
+                        value={downloadType}
+                        onChange={(e) => setDownloadType(e.target.value)}
+                        className="w-full text-lg border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="root">Root CA</option>
+                        <option value="intermediate">Intermediate CA</option>
+                        <option value="leaf">Issued Certificate</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label className="block text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">
+                        Enter Certificate ID
+                    </label>
+                    <input
+                        type="text"
+                        placeholder="e.g., 12345"
+                        value={certIdToDownload}
+                        onChange={(e) => setCertIdToDownload(e.target.value)}
+                        className="w-full text-lg border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-center dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+
+                <button
+                    onClick={handleDownload}
+                    disabled={downloading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-3 rounded-lg transition disabled:opacity-50 flex items-center justify-center"
+                >
+                    <Download size={24} className="mr-2" />
+                    {downloading ? "Downloading..." : "Download Certificate"}
+                </button>
+
+                {downloadMessage && (
+                    <p className="mt-4 text-lg font-medium text-blue-700 dark:text-blue-300">{downloadMessage}</p>
+                )}
+            </div>
+        </div>
+    );
+
+
+
+
+
     return (
-        <div className="min-h-screen bg-gray-100 font-sans">
-            {/* Header: Use px-4/8 for padding but keep it full width */}
-            <header className="bg-blue-100 text-blue-800 py-10 px-4 sm:px-8 shadow-sm border-b border-blue-200 text-center">
-                <h1 className="text-3xl font-bold">GoSecure - AnchorVPN</h1>
-                <p className="text-blue-700 font-bold text-lg mt-2">User Certificate Management</p>
+        <div className="mt-8 px-48 sm:px-18 pb-12">
+            {/* Header */}
+            <header className="bg-[#1b2067] dark:bg-[#0f143d] text-white py-8 px-8 shadow-sm border-b border-blue-200 text-center">
+                <h1 className="text-5xl font-bold">GoSecure - AnchorVPN</h1>
+                <p className="text-blue-200 font-semibold text-3xl mt-2 dark:text-blue-400">
+                    User Certificate Management
+                </p>
             </header>
 
-            <hr className="my-0" />
 
-            {/* Organisation Input + Tabs */}
-            {/* Removed max-w-6xl for full width, increased padding control */}
-            <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
-                <div className="mx-auto px-4 sm:px-8 pt-4"> {/* Increased side padding for small screens, kept on all others */}
-                    <div className="flex items-center space-x-4 mb-4">
-                        <label className="text-gray-700 font-lg font-bold">Organization ID:</label>
+            <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
+                <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
+                    {/* Sidebar */}
+                    <aside className="w-84 bg-blue-50 dark:bg-[#10163f] border-r border-blue-200 dark:border-gray-700 p-6 flex flex-col justify-between">
+                        <div>
+                            {/* Username / Heading */}
+                            <div className="mb-8 text-center">
+                                <h2 className="text-3xl font-extrabold text-blue-700 dark:text-blue-300">
+                                    Welcome, User
+                                </h2>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    Dashboard Menu
+                                </p>
+                            </div>
+
+                            {/* Navigation Tabs */}
+                            <nav className="space-y-4">
+                                {[
+                                    { key: "certs", label: "My Certificates", hover: "hover:text-blue-600" },
+                                    { key: "alerts", label: "Alerts", hover: "hover:text-red-600" },
+                                    { key: "download", label: "Download", hover: "hover:text-green-600" },
+                                    { key: "help", label: "Help", hover: "hover:text-purple-600" },
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => setActiveTab(tab.key as any)}
+                                        className={`w-full text-left text-2xl font-semibold px-5 py-3 rounded-md transition-all duration-200
+                            ${activeTab === tab.key
+                                                ? "text-white bg-[#1b2067] dark:bg-[#0f143d]"
+                                                : `bg-blue-100 dark:bg-blue-900 text-gray-700 dark:text-gray-200 ${tab.hover}`
+                                            }`}
+                                    >
+                                        {tab.label}
+
+                                        {tab.key === "alerts" &&
+                                            certs.filter((r) => daysRemaining(r.valid_until) <= 30 && r.is_active).length > 0 && (
+                                                <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-sm font-bold leading-none text-white bg-red-600 rounded-full">
+                                                    {certs.filter((r) => daysRemaining(r.valid_until) <= 30 && r.is_active).length}
+                                                </span>
+                                            )}
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+
+                        {/* Footer */}
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-8">
+                            © GoSecure 2025
+                        </p>
+                    </aside>
+                </div>
+
+
+
+                {/* Main Content */}
+                <main className="flex-1 p-10 text-gray-900 dark:text-gray-100">
+                    <div className="mb-8">
+                        <label className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-2 block">
+                            Organization ID
+                        </label>
                         <input
                             type="text"
                             placeholder="Enter Org ID"
                             value={orgId}
                             onChange={handleOrgIdChange}
-                            className="border border-gray-300 rounded-lg px-3 py-2 w-40 text-xl font-boldfocus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            className="text-center border border-gray-300 dark:border-gray-600 dark:bg-gray-800 rounded-lg px-4 py-2.5 w-64 text-lg font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         />
                     </div>
-
-                    <div className="flex space-x-1 pb-0.5">
-                        <button
-                            onClick={() => setActiveTab("certs")}
-                            className={`py-3 px-6 font-semibold text-sm transition-colors duration-200 ${activeTab === "certs" ? "border-b-4 border-blue-600 text-blue-700 bg-gray-50 rounded-t-lg" : "text-gray-500 hover:text-blue-600"}`}
-                        >
-                            My Certificates
-                        </button>
-
-                        <button
-                            onClick={() => setActiveTab("alerts")}
-                            className={`py-3 px-6 font-semibold text-sm transition-colors duration-200 ${activeTab === "alerts" ? "border-b-4 border-red-600 text-red-700 bg-gray-50 rounded-t-lg" : "text-gray-500 hover:text-red-600"}`}
-                        >
-                            Alerts
-                            {certs.filter((r) => daysRemaining(r.valid_until) <= 30 && r.is_active).length > 0 && (
-                                <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
-                                    {certs.filter((r) => daysRemaining(r.valid_until) <= 30 && r.is_active).length}
-                                </span>
-                            )}
-                        </button>
-                    </div>
-                </div>
+                    {/* Main Content */}
+                    <main className="flex-1 p-10 text-gray-900 dark:text-gray-100">
+                        {activeTab === "certs"
+                            ? renderCertCards(certs)
+                            : activeTab === "alerts"
+                                ? renderAlerts()
+                                : activeTab === "download"
+                                    ? renderDownloadTab()
+                                    : <p className="text-2xl text-center text-gray-600">Help section coming soon.</p>}
+                    </main>
+                </main>
             </div>
-
-            {/* Main Content */}
-            {/* Removed max-w-7xl and mx-auto for full-width content area */}
-            <main className="mt-8 px-4 sm:px-8 pb-12">
-                <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl border border-gray-200">
-                    {loading && <p className="text-center text-blue-600 font-medium py-10">Loading Certificates...</p>}
-                    {error && <p className="text-red-700 bg-red-100 border-l-4 border-red-500 p-4 rounded-md mb-6 font-medium">Error: {error}</p>}
-
-                    {!loading && !error && (
-                        <>
-                            {/* Content Header based on active tab */}
-                            {activeTab === "certs" && (
-                                <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">Root & Intermediate Certificate Authorities</h2>
-                            )}
-                            {activeTab === "alerts" && (
-                                <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">Certificate Expiration Alerts</h2>
-                            )}
-                            <hr className="mb-6" />
-
-                            {/* Content */}
-                            {activeTab === "certs" && (
-                                <>
-                                    {certs.length > 0 ? renderCertCards(certs) : <p className="text-gray-600 text-center py-10">No certificates found for this organization ID.</p>}
-                                </>
-                            )}
-
-                            {activeTab === "alerts" && (
-                                <>
-                                    {renderAlerts()}
-                                </>
-                            )}
-                        </>
-                    )}
-                </div>
-            </main>
         </div>
     );
+
 }
