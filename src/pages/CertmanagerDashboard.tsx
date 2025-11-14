@@ -1,20 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Clock, Download } from "lucide-react";
+import { AlertTriangle, CheckCircle, Clock } from "lucide-react";
 
 const API_BASE_URL = "https://pre-prod.be.anchorvpn.net/api/v1";
-// Interfaces for the certificate hierarchy
+
+// ------------------ INTERFACES ------------------
 export interface LeafCertificate {
     id: string;
     common_name: string;
     valid_until: string;
+    serial_number?: string;
+    is_active?: boolean;
 }
 
 export interface IntermediateCertificate {
     id: string;
     common_name: string;
     valid_until: string;
-    status: string;
+    serial_number?: string;
+    is_active?: boolean;
     issued_certificates?: LeafCertificate[];
 }
 
@@ -22,28 +26,18 @@ export interface RootCertificate {
     id: string;
     common_name: string;
     valid_until: string;
-    status: string;
+    serial_number?: string;
+    is_active?: boolean;
     intermediates?: IntermediateCertificate[];
 }
 
-// Optional interface if your backend includes server mappings
-export interface Server {
-    id: string;
-    name: string;
-    ip_address?: string;
-    status?: string;
-    cert_id?: string;
-}
-
+// ------------------ MAIN COMPONENT ------------------
 export default function UserDashboard() {
     const [orgId, setOrgId] = useState(localStorage.getItem("orgId") || "");
-    const [certs, setCerts] = useState([]);
-    const [intermediates, setIntermediates] = useState({});
-    const [expandedRows, setExpandedRows] = useState(new Set());
-    const [expandedIntermediates, setExpandedIntermediates] = useState(new Set());
+    const [certs, setCerts] = useState<RootCertificate[]>([]);
+    const [intermediates, setIntermediates] = useState<Record<string, IntermediateCertificate[]>>({});
     const [loading, setLoading] = useState(false);
-    const [loadingIntermediates, setLoadingIntermediates] = useState({});
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState("certs");
     const [certIdToDownload, setCertIdToDownload] = useState("");
     const [downloading, setDownloading] = useState(false);
@@ -51,17 +45,63 @@ export default function UserDashboard() {
     const [certTypeToDownload, setCertTypeToDownload] = useState("");
 
 
-    // --- FETCH ROOT CAs ---
+    // ------------------ HELPERS ------------------
+    const daysRemaining = (validUntil: string | number | Date) => {
+        const diff = new Date(validUntil).getTime() - Date.now();
+        return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    };
+
+    const getStatusStyles = (isActive: boolean | undefined, remainingDays: number) => {
+        if (!isActive)
+            return { text: "Inactive", icon: <Clock size={16} />, className: "bg-gray-200 text-gray-600" };
+        if (remainingDays <= 10)
+            return { text: "Expiring Soon", icon: <AlertTriangle size={16} />, className: "bg-red-100 text-red-700" };
+        if (remainingDays <= 30)
+            return { text: "Warning", icon: <AlertTriangle size={16} />, className: "bg-yellow-100 text-yellow-700" };
+        return { text: "Active", icon: <CheckCircle size={16} />, className: "bg-green-100 text-green-700" };
+    };
+
+    // ------------------ FETCH ALL CERT DATA ------------------
     const fetchCerts = async () => {
         if (!orgId?.trim()) {
             setCerts([]);
             return;
         }
+
         setLoading(true);
         setError(null);
         try {
+            // Fetch all root CAs
             const res = await axios.get(`${API_BASE_URL}/organizations/${orgId}/root-ca/`);
-            setCerts(res.data || []);
+            const rootData: RootCertificate[] = res.data || [];
+            setCerts(rootData);
+
+            // Fetch intermediates + issued certs for each root CA
+            const allIntermediateData: Record<string, IntermediateCertificate[]> = {};
+
+            for (const root of rootData) {
+                try {
+                    const intRes = await axios.get(`${API_BASE_URL}/root-ca/${root.id}/intermediate-ca/`);
+                    const intermediatesData: IntermediateCertificate[] = intRes.data || [];
+
+                    const withIssued = await Promise.all(
+                        intermediatesData.map(async (int) => {
+                            try {
+                                const leafRes = await axios.get(`${API_BASE_URL}/intermediate-ca/${int.id}/certificates/`);
+                                return { ...int, issued_certificates: leafRes.data || [] };
+                            } catch {
+                                return { ...int, issued_certificates: [] };
+                            }
+                        })
+                    );
+
+                    allIntermediateData[root.id] = withIssued;
+                } catch {
+                    allIntermediateData[root.id] = [];
+                }
+            }
+
+            setIntermediates(allIntermediateData);
         } catch (err) {
             console.error("fetchCerts error", err);
             setError("Failed to fetch certificates. Check Org ID.");
@@ -71,74 +111,182 @@ export default function UserDashboard() {
         }
     };
 
+    // ------------------ EFFECTS ------------------
     useEffect(() => {
-        if (activeTab === "certs" || activeTab === "alerts") fetchCerts();
-        else if (activeTab === "server") fetchServers();
+        if (activeTab === "certs") fetchCerts();
     }, [activeTab, orgId]);
 
-    const handleOrgIdChange = (e) => {
+    // ------------------ HANDLERS ------------------
+    const handleOrgIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setOrgId(value);
         localStorage.setItem("orgId", value);
     };
 
-    const daysRemaining = (validUntil: string | number | Date) => {
-        const diff = new Date(validUntil).getTime() - Date.now();
-        return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    console.log('days remaining', daysRemaining)
+
+
+
+    // ------------------ TABLE RENDER ------------------
+    const renderCertCards = () => {
+        if (loading)
+            return <p className="text-center text-lg font-medium">Loading certificates...</p>;
+        if (error)
+            return <p className="text-center text-red-500 font-medium">{error}</p>;
+        if (!certs || certs.length === 0)
+            return (
+                <p className="text-center text-lg italic text-gray-500">
+                    No certificates found.
+                </p>
+            );
+
+        return (
+            <div className="p-8 bg-white rounded-xl shadow-lg">
+                <h3 className="text-3xl font-bold mb-8 text-blue-900 text-center">
+                    My certificates
+                </h3>
+
+                <table className="w-full border border-gray-300 border-collapse">
+                    <thead className="text-white text-lg">
+                        <tr>
+                            <th className="bg-[#1e28b6] border border-blue-300 px-6 py-3 text-left w-1/3">
+                                Root Certificates
+                            </th>
+                            <th className="bg-[#1e28b6] border border-blue-400 px-6 py-3 text-left w-1/3">
+                                Intermediate Certificates
+                            </th>
+                            <th className="bg-[#1e28b6] border border-blue-500 px-6 py-3 text-left w-1/3">
+                                Issued Certificates
+                            </th>
+                        </tr>
+                    </thead>
+
+
+                    <tbody>
+                        {certs.map((rootCa) => {
+                            const remaining = daysRemaining(rootCa.valid_until);
+                            const status = getStatusStyles(rootCa.is_active, remaining);
+                            const intermediateList = intermediates[rootCa.id] || [];
+
+                            return (
+                                <tr key={rootCa.id} className="align-top hover:bg-gray-50">
+
+                                    {/* ROOT COLUMN */}
+                                    <td className="border border-gray-300 px-6 py-6 align-top w-1/3">
+                                        <div className="flex flex-col space-y-4">
+
+                                            <div className={`inline-flex items-center self-start px-4 py-2 rounded-full text-base font-semibold ${status.className}`}>
+                                                {status.icon}
+                                                <span className="ml-2">{status.text}</span>
+                                            </div>
+
+                                            <div className="text-2xl text-blue-900 font-bold">{rootCa.common_name}</div>
+                                            <div className="text-xl text-gray-700 font-medium">ID: {rootCa.id}</div>
+
+                                            <div className={`text-xl font-semibold ${remaining <= 30 ? "text-red-600" : "text-green-600"}`}>
+                                                Expires: {new Date(rootCa.valid_until).toLocaleDateString()}
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    {/* INTERMEDIATE COLUMN */}
+                                    <td className="border border-gray-300 px-6 py-6 align-top w-1/3">
+                                        {intermediateList.length === 0 ? (
+                                            <p className="italic text-gray-500 text-lg">No intermediate CAs found.</p>
+                                        ) : (
+                                            <div className="space-y-6">
+                                                {intermediateList.map((int) => {
+                                                    const intRemaining = daysRemaining(int.valid_until);
+                                                    const intStatus = getStatusStyles(int.is_active, intRemaining);
+
+                                                    return (
+                                                        <div
+                                                            key={int.id}
+                                                            className="rounded-lg border border-gray-200 p-5 bg-gray-50 hover:bg-gray-100 transition"
+                                                        >
+                                                            <div
+                                                                className={`inline-flex items-center mb-3 px-4 py-2 rounded-full text-base font-semibold ${intStatus.className}`}
+                                                            >
+                                                                {intStatus.icon}
+                                                                <span className="ml-2">{intStatus.text}</span>
+                                                            </div>
+
+                                                            <div className="text-2xl text-blue-800 font-bold">{int.common_name}</div>
+                                                            <div className="text-xl text-gray-700 font-medium">ID: {int.id}</div>
+
+                                                            <div className={`text-xl font-semibold ${intRemaining <= 30 ? "text-red-600" : "text-green-600"}`}>
+                                                                Expires: {new Date(int.valid_until).toLocaleDateString()}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </td>
+
+                                    {/* ISSUED CERTIFICATES COLUMN */}
+                                    <td className="border border-gray-300 px-6 py-6 align-top w-1/3">
+                                        {intermediateList.length === 0 ? (
+                                            <p className="italic text-gray-500 text-lg">No issued certificates found.</p>
+                                        ) : (
+                                            <div className="space-y-6">
+                                                {intermediateList.map((int) =>
+                                                    int.issued_certificates && int.issued_certificates.length > 0 ? (
+                                                        <div
+                                                            key={int.id}
+                                                            className="rounded-lg border border-gray-200 p-5 bg-gray-50 hover:bg-gray-100 transition"
+                                                        >
+                                                            <div className="text-2xl text-blue-700 font-semibold mb-3">
+                                                                {int.common_name} — Issued Certificates
+                                                            </div>
+
+                                                            {int.issued_certificates.map((leaf) => {
+                                                                const leafRemaining = daysRemaining(leaf.valid_until);
+                                                                const leafStatus = getStatusStyles(leaf.is_active, leafRemaining);
+
+                                                                return (
+                                                                    <div
+                                                                        key={leaf.id}
+                                                                        className="mb-6 pl-3 border-l-4 border-blue-200"
+                                                                    >
+                                                                        <div
+                                                                            className={`inline-flex items-center mb-2 px-4 py-2 rounded-full text-base font-semibold ${leafStatus.className}`}
+                                                                        >
+                                                                            {leafStatus.icon}
+                                                                            <span className="ml-2">{leafStatus.text}</span>
+                                                                        </div>
+
+                                                                        <div className="text-2xl font-bold text-blue-900">
+                                                                            {leaf.common_name}
+                                                                        </div>
+                                                                        <div className="text-xl text-gray-700 font-medium">
+                                                                            ID: {leaf.id}
+                                                                        </div>
+
+                                                                        <div className={`text-xl font-semibold ${leafRemaining <= 30 ? "text-red-600" : "text-green-600"}`}>
+                                                                            Expires: {new Date(leaf.valid_until).toLocaleDateString()}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : null
+                                                )}
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+
+
+                            );
+                        })}
+                    </tbody>
+
+                </table>
+            </div>
+        );
     };
 
-    // --- FETCH INTERMEDIATES + ISSUED CERTS ---
-    const fetchIntermediates = async (rootCaId: any) => {
-        setLoadingIntermediates((p) => ({ ...p, [rootCaId]: true }));
-        try {
-            const res = await axios.get(`${API_BASE_URL}/root-ca/${rootCaId}/intermediate-ca/`);
-            const ints = res.data || [];
-            const issuedPromises = ints.map(async (int: { id: any; }) => {
-                try {
-                    const r = await axios.get(`${API_BASE_URL}/intermediate-ca/${int.id}/certificates/`);
-                    return { ...int, issued_certificates: r.data || [] };
-                } catch {
-                    return { ...int, issued_certificates: [] };
-                }
-            });
-            const intsWithIssued = await Promise.all(issuedPromises);
-            setIntermediates((prev) => ({ ...prev, [rootCaId]: intsWithIssued }));
-        } catch (err) {
-            console.error("fetchIntermediates error", err);
-        } finally {
-            setLoadingIntermediates((p) => ({ ...p, [rootCaId]: false }));
-        }
-    };
-
-    const toggleRow = (rootCaId: unknown) => {
-        setExpandedRows((prev) => {
-            const next = new Set(prev);
-            const isExpanding = !next.has(rootCaId);
-            if (isExpanding) {
-                next.add(rootCaId);
-                if (!intermediates[rootCaId]) fetchIntermediates(rootCaId);
-            } else next.delete(rootCaId);
-            return next;
-        });
-    };
-
-    const toggleIntermediate = (intermediateId: unknown) => {
-        setExpandedIntermediates((prev) => {
-            const next = new Set(prev);
-            next.has(intermediateId) ? next.delete(intermediateId) : next.add(intermediateId);
-            return next;
-        });
-    };
-
-    const getStatusStyles = (isActive, remainingDays) => {
-        if (!isActive)
-            return { text: "Inactive", icon: <Clock size={16} />, className: "bg-gray-200 text-gray-600" };
-        if (remainingDays <= 10)
-            return { text: "Expiring Soon", icon: <AlertTriangle size={16} />, className: "bg-red-100 text-red-700" };
-        if (remainingDays <= 30)
-            return { text: "Warning", icon: <AlertTriangle size={16} />, className: "bg-yellow-100 text-yellow-700" };
-        return { text: "Active", icon: <CheckCircle size={16} />, className: "bg-green-100 text-green-700" };
-    };
 
     // --- DOWNLOAD ---
     const handleDownload = async () => {
@@ -167,25 +315,169 @@ export default function UserDashboard() {
         }
     };
 
-    // --- ALERTS TAB ---
+    const getAllCertificates = () => {
+        const all = [];
+
+        certs.forEach(root => {
+            all.push({ ...root, type: "root" });
+
+            const intermediateList = intermediates[root.id] || [];
+            intermediateList.forEach(int => {
+                all.push({ ...int, type: "intermediate" });
+
+                if (int.issued_certificates) {
+                    int.issued_certificates.forEach(leaf => {
+                        all.push({ ...leaf, type: "issued" });
+                    });
+                }
+            });
+        });
+
+        return all;
+    };
+    useEffect(() => {
+        if (activeTab === "alerts") fetchCerts();
+    }, [activeTab, orgId]);
     const renderAlerts = () => {
-        const soonExpiring = certs.filter((c) => daysRemaining(c.valid_until) <= 30);
+        const EXPIRY_THRESHOLD = 1500; // show certs expiring in 30 days///////////////////////////////////////
+
+        if (loading)
+            return <p className="text-center text-lg font-medium">Loading certificates...</p>;
+
+        if (error)
+            return <p className="text-center text-red-500 font-medium">{error}</p>;
+
+        if (!certs || certs.length === 0)
+            return (
+                <p className="text-center text-lg italic text-gray-500">
+                    No certificates found.
+                </p>
+            );
+
         return (
-            <div className="p-8">
-                <h2 className="text-3xl font-bold mb-4">Expiring Certificates</h2>
-                {soonExpiring.length === 0 ? (
-                    <p className="text-lg text-gray-500 italic">No upcoming expirations.</p>
-                ) : (
-                    soonExpiring.map((c) => (
-                        <div key={c.id} className="border-b border-gray-300 py-3">
-                            <p className="text-xl font-semibold">{c.common_name}</p>
-                            <p className="text-red-600">Expires on: {new Date(c.valid_until).toLocaleDateString()}</p>
-                        </div>
-                    ))
-                )}
+            <div className="p-8 bg-white rounded-xl shadow-lg">
+                <h3 className="text-3xl font-bold mb-8 text-red-700 text-center">
+                    Expiring Certificates
+                </h3>
+
+                <table className="w-full border border-gray-300 border-collapse">
+                    <thead className="text-white text-lg">
+                        <tr>
+                            <th className="bg-red-400 px-6 py-3 text-left w-1/3">Root CA</th>
+                            <th className="bg-red-400 px-6 py-3 text-left w-1/3">Intermediate CAs</th>
+                            <th className="bg-red-400 px-6 py-3 text-left w-1/3">Issued Certificates</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {certs.map((rootCa) => {
+                            const rootRemaining = daysRemaining(rootCa.valid_until);
+                            const intList = intermediates[rootCa.id] || [];
+
+                            const rootExpiring = rootRemaining <= EXPIRY_THRESHOLD;
+
+                            // Check if any intermediate or issued certs expire soon
+                            const intermediateExpiring = intList.some(
+                                (int) => daysRemaining(int.valid_until) <= EXPIRY_THRESHOLD
+                            );
+
+                            const issuedExpiring = intList.some((int) =>
+                                int.issued_certificates?.some(
+                                    (leaf) => daysRemaining(leaf.valid_until) <= EXPIRY_THRESHOLD
+                                )
+                            );
+
+                            // If nothing under this root CA is expiring, skip row
+                            if (!rootExpiring && !intermediateExpiring && !issuedExpiring)
+                                return null;
+
+                            return (
+                                <tr key={rootCa.id} className="align-top hover:bg-gray-50">
+
+                                    {/* ROOT COLUMN */}
+                                    <td className="border border-gray-300 px-6 py-6 align-top">
+                                        {rootExpiring ? (
+                                            <div className="space-y-2 p-4 bg-red-100 border border-red-300 rounded-lg">
+                                                <div className="text-2xl font-bold text-red-800">
+                                                    {rootCa.common_name}
+                                                </div>
+                                                <div className="text-lg text-gray-700">
+                                                    ID: {rootCa.id}
+                                                </div>
+                                                <div className="text-lg text-red-600 font-semibold">
+                                                    Expires: {new Date(rootCa.valid_until).toLocaleDateString()}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="italic text-gray-400">No expiring root CA.</p>
+                                        )}
+                                    </td>
+
+                                    {/* INTERMEDIATES COLUMN */}
+                                    <td className="border border-gray-300 px-6 py-6 align-top">
+                                        {intList
+                                            .filter((int) => daysRemaining(int.valid_until) <= EXPIRY_THRESHOLD)
+                                            .map((int) => (
+                                                <div
+                                                    key={int.id}
+                                                    className="mb-4 p-4 bg-orange-100 border border-orange-300 rounded-lg"
+                                                >
+                                                    <div className="text-xl font-semibold text-orange-800">
+                                                        {int.common_name}
+                                                    </div>
+                                                    <div className="text-lg text-gray-700">ID: {int.id}</div>
+                                                    <div className="text-lg text-red-600 font-semibold">
+                                                        Expires: {new Date(int.valid_until).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                            ))}
+
+                                        {intList.filter((int) => daysRemaining(int.valid_until) <= EXPIRY_THRESHOLD).length === 0 && (
+                                            <p className="italic text-gray-400">No expiring intermediates.</p>
+                                        )}
+                                    </td>
+
+                                    {/* ISSUED CERTIFICATES COLUMN */}
+                                    <td className="border border-gray-300 px-6 py-6 align-top">
+                                        {intList.map((int) =>
+                                            int.issued_certificates
+                                                ?.filter((leaf) => daysRemaining(leaf.valid_until) <= EXPIRY_THRESHOLD)
+                                                .map((leaf) => (
+                                                    <div
+                                                        key={leaf.id}
+                                                        className="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded-lg"
+                                                    >
+                                                        <div className="text-xl font-semibold text-yellow-800">
+                                                            {leaf.common_name}
+                                                        </div>
+                                                        <div className="text-lg text-gray-700">ID: {leaf.id}</div>
+                                                        <div className="text-lg text-red-600 font-semibold">
+                                                            Expires: {new Date(leaf.valid_until).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                ))
+                                        )}
+
+                                        {intList.every(
+                                            (int) =>
+                                                !int.issued_certificates?.some(
+                                                    (leaf) => daysRemaining(leaf.valid_until) <= EXPIRY_THRESHOLD
+                                                )
+                                        ) && (
+                                                <p className="italic text-gray-400">No expiring issued certs.</p>
+                                            )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
             </div>
         );
     };
+
+
+
 
     // --- DOWNLOAD TAB ---
     const renderDownloadTab = () => (
@@ -246,6 +538,7 @@ export default function UserDashboard() {
         try {
             const res = await axios.get(`${API_BASE_URL}/certificates/server/`);
             setServers(res.data || []);
+            console.log('calllllllled')
         } catch {
             setServers([]);
         }
@@ -266,207 +559,6 @@ export default function UserDashboard() {
         </div>
     );
 
-    // --- CERTIFICATES TAB ---
-    const renderCertCards = () => {
-        if (loading)
-            return <p className="text-center text-lg font-medium">Loading certificates...</p>;
-        if (error)
-            return <p className="text-center text-red-500 font-medium">{error}</p>;
-        if (!certs || certs.length === 0)
-            return (
-                <p className="text-center text-lg italic text-gray-500">
-                    No certificates found.
-                </p>
-            );
-
-        return (
-            <div className="p-6">
-                <h3 className="text-2xl font-bold mb-6 text-blue-800">Root Certificates</h3>
-
-                {certs.map((rootCa) => {
-                    const remaining = daysRemaining(rootCa.valid_until);
-                    const isExpanded = expandedRows.has(rootCa.id);
-                    const intermediateList = intermediates[rootCa.id] || [];
-                    const status = getStatusStyles(rootCa.is_active, remaining);
-
-                    return (
-                        <div
-                            key={rootCa.id}
-                            className="mb-8 border border-gray-200 rounded-xl shadow-md bg-white p-6"
-                        >
-                            {/* Root CA Header */}
-                            <div
-                                onClick={() => toggleRow(rootCa.id)}
-                                className="flex justify-between items-center cursor-pointer hover:bg-gray-50 rounded-t-xl"
-                            >
-                                <div className="flex flex-wrap items-center gap-6">
-                                    <div
-                                        className={`inline-flex items-center px-4 py-1 rounded-full text-base font-semibold ${status.className}`}
-                                    >
-                                        {status.icon}
-                                        <span className="ml-2">{status.text}</span>
-                                    </div>
-
-                                    <div className="text-base text-gray-600 font-medium">
-                                        <span className="font-semibold">ID:</span> {rootCa.id}
-                                    </div>
-
-                                    <div className="text-xl font-bold text-gray-800">
-                                        {rootCa.common_name}
-                                    </div>
-
-                                    <div
-                                        className={`text-base font-medium ${remaining <= 30 ? "text-red-600" : "text-green-600"}`}
-                                    >
-                                        <span className="font-semibold">Valid Until:</span>{" "}
-                                        {new Date(rootCa.valid_until).toLocaleDateString()}
-                                    </div>
-                                </div>
-
-                                <div className="ml-4">
-                                    {isExpanded ? <ChevronUp size={22} /> : <ChevronDown size={22} />}
-                                </div>
-                            </div>
-
-                            {/* Expanded Intermediate + Leaf Section */}
-                            {isExpanded && (
-                                <div >
-                                    <h5 className="text-lg font-semibold mb-3 text-blue-800">
-                                        Intermediate Certificates
-                                    </h5>
-
-                                    {loadingIntermediates[rootCa.id] ? (
-                                        <p className="text-gray-600 text-base pl-4">
-                                            Loading intermediate certificates...
-                                        </p>
-                                    ) : intermediateList.length === 0 ? (
-                                        <p className="italic text-gray-500 text-base pl-4">
-                                            No intermediate CAs found.
-                                        </p>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            {intermediateList.map((int) => {
-                                                const intRemaining = daysRemaining(int.valid_until);
-                                                const isIntExpanded = expandedIntermediates.has(int.id);
-                                                const intStatus = getStatusStyles(int.is_active, intRemaining);
-
-                                                return (
-                                                    <div key={int.id} className="pl-4">
-                                                        {/* Intermediate header */}
-                                                        <div
-                                                            className="flex justify-between items-center py-2 cursor-pointer hover:bg-gray-100 rounded-md px-2"
-                                                            onClick={() => toggleIntermediate(int.id)}
-                                                        >
-                                                            <div className="flex flex-wrap items-center gap-4">
-                                                                <div
-                                                                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${intStatus.className}`}
-                                                                >
-                                                                    {intStatus.icon}
-                                                                    <span className="ml-4">{intStatus.text}</span>
-                                                                </div>
-
-                                                                <div className="text-sm text-gray-600 font-medium">
-                                                                    <span className="font-semibold">ID:</span> {int.id}
-                                                                </div>
-
-                                                                <div className="text-lg font-semibold text-gray-800">
-                                                                    {int.common_name}
-                                                                </div>
-
-                                                                <div
-                                                                    className={`text-sm font-medium ${intRemaining <= 30 ? "text-red-600" : "text-green-600"}`}
-                                                                >
-                                                                    <span className="font-semibold">
-                                                                        Valid Until  :
-                                                                    </span>{" "}
-                                                                    {new Date(int.valid_until).toLocaleDateString()}
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="ml-2">
-                                                                {isIntExpanded ? (
-                                                                    <ChevronUp size={18} />
-                                                                ) : (
-                                                                    <ChevronDown size={18} />
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Issued Certificates */}
-                                                        {isIntExpanded && (
-                                                            <div className="ml-6 mt-3 border-l-2 border-gray-200 pl-5 pb-2">
-                                                                <h5 className="text-lg font-semibold mb-3 text-blue-800">
-                                                                    Issued Certificates
-                                                                </h5>
-
-                                                                {int.issued_certificates?.length > 0 ? (
-                                                                    <div className="space-y-4">
-                                                                        {int.issued_certificates.map((leaf) => {
-                                                                            const leafRemaining = daysRemaining(leaf.valid_until);
-                                                                            const leafStatus = getStatusStyles(leaf.is_active, leafRemaining);
-
-                                                                            return (
-                                                                                <div
-                                                                                    key={leaf.id}
-                                                                                    className="border border-gray-200 bg-white rounded-lg shadow-sm p-4 hover:bg-gray-50 transition flex justify-between items-center"
-                                                                                >
-                                                                                    {/* Left section: details */}
-                                                                                    <div className="flex flex-wrap items-center gap-5">
-                                                                                        <div
-                                                                                            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${leafStatus.className}`}
-                                                                                        >
-                                                                                            {leafStatus.icon}
-                                                                                            <span className="ml-2">{leafStatus.text}</span>
-                                                                                        </div>
-
-                                                                                        <div className="text-sm text-gray-700 font-medium">
-                                                                                            <span className="font-semibold">ID:</span> {leaf.id}
-                                                                                        </div>
-
-                                                                                        <div className="text-base font-semibold text-gray-800">
-                                                                                            {leaf.common_name}
-                                                                                        </div>
-
-                                                                                        {/* Right section: expiry info */}
-                                                                                        {/* <div className="text-sm font-medium text-gray-700"> */}
-                                                                                        <span
-                                                                                            className={`font-semibold ${leafRemaining <= 30
-                                                                                                ? "text-red-600"
-                                                                                                : "text-green-600"
-                                                                                                }`}
-                                                                                        >
-                                                                                            Valid Until  :
-                                                                                            {new Date(leaf.valid_until).toLocaleDateString()}
-                                                                                        </span>{"        "}
-                                                                                    </div>
-
-                                                                                </div>
-                                                                                // </div>
-                                                                            );
-                                                                        })}
-                                                                    </div>
-                                                                ) : (
-                                                                    <p className="italic text-gray-500 text-sm">
-                                                                        No issued certificates.
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-        );
-    };
-
-
 
     // --- HELP TAB ---
     const renderHelp = () => (
@@ -484,7 +576,7 @@ export default function UserDashboard() {
 
     // --- RETURN ---
     return (
-        <div className="mt-8 px-48 sm:px-18 pb-12">
+        <div className="p-8 bg-white rounded-xl shadow-lg w-[75%] mx-auto">
             {/* Header */}
             <header className="bg-[#1b2067] text-white py-8 px-8 text-center rounded-lg shadow-md">
                 <h1 className="text-5xl font-bold">GoSecure - AnchorVPN</h1>
@@ -537,7 +629,7 @@ export default function UserDashboard() {
                 {/* Active Tab Content */}
                 <main className="flex-grow p-8">
                     {activeTab === "certs" && renderCertCards()}
-                    {activeTab === "alerts" && renderAlerts()}
+                    {activeTab === "alerts" && renderAlerts({ certs, intermediates })}
                     {activeTab === "download" && renderDownloadTab()}
                     {activeTab === "server" && renderServers()}
                     {activeTab === "help" && renderHelp()}
