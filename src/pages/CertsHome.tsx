@@ -19,10 +19,13 @@ export default function CertsHome() {
 
         <Button variant="destructive">
 
-          <Link to="/certdashboard">UserCertmanager</Link>
+          <Link to="/usercertmanager">UserCertmanager</Link>
         </Button>
         <Button variant="destructive">
           <Link to="/vpndashboard">VPNDashboard</Link>
+        </Button>
+        <Button variant="destructive">
+          <Link to="/admncertmanager">Admn Certmanager</Link>
 
         </Button>
 

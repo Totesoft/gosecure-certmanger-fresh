@@ -4,13 +4,15 @@ import type { RouteObject } from 'react-router-dom'
 import CertsHome from "@/pages/CertsHome";
 import UserCertmanager from './pages/UserCertmanager';
 import VPNDashboard from './pages/vpndashboard'
-
+import AdmnCertmanager from './pages/AdmnCertmanager'
 
 export const routes: RouteObject[] = [
   { path: "/certs", element: <CertsHome /> },
 
   { path: "/certs/certdashboard", element: <UserCertmanager /> },
   { path: "/certs/vpndashboard", element: <VPNDashboard /> },
+  { path: "/certs/admncertmanager", element: <AdmnCertmanager /> },
+
 
 
 
