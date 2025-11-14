@@ -48,7 +48,7 @@ export default defineConfig({
         "./testapi": "./src/pages/testapipage",
         // "./Home": "./src/pages/Home",
         "./vpndashboard": "./src/pages/vpndashboard",
-        "./certdashboard": "./src/pages/CertmanagerDashboard",
+        "./certdashboard": "./src/pages/UserCertmanager",
 
       },
       shared: {

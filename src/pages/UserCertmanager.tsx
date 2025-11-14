@@ -31,8 +31,20 @@ export interface RootCertificate {
     intermediates?: IntermediateCertificate[];
 }
 
+interface ServerInfo {
+    id: string;
+    name: string;
+    ip_address: string;
+    port?: number;
+    status?: string;
+    certificate_serial?: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
+
 // ------------------ MAIN COMPONENT ------------------
-export default function UserDashboard() {
+export default function UserCertmanager() {
     const [orgId, setOrgId] = useState(localStorage.getItem("orgId") || "");
     const [certs, setCerts] = useState<RootCertificate[]>([]);
     const [intermediates, setIntermediates] = useState<Record<string, IntermediateCertificate[]>>({});
@@ -43,7 +55,9 @@ export default function UserDashboard() {
     const [downloading, setDownloading] = useState(false);
     const [downloadMessage, setDownloadMessage] = useState("");
     const [certTypeToDownload, setCertTypeToDownload] = useState("");
-
+    const [servers, setServers] = useState<ServerInfo[]>([]);
+    const [serversLoading, setServersLoading] = useState(false);
+    const [serversError, setServersError] = useState("");
 
     // ------------------ HELPERS ------------------
     const daysRemaining = (validUntil: string | number | Date) => {
@@ -115,6 +129,17 @@ export default function UserDashboard() {
     useEffect(() => {
         if (activeTab === "certs") fetchCerts();
     }, [activeTab, orgId]);
+
+    useEffect(() => {
+        if (activeTab === "alerts") fetchCerts();
+    }, [activeTab, orgId]);
+    useEffect(() => {
+        if (activeTab === "server") {
+            console.log("Servers tab activated");
+            fetchServers();
+        }
+    }, [activeTab]);
+
 
     // ------------------ HANDLERS ------------------
     const handleOrgIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -315,29 +340,8 @@ export default function UserDashboard() {
         }
     };
 
-    const getAllCertificates = () => {
-        const all = [];
 
-        certs.forEach(root => {
-            all.push({ ...root, type: "root" });
 
-            const intermediateList = intermediates[root.id] || [];
-            intermediateList.forEach(int => {
-                all.push({ ...int, type: "intermediate" });
-
-                if (int.issued_certificates) {
-                    int.issued_certificates.forEach(leaf => {
-                        all.push({ ...leaf, type: "issued" });
-                    });
-                }
-            });
-        });
-
-        return all;
-    };
-    useEffect(() => {
-        if (activeTab === "alerts") fetchCerts();
-    }, [activeTab, orgId]);
     const renderAlerts = () => {
         const EXPIRY_THRESHOLD = 1500; // show certs expiring in 30 days///////////////////////////////////////
 
@@ -533,29 +537,95 @@ export default function UserDashboard() {
     );
 
     // --- SERVER TAB ---
-    const [servers, setServers] = useState([]);
     const fetchServers = async () => {
+        console.log("Calling server API...");
         try {
+            setServersLoading(true);
+            setServersError("");
+
             const res = await axios.get(`${API_BASE_URL}/certificates/server/`);
-            setServers(res.data || []);
-            console.log('calllllllled')
-        } catch {
+
+            setServers(res.data?.data || []);   // backend uses { data: [...] }
+        } catch (e) {
             setServers([]);
+            setServersError("Failed to load server details.");
+        } finally {
+            setServersLoading(false);
         }
     };
+
     const renderServers = () => (
         <div className="p-8">
-            <h2 className="text-3xl font-bold mb-4">Server Details</h2>
-            {servers.length === 0 ? (
-                <p className="text-gray-500 italic">No server details available.</p>
-            ) : (
-                servers.map((s) => (
-                    <div key={s.id} className="border-b border-gray-300 py-3">
-                        <p className="text-xl font-semibold">{s.name}</p>
-                        <p>{s.ip_address}</p>
-                    </div>
-                ))
+            <h2 className="text-3xl font-bold mb-6">Server Details</h2>
+
+            {serversLoading && (
+                <p className="text-gray-500">Loading server details…</p>
             )}
+
+            {serversError && (
+                <p className="text-red-600 font-medium">{serversError}</p>
+            )}
+
+            {!serversLoading && !serversError && servers.length === 0 && (
+                <p className="text-gray-500 italic">No server details available.</p>
+            )}
+
+            <div className="space-y-4">
+                {servers.map((s) => (
+                    <div
+                        key={s.id}
+                        className="border rounded-lg p-4 bg-gray-50 shadow-sm"
+                    >
+                        <h3 className="text-xl font-semibold mb-2">
+                            {s.name || "Unnamed Server"}
+                        </h3>
+
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+
+                            <div>
+                                <span className="font-medium">IP Address:</span>{" "}
+                                {s.ip_address}
+                            </div>
+
+                            {s.port && (
+                                <div>
+                                    <span className="font-medium">Port:</span>{" "}
+                                    {s.port}
+                                </div>
+                            )}
+
+                            {s.status && (
+                                <div>
+                                    <span className="font-medium">Status:</span>{" "}
+                                    {s.status}
+                                </div>
+                            )}
+
+                            {s.certificate_serial && (
+                                <div>
+                                    <span className="font-medium">Cert Serial:</span>{" "}
+                                    {s.certificate_serial}
+                                </div>
+                            )}
+
+                            {s.created_at && (
+                                <div>
+                                    <span className="font-medium">Created:</span>{" "}
+                                    {new Date(s.created_at).toLocaleString()}
+                                </div>
+                            )}
+
+                            {s.updated_at && (
+                                <div>
+                                    <span className="font-medium">Updated:</span>{" "}
+                                    {new Date(s.updated_at).toLocaleString()}
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 

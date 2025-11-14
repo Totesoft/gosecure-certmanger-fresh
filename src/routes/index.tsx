@@ -1,6 +1,6 @@
 import { Routes, Route, Link } from "react-router-dom";
 import CertsHome from "../pages/CertsHome";
-import CertmanagerDashboard from "@/pages/CertmanagerDashboard";
+import UserCertmanager from "@/pages/UserCertmanager";
 // import OvpnGenerator from "@/pages/vpn";
 //import RootCADetail from "@/pages/rootcadetail-form";
 //import RootCADetail from "@/features/certs/forms/rootcadetail-form";
@@ -31,35 +31,11 @@ export default function CertsRoutes() {
   return (
     <Routes>
       <Route path="/certs" element={<CertsHome />} />
-      {/* <Route path="/ovpn" element={<OvpnGenerator />} /> */}
-      {/* Add more nested routes under /certs here */}
-
-      {/* <Route path="/root-ca" element={<RootCAPage />} />
-      <Route path="/intermediate-ca" element={<IntermediateCAPage />} />
-      <Route path="/user-ca" element={<UserCertForm />} /> */}
-      {/* <Route path="/certs/root" element={<RootCert />} />
-      <Route path="/certs/intermediate" element={<IntermediateCert />} />
-      <Route path="/certs/user" element={<UserCert />} /> */}
       <Route path="/certs/testapi" element={<TestAPI />} />
-      <Route path="/certdashboard" element={<CertmanagerDashboard />} />
-      {/* <Route path="/vpnmonitoring" element={<VPNmonitoring />} /> */}
-      {/* <Route path="/certs/home" element={<API />} /> */}
-
+      <Route path="/certdashboard" element={<UserCertmanager />} />
       <Route path="/vpndashboard" element={<VPNDashboard />} />
-      {/* <Route path="/rootCAlistAdmn" element={<RootCAlistAdmn />} /> */}
-      {/* <Route path="/certs/rootca" element={<RootCADetail cert={{ */}
-      {/* subject_cn: "",
-      subject_o: undefined,
-      subject_ou: undefined,
-      issuer_cn: "",
-      issuer_o: undefined,
-      issuer_ou: undefined,
-      not_before: "",
-      not_after: "",
-      sha256_fingerprint: "",
-      public_key_sha256: "",
-      pem_cert: ""
-      }} />} /> */}
+
+
 
 
 
