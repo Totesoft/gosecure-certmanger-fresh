@@ -36,7 +36,7 @@ function AdminCertManager() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [intermediatecerts, setIntermediatecerts] = useState<CertificateItem[]>([]);
-
+    const [allcerts, setAllcerts] = useState<CertificateItem[]>([]);
     const daysRemaining = (validUntil: string | number | Date) => {
         const diff = new Date(validUntil).getTime() - Date.now();
         return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
@@ -134,7 +134,7 @@ function AdminCertManager() {
         }
     ]
 
-    const certificatesmockdata = [
+    const allcertsmockdata = [
         {
             "id": 2,
             "intermediate_ca_id": 1,
@@ -262,19 +262,32 @@ function AdminCertManager() {
     const fetchallcerts = async () => {
         setLoading(true);
         setError("");
-        try {
-            // const res = await axios.get(`${API_BASE_URL}/intermediate-ca/`);
-            // const res = await axios.get(`${API_BASE_URL}/certificates/`);
 
-            const res = intermediatemockdata; // array
-            setIntermediatecerts(res);   // Set array directly
-            console.log("response:", res);
+        try {
+            console.log("Calling Certificate APIs...");
+
+            // --- REAL API CALLS ---
+            // const intermediateRes = await axios.get(`${API_BASE_URL}/intermediate-ca/`);
+            // const certificatesRes = await axios.get(`${API_BASE_URL}/certificates/`);
+
+            // --- MOCK DATA (FOR NOW) ---
+            const intermediateRes = intermediatemockdata; // ARRAY
+            const certificatesRes = allcertsmockdata;     // ARRAY (you must create this mock)
+
+            // SET STATES
+            setIntermediatecerts(intermediateRes);
+            setAllcerts(certificatesRes);
+
+            console.log("Intermediate:", intermediateRes);
+            console.log("All certs:", certificatesRes);
+
         } catch (err) {
-            setError("Failed to fetch data.");
+            setError("Failed to fetch certificate data.");
         } finally {
             setLoading(false);
         }
     };
+
     useEffect(() => {
         fetchallcerts();
     }, [activeTab]);
@@ -285,36 +298,70 @@ function AdminCertManager() {
     const renderTable = () => {
         if (loading) return <div className="p-4 text-gray-600">Loading...</div>;
         if (error) return <div className="p-4 text-red-500">{error}</div>;
-        //    if (!data.length) return <div className="p-4 text-gray-500">No records found.</div>;
 
         return (
-            <table className="w-full text-left border-collapse">
-                <thead>
-                    <tr className="border-b bg-gray-100">
-                        <th className="p-3">ID</th>
-                        <th className="p-3">Common Name</th>
-                        <th className="p-3">Serial No</th>
-                        <th className="p-3">Created At</th>
-                        <th className="p-3">Active</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tbody>
-                        {intermediatecerts.map((item) => (
-                            <tr key={item.id}>
-                                <td>{item.id}</td>
-                                <td>{item.common_name}</td>
-                                <td>{item.serial_number}</td>
-                                <td>{new Date(item.created_at).toLocaleDateString()}</td>
-                                <td>{item.is_active ? "Yes" : "No"}</td>
-                            </tr>
-                        ))}
-                    </tbody>
+            <div className="grid grid-cols-2 gap-6">
 
-                </tbody>
-            </table>
+                {/* INTERMEDIATE CERTIFICATES */}
+                <div className="border rounded-lg shadow p-4 bg-white">
+                    <h2 className="text-xl font-semibold mb-4">Intermediate Certificates</h2>
+
+                    {intermediatecerts.length === 0 ? (
+                        <p className="text-gray-500">No Intermediate Certificates</p>
+                    ) : (
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b bg-gray-100">
+                                    <th className="p-2">ID</th>
+                                    <th className="p-2">Name</th>
+                                    <th className="p-2">Serial</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {intermediatecerts.map(item => (
+                                    <tr key={item.id} className="border-b hover:bg-gray-50">
+                                        <td className="p-2">{item.id}</td>
+                                        <td className="p-2">{item.common_name}</td>
+                                        <td className="p-2">{item.serial_number}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+
+                {/* ALL CERTIFICATES */}
+                <div className="border rounded-lg shadow p-4 bg-white">
+                    <h2 className="text-xl font-semibold mb-4">All Certificates</h2>
+
+                    {allcerts.length === 0 ? (
+                        <p className="text-gray-500">No Certificates Found</p>
+                    ) : (
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b bg-gray-100">
+                                    <th className="p-2">ID</th>
+                                    <th className="p-2">Name</th>
+                                    <th className="p-2">Serial</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {allcerts.map(item => (
+                                    <tr key={item.id} className="border-b hover:bg-gray-50">
+                                        <td className="p-2">{item.id}</td>
+                                        <td className="p-2">{item.common_name}</td>
+                                        <td className="p-2">{item.serial_number}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+
+            </div>
         );
     };
+
 
     // ----------------------
     // UI Layout
@@ -349,7 +396,7 @@ function AdminCertManager() {
             <div className="shadow-xl rounded-xl border border-gray-100 bg-white">
                 <div className="p-4 border-b">
                     <div className="text-xl font-semibold">
-                        {activeTab === "certs" && "All Certificates"}
+                        {activeTab === "certs" && "renderTable"}
                         {activeTab === "users" && "User Certificates"}
                         {activeTab === "servers" && "Server Certificates"}
                     </div>
