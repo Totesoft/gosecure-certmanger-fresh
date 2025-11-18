@@ -1,66 +1,226 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { AlertTriangle, CheckCircle, Clock } from "lucide-react";
-
-const API_BASE_URL = "https://pre-prod.be.anchorvpn.net/api/v1";
+import { Clock, AlertTriangle, CheckCircle } from "lucide-react";
+const API_BASE_URL = "https://pre-prod.be.anchorvpn.net/api/v1"; // adjust if needed
 
 // ------------------ INTERFACES ------------------
 export interface LeafCertificate {
-    id: string;
+    id: number;
+    intermediate_ca_id: number;
     common_name: string;
-    valid_until: string;
-    serial_number?: string;
-    is_active?: boolean;
+    certificate_type: string;   // "server" | "user" | etc.
+    key_length: number;
+    valid_from: string;         // ISO datetime
+    valid_until: string;        // ISO datetime
+    serial_number: string;
+    is_active: boolean;
+    created_at: string;         // ISO datetime
 }
 
 export interface IntermediateCertificate {
-    id: string;
+    id: number;
+    root_ca_id: number;
     common_name: string;
-    valid_until: string;
-    serial_number?: string;
-    is_active?: boolean;
+    key_length: number;
+    valid_from: string;       // ISO datetime
+    valid_until: string;      // ISO datetime
+    serial_number: string;
+    is_active: boolean;
+    created_at: string;       // ISO datetime
+
     issued_certificates?: LeafCertificate[];
 }
 
 export interface RootCertificate {
-    id: string;
+    id: number;
+    organization_id: number;
     common_name: string;
-    valid_until: string;
-    serial_number?: string;
-    is_active?: boolean;
+    key_length: number;
+    valid_from: string;      // ISO datetime
+    valid_until: string;     // ISO datetime
+    serial_number: string;
+    is_active: boolean;
+    created_at: string;      // ISO datetime
     intermediates?: IntermediateCertificate[];
 }
 
-interface ServerInfo {
-    id: string;
-    name: string;
-    ip_address: string;
-    port?: number;
-    status?: string;
-    certificate_serial?: string;
-    created_at?: string;
-    updated_at?: string;
-}
 
+export default function UserCertManager() {
+    // raw fetched data (full tree)
+    const [roots, setRoots] = useState<any[]>([]);
+    const [interByRoot, setInterByRoot] = useState<Record<string, any[]>>({});
+    const [certsByIntermediate, setCertsByIntermediate] = useState<Record<string, any[]>>({});
 
-// ------------------ MAIN COMPONENT ------------------
-export default function UserCertmanager() {
-    const [orgId, setOrgId] = useState(localStorage.getItem("orgId") || "");
-    const [certs, setCerts] = useState<RootCertificate[]>([]);
-    const [intermediates, setIntermediates] = useState<Record<string, IntermediateCertificate[]>>({});
+    // UI-visible filtered data (what renderCertCards/renderAlerts expect)
+    const [certs, setCerts] = useState<any[]>([]); // filtered roots
+    const [intermediates, setIntermediates] = useState<Record<string, any[]>>({}); // rootId -> intermediates (each with issued_certificates)
+
+    // inputs / dropdowns
+    const [orgId, setOrgId] = useState("");
+    const [rootIdInput, setRootIdInput] = useState(""); // acts as root filter + trigger for dropdown population
+    const [intermediateIdInput, setIntermediateIdInput] = useState("");
+    const [certIdInput, setCertIdInput] = useState("");
+
+    const [intermediateOptions, setIntermediateOptions] = useState<any[]>([]);
+    const [certOptions, setCertOptions] = useState<any[]>([]);
+
+    // simple UI state
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // helper: safe id -> normalized string
+    const toId = (v: any) => (v === null || v === undefined ? "" : String(v).trim());
     const [activeTab, setActiveTab] = useState("certs");
     const [certIdToDownload, setCertIdToDownload] = useState("");
     const [downloading, setDownloading] = useState(false);
     const [downloadMessage, setDownloadMessage] = useState("");
     const [certTypeToDownload, setCertTypeToDownload] = useState("");
-    const [servers, setServers] = useState<ServerInfo[]>([]);
-    const [serversLoading, setServersLoading] = useState(false);
-    const [serversError, setServersError] = useState("");
 
-    const [rootFilter, setRootFilter] = useState("");
-    const [intermediateFilter, setIntermediateFilter] = useState("");
+    const [expandedRoot, setExpandedRoot] = useState({});
+    const [expandedInter, setExpandedInter] = useState({});
+
+    const toggleRoot = (id: number) => {
+        setExpandedRoot(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const toggleInter = (id: number) => {
+        setExpandedInter(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const formatDate = (d: string) => new Date(d).toLocaleDateString();
+
+    const renderExpandableTable = () => {
+        if (certs.length === 0) return <div>No certificates found</div>;
+
+        return (
+            <table className="w-full border border-gray-300 border-collapse">
+                <thead className="bg-[#1e28b6] text-white text-lg">
+                    <tr>
+                        <th className="border px-4 py-3 w-1/3">Root Certificates</th>
+                        <th className="border px-4 py-3 w-1/3">Intermediate Certificates</th>
+                        <th className="border px-4 py-3 w-1/3">Issued Certificates</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {certs.map((root) => {
+                        const rootIntermediates = intermediates[root.id] || [];
+                        const interCount = rootIntermediates.length;
+
+                        const rem = daysRemaining(root.valid_until);
+                        const status = getStatusStyles(root.is_active, rem);
+
+                        return (
+                            <>
+                                {/* ROOT ROW */}
+                                <tr
+                                    key={root.id}
+                                    className="cursor-pointer bg-gray-100 hover:bg-gray-200"
+                                    onClick={() => toggleRoot(root.id)}
+                                >
+                                    <td className="border px-4 py-4 align-top">
+                                        <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${status.className}`}>
+                                            {status.text}
+                                        </div>
+
+                                        <div className="mt-2 text-xl font-bold text-blue-900">{root.common_name}</div>
+                                        <div className="text-gray-700 text-xl font-bold">ID: {root.id}</div>
+                                        <div className="text-gray-700 text-xl">Key: {root.key_length} bits</div>
+
+                                        <div className={`mt-2 text-xl font-semibold ${rem <= 30 ? "text-red-600" : "text-green-700"}`}>
+                                            Expires: {formatDate(root.valid_until)}
+                                        </div>
+
+                                        <div className="text-blue-800 mt-1 text-xl font-bold flex items-center gap-2">
+                                            <span>Intermediates: {interCount}</span>
+                                            <span>{expandedRoot[root.id] ? "▼" : "►"}</span>
+                                        </div>
+                                    </td>
+
+                                    <td className="border"></td>
+                                    <td className="border"></td>
+                                </tr>
+
+                                {/* INTERMEDIATES */}
+                                {expandedRoot[root.id] &&
+                                    rootIntermediates.map((int) => {
+                                        const leafCerts = int.issued_certificates || [];
+                                        const leafCount = leafCerts.length;
+
+                                        const remI = daysRemaining(int.valid_until);
+                                        const statusI = getStatusStyles(int.is_active, remI);
+
+                                        return (
+                                            <>
+                                                <tr
+                                                    key={int.id}
+                                                    className="cursor-pointer bg-gray-50 hover:bg-gray-100"
+                                                    onClick={() => toggleInter(int.id)}
+                                                >
+                                                    <td className="border"></td>
+
+                                                    <td className="border px-4 py-4 align-top">
+                                                        <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${statusI.className}`}>
+                                                            {statusI.text}
+                                                        </div>
+
+                                                        <div className="mt-2 text-xl font-bold text-blue-800">{int.common_name}</div>
+                                                        <div className="text-xl text-gray-700 font-bold">ID: {int.id}</div>
+                                                        <div className="text-xl text-gray-700">Key: {int.key_length} bits</div>
+
+                                                        <div className={`mt-2 text-xl font-semibold ${remI <= 30 ? "text-red-600" : "text-green-700"}`}>
+                                                            Expires: {formatDate(int.valid_until)}
+                                                        </div>
+
+                                                        <div className="text-blue-700 mt-1 text-xl font-bold flex items-center gap-2">
+                                                            <span>Certificates: {leafCount}</span>
+                                                            <span>{expandedInter[int.id] ? "▼" : "►"}</span>
+                                                        </div>
+                                                    </td>
+
+                                                    <td className="border"></td>
+                                                </tr>
+
+                                                {/* LEAF CERTIFICATES */}
+                                                {expandedInter[int.id] &&
+                                                    leafCerts.map((leaf) => {
+                                                        const remL = daysRemaining(leaf.valid_until);
+                                                        const statusL = getStatusStyles(leaf.is_active, remL);
+
+                                                        return (
+                                                            <tr key={leaf.id} className="bg-white">
+                                                                <td className="border"></td>
+                                                                <td className="border"></td>
+
+                                                                <td className="border px-4 py-4 align-top">
+                                                                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${statusL.className}`}>
+                                                                        {statusL.text}
+                                                                    </div>
+
+                                                                    <div className="mt-2 text-xl font-bold text-blue-900">
+                                                                        {leaf.common_name}
+                                                                    </div>
+
+                                                                    <div className="text-xl text-gray-700 font-bold">ID: {leaf.id}</div>
+                                                                    <div className="text-xl text-gray-700">Key: {leaf.key_length} bits</div>
+
+                                                                    <div className={`mt-2 text-xl font-semibold ${remL <= 30 ? "text-red-600" : "text-green-700"}`}>
+                                                                        Expires: {formatDate(leaf.valid_until)}
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                            </>
+                                        );
+                                    })}
+                            </>
+                        );
+                    })}
+                </tbody>
+            </table>
+        );
+    };
 
 
     // ------------------ HELPERS ------------------
@@ -79,359 +239,219 @@ export default function UserCertmanager() {
         return { text: "Active", icon: <CheckCircle size={16} />, className: "bg-green-100 text-green-700" };
     };
 
-    // ------------------ FETCH ALL CERT DATA ------------------
-    let currentController: AbortController | null = null;
 
-    const fetchCerts = async () => {
-        if (!orgId?.trim()) {
-            setCerts([]);
-            setIntermediates({});
-            return;
-        }
 
-        // Cancel previous request (fixes race conditions)
-        if (currentController) currentController.abort();
-        const controller = new AbortController();
-        currentController = controller;
-        const signal = controller.signal;
 
-        setLoading(true);
-        setError(null);
 
-        try {
-            // 1️⃣ Fetch Root CAs
-            const res = await axios.get(
-                `${API_BASE_URL}/organizations/${orgId}/root-ca/`,
-                { signal }
-            );
+    // Fetch entire tree when orgId changes
+    useEffect(() => {
+        let cancelled = false;
 
-            const rootData: RootCertificate[] = Array.isArray(res.data) ? res.data : [];
-            setCerts(rootData);
-
-            if (rootData.length === 0) {
-                console.warn("No Root CAs found for org:", orgId);
+        const fetchCerts = async () => {
+            if (!orgId?.trim()) {
+                setRoots([]);
+                setInterByRoot({});
+                setCertsByIntermediate({});
+                setCerts([]);
                 setIntermediates({});
+                setIntermediateOptions([]);
+                setCertOptions([]);
                 return;
             }
 
-            // 2️⃣ For each root, fetch intermediates + issued certs
-            const allIntermediateData: Record<string, IntermediateCertificate[]> = {};
+            setLoading(true);
+            setError(null);
 
-            await Promise.all(
-                rootData.map(async (root) => {
-                    if (!root?.id) {
-                        console.warn("Root CA ID missing! Root:", root);
-                        return; // skip this root CA
-                    }
+            try {
+                const resRoot = await axios.get(`${API_BASE_URL}/organizations/${orgId}/root-ca/`);
+                const rootList = Array.isArray(resRoot.data) ? resRoot.data : [];
+
+                const newInterByRoot: Record<string, any[]> = {};
+                const newCertsByIntermediate: Record<string, any[]> = {};
+
+                // fetch intermediates and certs
+                await Promise.all(rootList.map(async (root: any) => {
+                    if (cancelled) return;
+                    const rootKey = toId(root?.id);
 
                     try {
-                        const intRes = await axios.get(
-                            `${API_BASE_URL}/root-ca/${root.id}/intermediate-ca/`,
-                            { signal }
-                        );
+                        const resInter = await axios.get(`${API_BASE_URL}/root-ca/${rootKey}/intermediate-ca/`);
+                        const interList = Array.isArray(resInter.data) ? resInter.data : [];
+                        newInterByRoot[rootKey] = interList;
 
-                        const intermediates = Array.isArray(intRes.data)
-                            ? intRes.data
-                            : [];
-
-                        const withIssued = await Promise.all(
-                            intermediates.map(async (int) => {
-                                if (!int?.id) {
-                                    console.warn("Intermediate CA ID missing!", int);
-                                    return { ...int, issued_certificates: [] };
-                                }
-
-                                try {
-                                    const leafRes = await axios.get(
-                                        `${API_BASE_URL}/intermediate-ca/${int.id}/certificates/`,
-                                        { signal }
-                                    );
-
-                                    return {
-                                        ...int,
-                                        issued_certificates: Array.isArray(leafRes.data)
-                                            ? leafRes.data
-                                            : [],
-                                    };
-                                } catch {
-                                    return { ...int, issued_certificates: [] };
-                                }
-                            })
-                        );
-
-                        allIntermediateData[root.id] = withIssued;
-                    } catch (error) {
-                        console.warn("Failed intermediates for root:", root.id);
-                        allIntermediateData[root.id] = [];
+                        // Fetch certificates for each intermediate
+                        await Promise.all(interList.map(async (inter: any) => {
+                            const interKey = toId(inter?.id);
+                            try {
+                                const resCerts = await axios.get(`${API_BASE_URL}/intermediate-ca/${interKey}/certificates/`);
+                                newCertsByIntermediate[interKey] = Array.isArray(resCerts.data) ? resCerts.data : [];
+                            } catch {
+                                newCertsByIntermediate[interKey] = [];
+                            }
+                        }));
+                    } catch {
+                        newInterByRoot[rootKey] = [];
                     }
-                })
-            );
+                }));
 
-            // 3️⃣ Update state only if NOT aborted
-            if (!signal.aborted) {
-                setIntermediates(allIntermediateData);
-            }
-        } catch (err: any) {
-            if (err.name === "CanceledError" || err.name === "AbortError") {
-                console.log("Fetch aborted because orgId changed.");
-                return;
-            }
+                if (cancelled) return;
 
-            console.error("fetchCerts error", err);
-            setError("Failed to fetch certificates. Check Org ID.");
-            setCerts([]);
-            setIntermediates({});
-        } finally {
-            if (!signal.aborted) {
-                setLoading(false);
+                // store raw tree
+                setRoots(rootList);
+                setInterByRoot(newInterByRoot);
+                setCertsByIntermediate(newCertsByIntermediate);
+
+                // apply no-filter default (show all)
+                applyFilters(rootList, newInterByRoot, newCertsByIntermediate, "", "", "");
+            } catch (err) {
+                console.error("fetchCerts", err);
+                setError("Failed to load certificate tree for this Org ID.");
+                setRoots([]);
+                setInterByRoot({});
+                setCertsByIntermediate({});
+                setCerts([]);
+                setIntermediates({});
+            } finally {
+                if (!cancelled) setLoading(false);
             }
+        };
+
+        fetchCerts();
+
+        return () => { cancelled = true; };
+    }, [orgId]);
+
+    // applyFilters: produces certs + intermediates states (UI-ready)
+    // accepts optional params so callers can pass freshly fetched data
+    const applyFilters = (
+        rootsBase = roots,
+        interBase = interByRoot,
+        certsBase = certsByIntermediate,
+        rootFilter = rootIdInput,
+        interFilter = intermediateIdInput,
+        certFilter = certIdInput
+    ) => {
+        const rf = toId(rootFilter).toLowerCase();
+        const ifl = toId(interFilter).toLowerCase();
+        const cf = toId(certFilter).toLowerCase();
+
+        // start with roots (array of objects)
+        let filteredRoots = Array.isArray(rootsBase) ? rootsBase.slice() : [];
+
+        if (rf) {
+            filteredRoots = filteredRoots.filter(r => toId(r?.id).toLowerCase().includes(rf));
         }
-    };
 
-    // ------------------ EFFECTS ------------------
-    useEffect(() => {
-        if (activeTab === "certs") fetchCerts();
-    }, [activeTab, orgId]);
+        const finalInter: Record<string, any[]> = {};
 
-    useEffect(() => {
-        if (activeTab === "alerts") fetchCerts();
-    }, [activeTab, orgId]);
-    useEffect(() => {
-        if (activeTab === "server") {
-            console.log("Servers tab activated");
-            fetchServers();
+        filteredRoots.forEach(root => {
+            const rootKey = toId(root?.id);
+            let interList = Array.isArray(interBase[rootKey]) ? interBase[rootKey].slice() : [];
+
+            if (ifl) {
+                interList = interList.filter(i => toId(i?.id).toLowerCase().includes(ifl));
+            }
+
+            const mappedInter = interList.map(inter => {
+                const interKey = toId(inter?.id);
+                let certList = Array.isArray(certsBase[interKey]) ? certsBase[interKey].slice() : [];
+
+                if (cf) {
+                    certList = certList.filter(c => toId(c?.id).toLowerCase().includes(cf));
+                }
+
+                // attach issued_certificates so render functions expecting that shape work
+                return {
+                    ...inter,
+                    issued_certificates: certList
+                };
+            }).filter(i => i.issued_certificates.length > 0 || !cf); // if certFilter exists then drop intermediates with 0 certs
+
+            finalInter[rootKey] = mappedInter;
+        });
+
+        // Drop roots with zero intermediates (if intermediate filtering or cert filtering active)
+        if (ifl || cf) {
+            filteredRoots = filteredRoots.filter(r => Array.isArray(finalInter[toId(r.id)]) && finalInter[toId(r.id)].length > 0);
         }
-    }, [activeTab]);
 
-
-    // ------------------ HANDLERS ------------------
-    const handleOrgIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setOrgId(value);
-        localStorage.setItem("orgId", value);
+        // set UI states expected by rest of app
+        setCerts(filteredRoots);
+        setIntermediates(finalInter);
     };
 
-    console.log('days remaining', daysRemaining)
+    // when any of the filter inputs change, apply filters
+    useEffect(() => {
+        applyFilters();
+    }, [rootIdInput, intermediateIdInput, certIdInput, roots, interByRoot, certsByIntermediate]);
 
-
-
-    // ------------------ TABLE RENDER ------------------
-    const renderCertCards = () => {
-        if (loading)
-            return <p className="text-center text-lg font-medium">Loading certificates...</p>;
-        if (error)
-            return <p className="text-center text-red-500 font-medium">{error}</p>;
-        if (!certs || certs.length === 0)
-            return (
-                <p className="text-center text-lg italic text-gray-500">
-                    No certificates found.
-                </p>
-            );
-
-        return (
-            <div className="p-8 bg-white rounded-xl shadow-lg">
-                <h3 className="text-3xl font-bold mb-8 text-blue-900 text-center">
-                    My certificates
-                </h3>
-
-                <table className="w-full border border-gray-300 border-collapse">
-                    <thead className="text-white text-lg">
-                        <tr>
-                            <th className="bg-[#1e28b6] border border-blue-300 px-6 py-3 text-left w-1/3">
-                                Root Certificates
-                            </th>
-                            <th className="bg-[#1e28b6] border border-blue-400 px-6 py-3 text-left w-1/3">
-                                Intermediate Certificates
-                            </th>
-                            <th className="bg-[#1e28b6] border border-blue-500 px-6 py-3 text-left w-1/3">
-                                Issued Certificates
-                            </th>
-                        </tr>
-                    </thead>
-
-
-                    <tbody>
-                        {certs.map((rootCa) => {
-                            const remaining = daysRemaining(rootCa.valid_until);
-                            const status = getStatusStyles(rootCa.is_active, remaining);
-                            const intermediateList = intermediates[rootCa.id] || [];
-                            <div className="flex items-center space-x-6 mb-6">
-
-                                <div>
-                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                        Filter by Root CA ID
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="border px-4 py-2 rounded-lg w-48"
-                                        placeholder="e.g. 8"
-                                        value={rootFilter}
-                                        onChange={(e) => setRootFilter(e.target.value)}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                        Filter by Intermediate CA ID
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="border px-4 py-2 rounded-lg w-48"
-                                        placeholder="e.g. 12"
-                                        value={intermediateFilter}
-                                        onChange={(e) => setIntermediateFilter(e.target.value)}
-                                    />
-                                </div>
-
-                            </div>
-
-                            return (
-                                <tr key={rootCa.id} className="align-top hover:bg-gray-50">
-
-                                    {/* ROOT COLUMN */}
-                                    <td className="border border-gray-300 px-6 py-6 align-top w-1/3">
-                                        <div className="flex flex-col space-y-4">
-
-                                            <div className={`inline-flex items-center self-start px-4 py-2 rounded-full text-base font-semibold ${status.className}`}>
-                                                {status.icon}
-                                                <span className="ml-2">{status.text}</span>
-                                            </div>
-
-                                            <div className="text-2xl text-blue-900 font-bold">{rootCa.common_name}</div>
-                                            <div className="text-xl text-gray-700 font-medium">ID: {rootCa.id}</div>
-
-                                            <div className={`text-xl font-semibold ${remaining <= 30 ? "text-red-600" : "text-green-600"}`}>
-                                                Expires: {new Date(rootCa.valid_until).toLocaleDateString()}
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    {/* INTERMEDIATE COLUMN */}
-                                    <td className="border border-gray-300 px-6 py-6 align-top w-1/3">
-                                        {intermediateList.length === 0 ? (
-                                            <p className="italic text-gray-500 text-lg">No intermediate CAs found.</p>
-                                        ) : (
-                                            <div className="space-y-6">
-                                                {intermediateList.map((int) => {
-                                                    const intRemaining = daysRemaining(int.valid_until);
-                                                    const intStatus = getStatusStyles(int.is_active, intRemaining);
-
-                                                    return (
-                                                        <div
-                                                            key={int.id}
-                                                            className="rounded-lg border border-gray-200 p-5 bg-gray-50 hover:bg-gray-100 transition"
-                                                        >
-                                                            <div
-                                                                className={`inline-flex items-center mb-3 px-4 py-2 rounded-full text-base font-semibold ${intStatus.className}`}
-                                                            >
-                                                                {intStatus.icon}
-                                                                <span className="ml-2">{intStatus.text}</span>
-                                                            </div>
-
-                                                            <div className="text-2xl text-blue-800 font-bold">{int.common_name}</div>
-                                                            <div className="text-xl text-gray-700 font-medium">ID: {int.id}</div>
-
-                                                            <div className={`text-xl font-semibold ${intRemaining <= 30 ? "text-red-600" : "text-green-600"}`}>
-                                                                Expires: {new Date(int.valid_until).toLocaleDateString()}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                    </td>
-
-                                    {/* ISSUED CERTIFICATES COLUMN */}
-                                    <td className="border border-gray-300 px-6 py-6 align-top w-1/3">
-                                        {intermediateList.length === 0 ? (
-                                            <p className="italic text-gray-500 text-lg">No issued certificates found.</p>
-                                        ) : (
-                                            <div className="space-y-6">
-                                                {intermediateList.map((int) =>
-                                                    int.issued_certificates && int.issued_certificates.length > 0 ? (
-                                                        <div
-                                                            key={int.id}
-                                                            className="rounded-lg border border-gray-200 p-5 bg-gray-50 hover:bg-gray-100 transition"
-                                                        >
-                                                            <div className="text-2xl text-blue-700 font-semibold mb-3">
-                                                                {int.common_name} — Issued Certificates
-                                                            </div>
-
-                                                            {int.issued_certificates.map((leaf) => {
-                                                                const leafRemaining = daysRemaining(leaf.valid_until);
-                                                                const leafStatus = getStatusStyles(leaf.is_active, leafRemaining);
-
-                                                                return (
-                                                                    <div
-                                                                        key={leaf.id}
-                                                                        className="mb-6 pl-3 border-l-4 border-blue-200"
-                                                                    >
-                                                                        <div
-                                                                            className={`inline-flex items-center mb-2 px-4 py-2 rounded-full text-base font-semibold ${leafStatus.className}`}
-                                                                        >
-                                                                            {leafStatus.icon}
-                                                                            <span className="ml-2">{leafStatus.text}</span>
-                                                                        </div>
-
-                                                                        <div className="text-2xl font-bold text-blue-900">
-                                                                            {leaf.common_name}
-                                                                        </div>
-                                                                        <div className="text-xl text-gray-700 font-medium">
-                                                                            ID: {leaf.id}
-                                                                        </div>
-
-                                                                        <div className={`text-xl font-semibold ${leafRemaining <= 30 ? "text-red-600" : "text-green-600"}`}>
-                                                                            Expires: {new Date(leaf.valid_until).toLocaleDateString()}
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    ) : null
-                                                )}
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-
-
-                            );
-                        })}
-                    </tbody>
-
-                </table>
-            </div>
-        );
-    };
-
-
-    // --- DOWNLOAD ---
-    const handleDownload = async () => {
-        if (!certIdToDownload.trim()) {
-            setDownloadMessage("Please enter a certificate ID.");
+    // When rootIdInput changes: populate intermediateOptions dropdown (all intermediates for that root)
+    useEffect(() => {
+        const rid = toId(rootIdInput);
+        if (!rid) {
+            setIntermediateOptions([]);
+            setIntermediateIdInput("");
+            setCertOptions([]);
+            setCertIdInput("");
             return;
         }
-        setDownloading(true);
-        setDownloadMessage("");
-        try {
-            const url = `${API_BASE_URL}/certificates/${certIdToDownload}/download/`;
-            const res = await axios.get(url, { responseType: "blob" });
-            const blob = new Blob([res.data], { type: "application/x-x509-ca-cert" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `${certIdToDownload}.crt`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            setDownloadMessage("Certificate downloaded successfully.");
-        } catch (err) {
-            console.error("Download failed", err);
-            setDownloadMessage("Failed to download certificate. Check the ID.");
-        } finally {
-            setDownloading(false);
-        }
-    };
 
+        // find root object (allow numeric/string mismatch)
+        const matchedRoot = roots.find(r => toId(r?.id) === rid);
+
+        // gather intermediates from map or by scanning (defensive)
+        let matchedIntermediates: any[] = [];
+
+        if (matchedRoot) {
+            const listFromMap = interByRoot[toId(matchedRoot.id)] ?? [];
+            if (Array.isArray(listFromMap) && listFromMap.length > 0) {
+                matchedIntermediates = listFromMap;
+            } else {
+                matchedIntermediates = Object.values(interByRoot).flat().filter(i => toId(i?.parent_id) === toId(matchedRoot.id));
+            }
+        } else {
+            // If matchedRoot not found, try direct map key (maybe user entered id matching map key)
+            const directList = interByRoot[rid] ?? [];
+            if (Array.isArray(directList) && directList.length > 0) {
+                matchedIntermediates = directList;
+            }
+        }
+
+        // normalize to array
+        if (!Array.isArray(matchedIntermediates)) matchedIntermediates = [];
+
+        // set options (do NOT auto-select)
+        setIntermediateOptions(matchedIntermediates);
+        setIntermediateIdInput("");   // important: leave empty so user chooses
+        setCertOptions([]);
+        setCertIdInput("");
+    }, [rootIdInput, roots, interByRoot]);
+
+    // when intermediateIdInput changes: populate certOptions dropdown
+    useEffect(() => {
+        const iid = toId(intermediateIdInput);
+
+        if (!iid) {
+            setCertOptions([]);
+            setCertIdInput("");   // empty until user selects
+            return;
+        }
+
+        // Try map lookup first
+        let certList = certsByIntermediate[iid] ?? [];
+
+        // fallback: scan all
+        if (!Array.isArray(certList) || certList.length === 0) {
+            certList = Object.values(certsByIntermediate)
+                .flat()
+                .filter(c => toId(c?.parent_id) === iid);
+        }
+
+        setCertOptions(certList ?? []);
+
+        // IMPORTANT: do NOT auto-select anything
+        setCertIdInput("");
+    }, [intermediateIdInput, certsByIntermediate]);
 
 
     const renderAlerts = () => {
@@ -571,11 +591,33 @@ export default function UserCertmanager() {
             </div>
         );
     };
+    // --- DOWNLOAD ---
+    const handleDownload = async () => {
+        if (!certIdToDownload.trim()) {
+            setDownloadMessage("Please enter a certificate ID.");
+            return;
+        }
+        setDownloading(true);
+        setDownloadMessage("");
+        try {
+            const url = `${API_BASE_URL}/certificates/${certIdToDownload}/download/`;
+            const res = await axios.get(url, { responseType: "blob" });
+            const blob = new Blob([res.data], { type: "application/x-x509-ca-cert" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `${certIdToDownload}.crt`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setDownloadMessage("Certificate downloaded successfully.");
+        } catch (err) {
+            console.error("Download failed", err);
+            setDownloadMessage("Failed to download certificate. Check the ID.");
+        } finally {
+            setDownloading(false);
+        }
+    };
 
-
-
-
-    // --- DOWNLOAD TAB ---
     const renderDownloadTab = () => (
         <div className="p-8 max-w-lg mx-auto">
             <h2 className="text-3xl font-bold mb-6 text-gray-800">Download Certificate</h2>
@@ -628,100 +670,6 @@ export default function UserCertmanager() {
         </div>
     );
 
-    // --- SERVER TAB ---
-    const fetchServers = async () => {
-        console.log("Calling server API...");
-        try {
-            setServersLoading(true);
-            setServersError("");
-
-            const res = await axios.get(`${API_BASE_URL}/certificates/server/`);
-
-            setServers(res.data?.data || []);   // backend uses { data: [...] }
-        } catch (e) {
-            setServers([]);
-            setServersError("Failed to load server details.");
-        } finally {
-            setServersLoading(false);
-        }
-    };
-
-    const renderServers = () => (
-        <div className="p-8">
-            <h2 className="text-3xl font-bold mb-6">Server Details</h2>
-
-            {serversLoading && (
-                <p className="text-gray-500">Loading server details…</p>
-            )}
-
-            {serversError && (
-                <p className="text-red-600 font-medium">{serversError}</p>
-            )}
-
-            {!serversLoading && !serversError && servers.length === 0 && (
-                <p className="text-gray-500 italic">No server details available.</p>
-            )}
-
-            <div className="space-y-4">
-                {servers.map((s) => (
-                    <div
-                        key={s.id}
-                        className="border rounded-lg p-4 bg-gray-50 shadow-sm"
-                    >
-                        <h3 className="text-xl font-semibold mb-2">
-                            {s.name || "Unnamed Server"}
-                        </h3>
-
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-
-                            <div>
-                                <span className="font-medium">IP Address:</span>{" "}
-                                {s.ip_address}
-                            </div>
-
-                            {s.port && (
-                                <div>
-                                    <span className="font-medium">Port:</span>{" "}
-                                    {s.port}
-                                </div>
-                            )}
-
-                            {s.status && (
-                                <div>
-                                    <span className="font-medium">Status:</span>{" "}
-                                    {s.status}
-                                </div>
-                            )}
-
-                            {s.certificate_serial && (
-                                <div>
-                                    <span className="font-medium">Cert Serial:</span>{" "}
-                                    {s.certificate_serial}
-                                </div>
-                            )}
-
-                            {s.created_at && (
-                                <div>
-                                    <span className="font-medium">Created:</span>{" "}
-                                    {new Date(s.created_at).toLocaleString()}
-                                </div>
-                            )}
-
-                            {s.updated_at && (
-                                <div>
-                                    <span className="font-medium">Updated:</span>{" "}
-                                    {new Date(s.updated_at).toLocaleString()}
-                                </div>
-                            )}
-
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-
-
     // --- HELP TAB ---
     const renderHelp = () => (
         <div className="p-10 max-w-3xl mx-auto text-lg leading-relaxed">
@@ -736,7 +684,7 @@ export default function UserCertmanager() {
         </div>
     );
 
-    // --- RETURN ---
+    /////Main RETURN////
     return (
         <div className="p-8 bg-white rounded-xl shadow-lg w-[75%] mx-auto">
             {/* Header */}
@@ -748,21 +696,97 @@ export default function UserCertmanager() {
                 <p className="text-blue-200 font-semibold text-left text-3xl mt-2">Welcome User</p>
             </header>
 
-            {/* Organization ID Section */}
-            <div className="flex justify-center mt-10 mb-10">
-                <div className="w-1/4 min-w-[300px] text-center">
-                    <label className="text-2xl font-bold text-blue-700 mb-3 block">
-                        Organization ID
-                    </label>
+            {/* Organization + Filters Section */}
+
+
+            <div className="flex justify-center mt-10">
+                <div className="w-3/4 min-w-[75%]">
+                    <label className="text-2xl font-bold text-blue-700 mb-3 block text-center">Organization ID</label>
                     <input
                         type="text"
                         placeholder="Enter Org ID"
                         value={orgId}
-                        onChange={handleOrgIdChange}
-                        className="text-center border border-gray-300 rounded-lg px-4 py-2.5 w-full text-lg font-bold focus:ring-2 focus:ring-blue-500 shadow-sm"
+                        onChange={(e) => setOrgId(e.target.value)}
+                        className="text-center border border-gray-300 rounded-lg px-4 py-2.5 w-full text-lg font-bold focus:ring-2 focus:ring-blue-500 shadow-sm mb-6"
                     />
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end text-lg">
+
+                        {/* Root ID */}
+                        <div className="flex flex-col">
+                            <label className="font-semibold text-center  text-gray-700 mb-1">Root Certs</label>
+                            <input
+                                placeholder="Enter / Filter Root CA ID"
+                                value={rootIdInput}
+                                onChange={(e) => setRootIdInput(e.target.value)}
+                                className="border border-gray-300 rounded-lg px-3 py-2 text-center shadow-sm text-lg"
+                            />
+                        </div>
+
+                        {/* Intermediate ID */}
+                        <div className="flex flex-col">
+                            <label className="font-semibold text-center text-gray-700 mb-1">Intermediate Certs</label>
+                            <select
+                                value={intermediateIdInput}
+                                onChange={(e) => setIntermediateIdInput(e.target.value)}
+                                className="border border-gray-300 rounded-lg px-3 py-2 text-center shadow-sm text-lg"
+                            >
+                                <option value="">
+                                    {intermediateOptions.length > 0
+                                        ? `Intermediates (${intermediateOptions.length})`
+                                        : "No intermediates"}
+                                </option>
+
+                                {intermediateOptions.map(i => (
+                                    <option key={toId(i.id)} value={toId(i.id)}>
+                                        {i.id} — {i.common_name ?? ""}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Certificate ID */}
+                        <div className="flex flex-col">
+                            <label className="font-semibold text-center text-gray-700 mb-1">Certificates</label>
+                            <select
+                                value={certIdInput}
+                                onChange={(e) => setCertIdInput(e.target.value)}
+                                className="border border-gray-300 rounded-lg px-3 py-2 text-center shadow-sm text-lg"
+                            >
+                                <option value="">
+                                    {certOptions.length > 0
+                                        ? `Certificates (${certOptions.length})`
+                                        : "No certificates"}
+                                </option>
+
+                                {certOptions.map(c => (
+                                    <option key={toId(c.id)} value={toId(c.id)}>
+                                        {c.id} — {c.common_name ?? ""}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Clear Button */}
+                        <div className="flex flex-col">
+                            <button
+                                onClick={() => {
+                                    setRootIdInput("");
+                                    setIntermediateIdInput("");
+                                    setCertIdInput("");
+                                    setIntermediateOptions([]);
+                                    setCertOptions([]);
+                                    applyFilters(roots, interByRoot, certsByIntermediate, "", "", "");
+                                }}
+                                className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg font-semibold text-gray-700 text-lg"
+                            >
+                                Clear Filters
+                            </button>
+                        </div>
+
+                    </div>
                 </div>
             </div>
+
 
             {/* Main App Layout */}
             <div className="bg-gray-100 min-h-screen flex flex-col rounded-t-2xl shadow-inner">
@@ -772,7 +796,6 @@ export default function UserCertmanager() {
                         { key: "certs", label: "My Certificates" },
                         { key: "alerts", label: "Alerts" },
                         { key: "download", label: "Download" },
-                        { key: "server", label: "Server Details" },
                         { key: "help", label: "Help" },
                     ].map((tab) => (
                         <button
@@ -790,10 +813,9 @@ export default function UserCertmanager() {
 
                 {/* Active Tab Content */}
                 <main className="flex-grow p-8">
-                    {activeTab === "certs" && renderCertCards()}
+                    {activeTab === "certs" && renderExpandableTable()}
                     {activeTab === "alerts" && renderAlerts({ certs, intermediates })}
                     {activeTab === "download" && renderDownloadTab()}
-                    {activeTab === "server" && renderServers()}
                     {activeTab === "help" && renderHelp()}
                 </main>
 
@@ -802,7 +824,12 @@ export default function UserCertmanager() {
                     © GoSecure 2025
                 </footer>
             </div>
-        </div>
-    );
 
+            {/* <div className="bg-gray-100 min-h-screen flex flex-col rounded-t-2xl shadow-inner mt-6 p-6">
+                {loading ? <div>Loading...</div> : error ? <div className="text-red-600">{error}</div> : renderCertCardsWrapper()}
+            </div> */}
+        </div>
+
+
+    );
 }
