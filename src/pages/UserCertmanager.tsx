@@ -59,6 +59,10 @@ export default function UserCertmanager() {
     const [serversLoading, setServersLoading] = useState(false);
     const [serversError, setServersError] = useState("");
 
+    const [rootFilter, setRootFilter] = useState("");
+    const [intermediateFilter, setIntermediateFilter] = useState("");
+
+
     // ------------------ HELPERS ------------------
     const daysRemaining = (validUntil: string | number | Date) => {
         const diff = new Date(validUntil).getTime() - Date.now();
@@ -76,52 +80,111 @@ export default function UserCertmanager() {
     };
 
     // ------------------ FETCH ALL CERT DATA ------------------
+    let currentController: AbortController | null = null;
+
     const fetchCerts = async () => {
         if (!orgId?.trim()) {
             setCerts([]);
+            setIntermediates({});
             return;
         }
 
+        // Cancel previous request (fixes race conditions)
+        if (currentController) currentController.abort();
+        const controller = new AbortController();
+        currentController = controller;
+        const signal = controller.signal;
+
         setLoading(true);
         setError(null);
+
         try {
-            // Fetch all root CAs
-            const res = await axios.get(`${API_BASE_URL}/organizations/${orgId}/root-ca/`);
-            const rootData: RootCertificate[] = res.data || [];
+            // 1️⃣ Fetch Root CAs
+            const res = await axios.get(
+                `${API_BASE_URL}/organizations/${orgId}/root-ca/`,
+                { signal }
+            );
+
+            const rootData: RootCertificate[] = Array.isArray(res.data) ? res.data : [];
             setCerts(rootData);
 
-            // Fetch intermediates + issued certs for each root CA
-            const allIntermediateData: Record<string, IntermediateCertificate[]> = {};
-
-            for (const root of rootData) {
-                try {
-                    const intRes = await axios.get(`${API_BASE_URL}/root-ca/${root.id}/intermediate-ca/`);
-                    const intermediatesData: IntermediateCertificate[] = intRes.data || [];
-
-                    const withIssued = await Promise.all(
-                        intermediatesData.map(async (int) => {
-                            try {
-                                const leafRes = await axios.get(`${API_BASE_URL}/intermediate-ca/${int.id}/certificates/`);
-                                return { ...int, issued_certificates: leafRes.data || [] };
-                            } catch {
-                                return { ...int, issued_certificates: [] };
-                            }
-                        })
-                    );
-
-                    allIntermediateData[root.id] = withIssued;
-                } catch {
-                    allIntermediateData[root.id] = [];
-                }
+            if (rootData.length === 0) {
+                console.warn("No Root CAs found for org:", orgId);
+                setIntermediates({});
+                return;
             }
 
-            setIntermediates(allIntermediateData);
-        } catch (err) {
+            // 2️⃣ For each root, fetch intermediates + issued certs
+            const allIntermediateData: Record<string, IntermediateCertificate[]> = {};
+
+            await Promise.all(
+                rootData.map(async (root) => {
+                    if (!root?.id) {
+                        console.warn("Root CA ID missing! Root:", root);
+                        return; // skip this root CA
+                    }
+
+                    try {
+                        const intRes = await axios.get(
+                            `${API_BASE_URL}/root-ca/${root.id}/intermediate-ca/`,
+                            { signal }
+                        );
+
+                        const intermediates = Array.isArray(intRes.data)
+                            ? intRes.data
+                            : [];
+
+                        const withIssued = await Promise.all(
+                            intermediates.map(async (int) => {
+                                if (!int?.id) {
+                                    console.warn("Intermediate CA ID missing!", int);
+                                    return { ...int, issued_certificates: [] };
+                                }
+
+                                try {
+                                    const leafRes = await axios.get(
+                                        `${API_BASE_URL}/intermediate-ca/${int.id}/certificates/`,
+                                        { signal }
+                                    );
+
+                                    return {
+                                        ...int,
+                                        issued_certificates: Array.isArray(leafRes.data)
+                                            ? leafRes.data
+                                            : [],
+                                    };
+                                } catch {
+                                    return { ...int, issued_certificates: [] };
+                                }
+                            })
+                        );
+
+                        allIntermediateData[root.id] = withIssued;
+                    } catch (error) {
+                        console.warn("Failed intermediates for root:", root.id);
+                        allIntermediateData[root.id] = [];
+                    }
+                })
+            );
+
+            // 3️⃣ Update state only if NOT aborted
+            if (!signal.aborted) {
+                setIntermediates(allIntermediateData);
+            }
+        } catch (err: any) {
+            if (err.name === "CanceledError" || err.name === "AbortError") {
+                console.log("Fetch aborted because orgId changed.");
+                return;
+            }
+
             console.error("fetchCerts error", err);
             setError("Failed to fetch certificates. Check Org ID.");
             setCerts([]);
+            setIntermediates({});
         } finally {
-            setLoading(false);
+            if (!signal.aborted) {
+                setLoading(false);
+            }
         }
     };
 
@@ -192,6 +255,35 @@ export default function UserCertmanager() {
                             const remaining = daysRemaining(rootCa.valid_until);
                             const status = getStatusStyles(rootCa.is_active, remaining);
                             const intermediateList = intermediates[rootCa.id] || [];
+                            <div className="flex items-center space-x-6 mb-6">
+
+                                <div>
+                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                        Filter by Root CA ID
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="border px-4 py-2 rounded-lg w-48"
+                                        placeholder="e.g. 8"
+                                        value={rootFilter}
+                                        onChange={(e) => setRootFilter(e.target.value)}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                        Filter by Intermediate CA ID
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="border px-4 py-2 rounded-lg w-48"
+                                        placeholder="e.g. 12"
+                                        value={intermediateFilter}
+                                        onChange={(e) => setIntermediateFilter(e.target.value)}
+                                    />
+                                </div>
+
+                            </div>
 
                             return (
                                 <tr key={rootCa.id} className="align-top hover:bg-gray-50">

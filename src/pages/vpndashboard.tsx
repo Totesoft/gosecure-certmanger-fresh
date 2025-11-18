@@ -91,9 +91,15 @@ interface MonitoringStatusResponse {
 }
 
 // 3️⃣ /monitoring/metrics
+// interface MetricsResponse {
+//     metrics: any[];        // Empty array or structured metrics if available
+//     timestamp: string;
+// }
 interface MetricsResponse {
-    metrics: any[];        // Empty array or structured metrics if available
-    timestamp: string;
+    cpu: number;
+    disk: number;
+    memory: number;
+    network: number;
 }
 
 // 4️⃣ /monitoring/alerts
@@ -429,7 +435,6 @@ const VpnDashboard = () => {
                 setLoading(false);
             }
         };
-
         fetchData();
     }, [dateRange]);
 
@@ -553,6 +558,7 @@ const VpnDashboard = () => {
 
     console.log('servicestatus', status)
     console.log("serviceeee", services)
+    console.log('metrics', metrics)
 
     const servicesEnabled = services.filter(s => s.enabled).length;
     const servicesDisabled = services.filter(s => !s.enabled).length;
@@ -562,7 +568,7 @@ const VpnDashboard = () => {
     return (
         // <div className="min-h-screen w-full flex flex-col bg-gray-100 dark:bg-gray-900 p-20 space-y-10">
         //    <div className="min-h-screen w-full flex flex-col bg-[#f4e1d3] p-20 space-y-10">
-        <div className="min-h-screen w-full flex flex-col bg-[#e4e5f2] p-28 space-y-14">
+        <div className="min-h-screen w-[75%] mx-auto flex flex-col bg-[#e4e5f2] p-28 space-y-14">
 
             {/* === Header === */}
             <div className="flex flex-col space-y-6">
