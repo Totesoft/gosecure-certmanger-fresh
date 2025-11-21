@@ -36,9 +36,9 @@ function AdminCertManager() {
     const [data, setData] = useState<CertificateItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [intermediatecerts, setIntermediatecerts] = useState<CertificateItem[]>([]);
-    const [issuedcerts, setIssuedcerts] = useState<CertificateItem[]>([]);
-    const [rootcerts, setRootcerts] = useState<CertificateItem[]>([]);
+    const [intermediateallcerts, setIntermediateallcerts] = useState<CertificateItem[]>([]);
+    const [issuedallcerts, setIssuedallcerts] = useState<CertificateItem[]>([]);
+    const [rootallcerts, setRootallcerts] = useState<CertificateItem[]>([]);
     const [usercerts, setUsercerts] = useState<CertificateItem[]>([]);
     const [loadingUser, setLoadingUser] = useState(false);
     const [errorUser, setErrorUser] = useState("");
@@ -82,19 +82,19 @@ function AdminCertManager() {
             console.log("Calling Certificate APIs...");
 
             // REAL API CALLS
-            // const rootRes = await axios.get(`${API_BASE_URL}/organizations/root-cas/`);
-            // const intermediateRes = await axios.get(`${API_BASE_URL}/intermediate-ca/`);
-            // const issuedcertsRes = await axios.get(`${API_BASE_URL}/certificates/`);
-            // setIntermediatecerts(intermediateRes.data);
+            // const rootallRes = await axios.get(`${API_BASE_URL}/organizations/root-cas/`);
+            // const intermediateallRes = await axios.get(`${API_BASE_URL}/intermediate-ca/`);
+            // const issuedcertsallRes = await axios.get(`${API_BASE_URL}/certificates/`);
+            // setIntermediateallcerts(intermediateRes.data);
             // setAllcerts(allcertsRes.data);
 
             // MOCK DATA (remove later)
             //      const rootRes = rootCAmockdata;
-            const intermediateRes = intermediatemockdata;
-            const issuedcertsRes = issuedcertsmockdata;
+            const intermediateallRes = intermediatemockdata;
+            const issuedcertsallRes = issuedcertsmockdata;
             // setRootcerts(rootRes);
-            setIntermediatecerts(intermediateRes);
-            setIssuedcerts(issuedcertsRes);
+            setIntermediateallcerts(intermediateallRes);
+            setIssuedallcerts(issuedcertsallRes);
 
             //console.log("Intermediate:", intermediateRes);
             // console.log("All certs:", certificatesRes);
@@ -176,7 +176,7 @@ function AdminCertManager() {
                 <div className="border rounded-lg shadow p-4 bg-white">
                     <h2 className="text-xl font-semibold mb-4">Intermediate CerRRRRRRRRRRRRtificates</h2>
 
-                    {intermediatecerts.length === 0 ? (
+                    {intermediateallcerts.length === 0 ? (
                         <p className="text-gray-500">No Intermediate Certificates</p>
                     ) : (
                         <table className="w-full text-left border-collapse">
@@ -188,7 +188,7 @@ function AdminCertManager() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {intermediatecerts.map(item => (
+                                {intermediateallcerts.map(item => (
                                     <tr key={item.id} className="border-b hover:bg-gray-50">
                                         <td className="p-2">{item.id}</td>
                                         <td className="p-2">{item.common_name}</td>
@@ -204,7 +204,7 @@ function AdminCertManager() {
                 <div className="border rounded-lg shadow p-4 bg-white">
                     <h2 className="text-xl font-semibold mb-4">Issued Certificates</h2>
 
-                    {issuedcerts.length === 0 ? (
+                    {issuedallcerts.length === 0 ? (
                         <p className="text-gray-500">No Certificates Found</p>
                     ) : (
                         <table className="w-full text-left border-collapse">
@@ -216,7 +216,7 @@ function AdminCertManager() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {issuedcerts.map(item => (
+                                {issuedallcerts.map(item => (
                                     <tr key={item.id} className="border-b hover:bg-gray-50">
                                         <td className="p-2">{item.id}</td>
                                         <td className="p-2">{item.common_name}</td>
@@ -245,7 +245,7 @@ function AdminCertManager() {
             </thead>
 
             <tbody>
-                {intermediatecerts.map((cert) => {
+                {intermediateallcerts.map((cert) => {
                     const days = daysRemaining(cert.valid_until);
                     const status = getStatusStyles(cert.is_active, days);
 
@@ -283,7 +283,7 @@ function AdminCertManager() {
             </thead>
 
             <tbody>
-                {issuedcerts.map((cert) => {
+                {issuedallcerts.map((cert) => {
                     const days = daysRemaining(cert.valid_until);
                     const status = getStatusStyles(cert.is_active, days);
 

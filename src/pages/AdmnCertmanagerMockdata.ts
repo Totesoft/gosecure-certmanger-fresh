@@ -1,3 +1,143 @@
+
+
+export const rootCAmockdata = [
+    {
+        "id": 1,
+        "organization_id": 1,
+        "common_name": "Test Root CA",
+        "key_length": 2048,
+        "valid_from": "2025-11-06T21:42:13.059509",
+        "valid_until": "2055-10-30T21:42:13.059509",
+        "serial_number": "15772843469501974397",
+        "is_active": false,
+        "created_at": "2025-11-06T21:42:13.062270"
+    },
+    {
+        "id": 2,
+        "organization_id": 1,
+        "common_name": "Test Organization Root CA Renewed",
+        "key_length": 4096,
+        "valid_from": "2025-11-06T22:02:27.948378",
+        "valid_until": "2055-10-30T22:02:27.948378",
+        "serial_number": "5209264937173098846",
+        "is_active": true,
+        "created_at": "2025-11-06T22:02:27.957636"
+    },
+    {
+        "id": 3,
+        "organization_id": 5,
+        "common_name": "Acme Corporation Root CA",
+        "key_length": 2048,
+        "valid_from": "2025-11-06T22:41:39.795905",
+        "valid_until": "2055-10-30T22:41:39.795905",
+        "serial_number": "13228504331192530276",
+        "is_active": false,
+        "created_at": "2025-11-06T22:41:39.801456"
+    },
+    {
+        "id": 4,
+        "organization_id": 5,
+        "common_name": "Test Organization Root CA Renewed",
+        "key_length": 4096,
+        "valid_from": "2025-11-07T14:35:29.765155",
+        "valid_until": "2055-10-31T14:35:29.765155",
+        "serial_number": "8712086182557613571",
+        "is_active": true,
+        "created_at": "2025-11-07T14:35:29.775142"
+    },
+    {
+        "id": 5,
+        "organization_id": 1,
+        "common_name": "string",
+        "key_length": 2048,
+        "valid_from": "2025-11-07T15:27:28.064652",
+        "valid_until": "2055-10-31T15:27:28.064652",
+        "serial_number": "15781029930151688608",
+        "is_active": true,
+        "created_at": "2025-11-07T15:27:28.068806"
+    },
+    {
+        "id": 6,
+        "organization_id": 3,
+        "common_name": "string",
+        "key_length": 2048,
+        "valid_from": "2025-11-07T18:50:47.316938",
+        "valid_until": "2055-10-31T18:50:47.316938",
+        "serial_number": "3526864657655638787",
+        "is_active": true,
+        "created_at": "2025-11-07T18:50:47.320844"
+    },
+    {
+        "id": 7,
+        "organization_id": 1,
+        "common_name": "string",
+        "key_length": 2048,
+        "valid_from": "2025-11-08T07:06:26.869777",
+        "valid_until": "2055-11-01T07:06:26.869777",
+        "serial_number": "17827069108892108750",
+        "is_active": true,
+        "created_at": "2025-11-08T07:06:26.875839"
+    },
+    {
+        "id": 8,
+        "organization_id": 8,
+        "common_name": "Test Organ123",
+        "key_length": 2048,
+        "valid_from": "2025-11-10T13:58:12.589996",
+        "valid_until": "2028-11-09T13:58:12.589996",
+        "serial_number": "14488838880025205117",
+        "is_active": true,
+        "created_at": "2025-11-10T13:58:12.592953"
+    },
+    {
+        "id": 9,
+        "organization_id": 9,
+        "common_name": "Testing",
+        "key_length": 2048,
+        "valid_from": "2025-11-10T14:31:54.427066",
+        "valid_until": "2030-11-09T14:31:54.427066",
+        "serial_number": "1807927671404892091",
+        "is_active": true,
+        "created_at": "2025-11-10T14:31:54.430010"
+    },
+    {
+        "id": 10,
+        "organization_id": 10,
+        "common_name": "anchorvpn.com",
+        "key_length": 2048,
+        "valid_from": "2025-11-10T15:06:19.496231",
+        "valid_until": "2027-11-10T15:06:19.496231",
+        "serial_number": "18039884546192881352",
+        "is_active": false,
+        "created_at": "2025-11-10T15:06:19.499162"
+    },
+    {
+        "id": 11,
+        "organization_id": 10,
+        "common_name": "anchorvpn.com",
+        "key_length": 2048,
+        "valid_from": "2025-11-10T15:07:58.801538",
+        "valid_until": "2028-11-09T15:07:58.801538",
+        "serial_number": "3313434577358832800",
+        "is_active": true,
+        "created_at": "2025-11-10T15:07:58.805066"
+    },
+    {
+        "id": 12,
+        "organization_id": 11,
+        "common_name": "Testing Vpn",
+        "key_length": 2048,
+        "valid_from": "2025-11-11T11:46:21.505658",
+        "valid_until": "2028-11-10T11:46:21.505658",
+        "serial_number": "13409109060535048974",
+        "is_active": true,
+        "created_at": "2025-11-11T11:46:21.508709"
+    }
+]
+
+
+
+
 export const intermediatemockdata = [
     {
         "id": 1,
