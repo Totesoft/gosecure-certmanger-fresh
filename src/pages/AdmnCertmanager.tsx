@@ -7,6 +7,22 @@ const API_BASE_URL = "https://pre-prod.be.anchorvpn.net/api/v1";
 // ----------------------
 // Interfaces
 // ----------------------
+
+interface Organization {
+    id: number;
+    name: string;
+    root_ca_count: number;
+}
+
+interface OrganizationListResponse {
+    organizations: Organization[];
+    total: number;
+}
+
+
+
+
+
 interface CertificateItem {
     id: number;
     root_ca_id?: number;       // ADD THIS
@@ -32,6 +48,27 @@ type TabType = "certs" | "users" | "servers";
 // Main Component
 // ----------------------
 function AdminCertManager() {
+    const [orgs, setOrgs] = useState<Organization[]>([]);
+
+
+    const fetchOrganizations = async () => {
+        setLoading(true);
+        setError("");
+
+        try {
+            const response = await axios.get<OrganizationListResponse>(`${API_BASE_URL}/admin/list-organizations`);
+            setOrgs(response.data.organizations);
+        } catch (err) {
+            setError("Failed to load organizations");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchOrganizations();
+    }, []);
+
     const [activeTab, setActiveTab] = useState<TabType>("certs");
     const [data, setData] = useState<CertificateItem[]>([]);
     const [loading, setLoading] = useState(false);
@@ -431,8 +468,51 @@ function AdminCertManager() {
                 </p>
             </header>
 
-            {/* TABS */}
-            <nav className="w-full bg-blue-50 border-b px-10 py-5 flex justify-center gap-x-10">
+
+            <div className="p-6">
+
+                <h1 className="text-3xl font-bold mb-4">Organizations</h1>
+
+                {loading && <p className="text-lg">Loading...</p>}
+                {error && <p className="text-red-600 text-lg">{error}</p>}
+
+                {!loading && !error && (
+                    <table className="min-w-[70%] border border-gray-300 rounded-lg shadow bg-white">
+                        <thead className="bg-gray-100 text-lg font-semibold">
+                            <tr>
+                                <th className="px-4 py-2 border">ID</th>
+                                <th className="px-4 py-2 border">Name</th>
+                                <th className="px-4 py-2 border">Root CAs</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {orgs.map((org) => (
+                                <tr key={org.id} className="hover:bg-gray-50 text-lg">
+                                    <td className="px-4 py-2 border">{org.id}</td>
+                                    <td className="px-4 py-2 border">{org.name}</td>
+                                    <td className="px-4 py-2 border">{org.root_ca_count}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
+
+
+
+
+
+
+
+
+{/* TABS */ }
+{/* <nav className="w-full bg-blue-50 border-b px-10 py-5 flex justify-center gap-x-10">
                 {[
                     { key: "certs", label: "Certificates" },
                     { key: "users", label: "User Certs" },
@@ -451,25 +531,25 @@ function AdminCertManager() {
                     </button>
                 ))}
             </nav>
+ */}
+{/* CARD WRAPPER */ }
+{/* <div className="shadow-xl rounded-xl border border-gray-100 bg-white mt-6"> */ }
 
-            {/* CARD WRAPPER */}
-            <div className="shadow-xl rounded-xl border border-gray-100 bg-white mt-6">
-
-                {/* CARD HEADER */}
-                <div className="p-4 border-b text-xl font-semibold">
+{/* CARD HEADER */ }
+{/* <div className="p-4 border-b text-xl font-semibold">
                     {activeTab === "certs"}
                     {activeTab === "users"}
                     {activeTab === "servers"}
                     {activeTab === "help"}
-                </div>
+                </div> */}
 
-                {/* CARD BODY (SEPARATED CONTENT) */}
-                <div className="p-4">
+{/* CARD BODY (SEPARATED CONTENT) */ }
+{/* <div className="p-4">
                     {activeTab === "certs" && (
-                        <div className="p-4">
+                        <div className="p-4"> */}
 
-                            {/* SUB TABS */}
-                            <div className="flex gap-4 mb-4 border-b pb-3">
+{/* SUB TABS */ }
+{/* <div className="flex gap-4 mb-4 border-b pb-3">
                                 <button
                                     onClick={() => setCertSubTab("root")}
                                     className={`px-4 py-2 text-lg font-semibold rounded 
@@ -501,24 +581,24 @@ function AdminCertManager() {
                                 >
                                     Issued Certificates
                                 </button>
-                            </div>
+                            </div> */}
 
-                            {/* SUB TAB RENDER LOGIC */}
-                            {certSubTab === "intermediate" && renderIntermediateTable()}
-                            {certSubTab === "issued" && renderIssuedCertsTable()}
-                            {/* {certSubTab === "root" && renderRootCertsTable()} */}
+{/* SUB TAB RENDER LOGIC */ }
+{/* {certSubTab === "intermediate" && renderIntermediateTable()}
+                            {certSubTab === "issued" && renderIssuedCertsTable()} */}
+{/* {certSubTab === "root" && renderRootCertsTable()} */ }
 
-                        </div>
+{/* </div>
                     )}
                     {activeTab === "users" && renderUserTable()}
                     {activeTab === "servers" && renderServerCertsTable()}
                     {activeTab === "help" && <p>Help content here...</p>}
                 </div>
 
-            </div>
-        </div>
+            </div>*/}
+{/* </div>
     );
 
-}
+} */}
 
 export default AdminCertManager;

@@ -1,3 +1,6 @@
+import { servercertsmockdata } from "@/pages/AdmnCertmanagerMockdata";
+import type { ServerCertificate } from "@/pages/UserCertmanager";
+import { useState } from "react";
 
 const [servercerts, setServercerts] = useState<ServerCertificate[]>([]);
 const [loadingServers, setLoadingServers] = useState(false);
@@ -38,7 +41,7 @@ export const renderServerCertsTable = () => (
         </thead>
 
         <tbody>
-            {servers.map((cert) => {
+            {servercerts.map((cert) => {
                 const days = daysRemaining(cert.valid_until);
                 const status = getStatusStyles(cert.is_active, days);
 
@@ -71,3 +74,11 @@ export const renderServerCertsTable = () => (
         </tbody>
     </table>
 );
+function daysRemaining(valid_until: string) {
+    throw new Error("Function not implemented.");
+}
+
+function getStatusStyles(is_active: boolean, days: any) {
+    throw new Error("Function not implemented.");
+}
+

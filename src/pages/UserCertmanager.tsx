@@ -76,14 +76,21 @@ export interface UserCertificate {
 }
 type ExpandState = Record<string, boolean>;
 
-
+interface OrgCertificate {
+    id: string;
+    common_name: string;
+    key_length: number;
+    valid_until: string;
+    is_active: boolean;
+    intermediate_ca_id?: string | null;
+}
 export default function UserCertManager() {
     // raw fetched data (full tree)
     const [roots, setRoots] = useState<any[]>([]);
     const [interByRoot, setInterByRoot] = useState<Record<string, any[]>>({});
     const [certsByIntermediate, setCertsByIntermediate] = useState<Record<string, any[]>>({});
 
-    // UI-visible filtered data (what renderCertCards/renderAlerts expect)
+    // UI-visible filtered data (what renderexpandable/renderAlerts expect)
     const [certs, setCerts] = useState<any[]>([]); // filtered roots
     const [intermediates, setIntermediates] = useState<Record<string, any[]>>({}); // rootId -> intermediates (each with issued_certificates)
 
@@ -128,9 +135,9 @@ export default function UserCertManager() {
     // const [hierarchySubTab, setHierarchySubTab] = useState("hierarchy");
     // const [issuedSubTab, setIssuedSubTab] = useState("issued");
     // const [alertsSubTab, setAlertsSubTab] = useState("alerts");
-    const [orgIdCerts, setOrgIdCerts] = useState([]);
+    const [orgIdCerts, setOrgIdCerts] = useState<OrgCertificate[]>([]);
     const [loadingOrgIdCerts, setLoadingOrgIdCerts] = useState(false);
-    const [orgIdError, setOrgIdError] = useState(null);
+    const [orgIdError, setOrgIdError] = useState<string | null>(null);
 
     // ------------------ HELPERS ------------------
     const toggleRoot = (id: string) => {
@@ -165,180 +172,8 @@ export default function UserCertManager() {
     };
 
 
-    ///server
-    useEffect(() => {
-        if (activeTab === "servers") {
-            fetchServercerts();
-        }
-    }, [activeTab]);
-    useEffect(() => {
-        fetchallcerts();
-    }, [activeTab]);
 
-    ////allcerts
-    const fetchallcerts = async () => {
-        setLoading(true);
-        setError("");
-
-        try {
-            console.log("Calling Certificate APIs...");
-
-            // REAL API CALLS
-            // const token = "YOUR_TOKEN_HERE";   // Replace with real token
-
-            // const rootallRes = await axios.get(
-            //     `${API_BASE_URL}/organizations/root-cas/`,
-            //     {
-            //         headers: {
-            //             Authorization: `Bearer ${token}`,
-            //             "Content-Type": "application/json"
-            //         }
-            //     })
-            // //  const rootallRes = await axios.get(`${API_BASE_URL}/organizations/root-cas/`);
-            // const intermediateallRes = await axios.get(`${API_BASE_URL}/intermediate-ca/`);
-            // const issuedcertsallRes = await axios.get(`${API_BASE_URL}/certificates/`);
-            // setIntermediateallcerts(intermediateRes.data);
-            // setAllcerts(allcertsRes.data);
-            //   setRootallcerts(rootallRes.data);
-
-            // MOCK DATA (remove later)
-            const rootallRes = rootCAmockdata;
-            const intermediateallRes = intermediatemockdata;
-            const issuedcertsallRes = issuedcertsmockdata;
-            setRootallcerts(rootallRes);
-            setIntermediateallcerts(intermediateallRes);
-            setIssuedallcerts(issuedcertsallRes);
-
-            //console.log("Intermediate:", intermediateRes);
-            // console.log("All certs:", certificatesRes);
-
-        } catch (err) {
-            setError("Failed to fetch certificate data.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const renderRootallTable = () => (
-        <table className="min-w-full border border-gray-200 rounded-lg shadow">
-            <thead className="bg-gray-100">
-                <tr>
-                    <th className="px-4 py-2 border">Status</th>
-                    <th className="px-4 py-2 border">ID</th>
-                    <th className="px-4 py-2 border">Common Name</th>
-                    <th className="px-4 py-2 border">Valid Until</th>
-                    <th className="px-4 py-2 border">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {rootallcerts.map((cert) => {
-                    const days = daysRemaining(cert.valid_until);
-                    const status = getStatusStyles(cert.is_active, days);
-
-                    return (
-                        <tr key={cert.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-2 border">
-                                <span className={`px-2 py-1 rounded text-sm ${status.className}`}>
-                                    {status.text}
-                                </span>
-                            </td>
-                            <td className="px-4 py-2 border">{cert.id}</td>
-                            <td className="px-4 py-2 border">{cert.common_name}</td>
-                            <td className="px-4 py-2 border">
-                                {new Date(cert.valid_until).toISOString().split("T")[0]}
-                            </td>
-                            <td className="px-4 py-2 border">
-                                <button className="underline text-blue-500">Download</button>
-                            </td>
-                        </tr>
-                    );
-                })}
-            </tbody>
-        </table>
-    );
-
-    const renderIntermediateallTable = () => (
-        <table className="min-w-full border border-gray-200 rounded-lg shadow">
-            <thead className="bg-gray-100">
-                <tr>
-                    <th className="px-4 py-2 border">Status</th>
-                    <th className="px-4 py-2 border">ID</th>
-                    <th className="px-4 py-2 border">Common Name</th>
-                    <th className="px-4 py-2 border">Valid Until</th>
-                    <th className="px-4 py-2 border">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {intermediateallcerts.map((cert) => {
-                    const days = daysRemaining(cert.valid_until);
-                    const status = getStatusStyles(cert.is_active, days);
-
-                    return (
-                        <tr key={cert.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-2 border">
-                                <span className={`px-2 py-1 rounded text-sm ${status.className}`}>
-                                    {status.text}
-                                </span>
-                            </td>
-                            <td className="px-4 py-2 border">{cert.id}</td>
-                            <td className="px-4 py-2 border">{cert.common_name}</td>
-                            <td className="px-4 py-2 border">
-                                {new Date(cert.valid_until).toISOString().split("T")[0]}
-                            </td>
-                            <td className="px-4 py-2 border">
-                                <button className="underline text-blue-500">Download</button>
-                            </td>
-                        </tr>
-                    );
-                })}
-            </tbody>
-        </table>
-    );
-    const renderIssuedCertsallTable = () => (
-        <table className="min-w-full border border-gray-200 rounded-lg shadow">
-            <thead className="bg-gray-100">
-                <tr>
-                    <th className="px-4 py-2 border">Status</th>
-                    <th className="px-4 py-2 border">ID</th>
-                    <th className="px-4 py-2 border">Common Name</th>
-                    <th className="px-4 py-2 border">Valid Until</th>
-                    <th className="px-4 py-2 border">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {issuedallcerts.map((cert) => {
-                    const days = daysRemaining(cert.valid_until);
-                    const status = getStatusStyles(cert.is_active, days);
-
-                    return (
-                        <tr key={cert.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-2 border">
-                                <span className={`px-2 py-1 rounded text-sm ${status.className}`}>
-                                    {status.text}
-                                </span>
-                            </td>
-                            <td className="px-4 py-2 border">{cert.id}</td>
-                            <td className="px-4 py-2 border">{cert.common_name}</td>
-                            <td className="px-4 py-2 border">
-                                {new Date(cert.valid_until).toISOString().split("T")[0]}
-                            </td>
-                            <td className="px-4 py-2 border">
-                                <button className="underline text-blue-500">Download</button>
-                            </td>
-                        </tr>
-                    );
-                })}
-            </tbody>
-        </table>
-    );
-
-
-
-
-    // Fetch entire Hierarchy when orgId changes
+    // Fetch Certs--Entire Hierarchy when orgId changes
     useEffect(() => {
         let cancelled = false;
 
@@ -416,152 +251,6 @@ export default function UserCertManager() {
         return () => { cancelled = true; };
     }, [orgId]);
 
-    // applyFilters: produces certs + intermediates states (UI-ready)
-    // accepts optional params so callers can pass freshly fetched data
-    const applyFilters = (
-        rootsBase = roots,
-        interBase = interByRoot,
-        certsBase = certsByIntermediate,
-        rootFilter = rootIdInput,
-        interFilter = intermediateIdInput,
-        certFilter = certIdInput
-    ) => {
-        const rf = toId(rootFilter).toLowerCase();
-        const ifl = toId(interFilter).toLowerCase();
-        const cf = toId(certFilter).toLowerCase();
-
-        let filteredRoots = Array.isArray(rootsBase) ? rootsBase.slice() : [];
-
-        // ROOT EXACT MATCH
-        if (rf) {
-            filteredRoots = filteredRoots.filter(
-                r => toId(r?.id).toLowerCase() === rf
-            );
-        }
-
-        const finalInter: Record<string, any[]> = {};
-
-        filteredRoots.forEach(root => {
-            const rootKey = toId(root?.id);
-
-            let interList = Array.isArray(interBase[rootKey])
-                ? interBase[rootKey].slice()
-                : [];
-
-            // INTERMEDIATE EXACT MATCH
-            if (ifl) {
-                interList = interList.filter(
-                    i => toId(i?.id).toLowerCase() === ifl
-                );
-            }
-
-            const mappedInter = interList
-                .map(inter => {
-                    const interKey = toId(inter?.id);
-
-                    let certList = Array.isArray(certsBase[interKey])
-                        ? certsBase[interKey].slice()
-                        : [];
-
-                    // CERT EXACT MATCH
-                    if (cf) {
-                        certList = certList.filter(
-                            c => toId(c?.id).toLowerCase() === cf
-                        );
-                    }
-
-                    return { ...inter, issued_certificates: certList };
-                })
-                // If cert filter is active, drop intermediates with zero certs
-                .filter(i => i.issued_certificates.length > 0 || !cf);
-
-            finalInter[rootKey] = mappedInter;
-        });
-
-        // Drop roots that have zero intermediates when filtering
-        if (ifl || cf) {
-            filteredRoots = filteredRoots.filter(
-                r => Array.isArray(finalInter[toId(r.id)]) &&
-                    finalInter[toId(r.id)].length > 0
-            );
-        }
-
-        setCerts(filteredRoots);
-        setIntermediates(finalInter);
-    };
-
-    // when any of the filter inputs change, apply filters
-    useEffect(() => {
-        applyFilters();
-    }, [rootIdInput, intermediateIdInput, certIdInput, roots, interByRoot, certsByIntermediate]);
-
-    // When rootIdInput changes: populate intermediateOptions dropdown (all intermediates for that root)
-    useEffect(() => {
-        const rid = toId(rootIdInput);
-        if (!rid) {
-            setIntermediateOptions([]);
-            setIntermediateIdInput("");
-            setCertOptions([]);
-            setCertIdInput("");
-            return;
-        }
-
-        // find root object (allow numeric/string mismatch)
-        const matchedRoot = roots.find(r => toId(r?.id) === rid);
-
-        // gather intermediates from map or by scanning (defensive)
-        let matchedIntermediates: any[] = [];
-
-        if (matchedRoot) {
-            const listFromMap = interByRoot[toId(matchedRoot.id)] ?? [];
-            if (Array.isArray(listFromMap) && listFromMap.length > 0) {
-                matchedIntermediates = listFromMap;
-            } else {
-                matchedIntermediates = Object.values(interByRoot).flat().filter(i => toId(i?.parent_id) === toId(matchedRoot.id));
-            }
-        } else {
-            // If matchedRoot not found, try direct map key (maybe user entered id matching map key)
-            const directList = interByRoot[rid] ?? [];
-            if (Array.isArray(directList) && directList.length > 0) {
-                matchedIntermediates = directList;
-            }
-        }
-
-        // normalize to array
-        if (!Array.isArray(matchedIntermediates)) matchedIntermediates = [];
-
-        // set options (do NOT auto-select)
-        setIntermediateOptions(matchedIntermediates);
-        setIntermediateIdInput("");   // important: leave empty so user chooses
-        setCertOptions([]);
-        setCertIdInput("");
-    }, [rootIdInput, roots, interByRoot]);
-
-    // when intermediateIdInput changes: populate certOptions dropdown
-    useEffect(() => {
-        const iid = toId(intermediateIdInput);
-
-        if (!iid) {
-            setCertOptions([]);
-            setCertIdInput("");   // empty until user selects
-            return;
-        }
-
-        // Try map lookup first
-        let certList = certsByIntermediate[iid] ?? [];
-
-        // fallback: scan all
-        if (!Array.isArray(certList) || certList.length === 0) {
-            certList = Object.values(certsByIntermediate)
-                .flat()
-                .filter(c => toId(c?.parent_id) === iid);
-        }
-
-        setCertOptions(certList ?? []);
-
-        // IMPORTANT: do NOT auto-select anything
-        setCertIdInput("");
-    }, [intermediateIdInput, certsByIntermediate]);
     ////Hierarchy Table
     const renderExpandableTable = () => {
         if (certs.length === 0)
@@ -572,7 +261,7 @@ export default function UserCertManager() {
             );
 
         return (
-            <div className="space-y-6">
+            <div className="space-y-6 w-[90%] mx-auto">
 
                 {/* ROOT CERTS HEADING */}
                 <h2 className="text-2xl font-extrabold text-gray-800 mb-2">
@@ -592,7 +281,8 @@ export default function UserCertManager() {
 
                             {/* ROOT CARD */}
                             <div
-                                className="p-6 cursor-pointer bg-gray-100 hover:bg-gray-200 flex justify-between items-center"
+                                className="p-6 cursor-pointer bg-blue-50 hover:bg-blue-100 flex justify-between items-center border-b border-blue-200"
+
                                 onClick={() => toggleRoot(root.id)}
                             >
                                 <div className="flex items-center gap-12 text-2xl">
@@ -766,6 +456,307 @@ export default function UserCertManager() {
     };
 
 
+    // applyFilters: produces certs + intermediates states (UI-ready)
+    // accepts optional params so callers can pass freshly fetched data
+    const applyFilters = (
+        rootsBase = roots,
+        interBase = interByRoot,
+        certsBase = certsByIntermediate,
+        rootFilter = rootIdInput,
+        interFilter = intermediateIdInput,
+        certFilter = certIdInput
+    ) => {
+        const rf = toId(rootFilter).toLowerCase();
+        const ifl = toId(interFilter).toLowerCase();
+        const cf = toId(certFilter).toLowerCase();
+
+        let filteredRoots = Array.isArray(rootsBase) ? rootsBase.slice() : [];
+
+        // ROOT EXACT MATCH
+        if (rf) {
+            filteredRoots = filteredRoots.filter(
+                r => toId(r?.id).toLowerCase() === rf
+            );
+        }
+
+        const finalInter: Record<string, any[]> = {};
+
+        filteredRoots.forEach(root => {
+            const rootKey = toId(root?.id);
+
+            let interList = Array.isArray(interBase[rootKey])
+                ? interBase[rootKey].slice()
+                : [];
+
+            // INTERMEDIATE EXACT MATCH
+            if (ifl) {
+                interList = interList.filter(
+                    i => toId(i?.id).toLowerCase() === ifl
+                );
+            }
+
+            const mappedInter = interList
+                .map(inter => {
+                    const interKey = toId(inter?.id);
+
+                    let certList = Array.isArray(certsBase[interKey])
+                        ? certsBase[interKey].slice()
+                        : [];
+
+                    // CERT EXACT MATCH
+                    if (cf) {
+                        certList = certList.filter(
+                            c => toId(c?.id).toLowerCase() === cf
+                        );
+                    }
+
+                    return { ...inter, issued_certificates: certList };
+                })
+                // If cert filter is active, drop intermediates with zero certs
+                .filter(i => i.issued_certificates.length > 0 || !cf);
+
+            finalInter[rootKey] = mappedInter;
+        });
+
+        // Drop roots that have zero intermediates when filtering
+        if (ifl || cf) {
+            filteredRoots = filteredRoots.filter(
+                r => Array.isArray(finalInter[toId(r.id)]) &&
+                    finalInter[toId(r.id)].length > 0
+            );
+        }
+
+        setCerts(filteredRoots);
+        setIntermediates(finalInter);
+    };
+    ////Filter
+    const renderCertFilters = () => (
+        <div className="p-6 flex justify-center mt-10">
+            <div
+                className="
+        w-[90%] min-w-[75%]
+        shadow-md rounded-xl p-6
+        border
+        bg-[var(--bg-card)]
+        border-[var(--border-color)]
+        text-[var(--text-primary)]
+    "
+            >
+                <div className="flex items-center gap-6">
+
+                    <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
+                        Organization ID
+                    </span>
+
+                    <input
+                        type="text"
+                        placeholder="--Enter Org ID--"
+                        value={orgId}
+                        onChange={(e) => setOrgId(e.target.value)}
+                        className="
+        text-2xl font-semibold text-center
+        py-2 px-3
+        bg-gray-500 text-gray-100
+        border border-gray-500
+        rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500
+        w-[300px]
+    "
+                    />
+
+                </div>
+
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 items-end text-lg">
+
+                    {/* Root ID */}
+                    <div className="flex flex-col">
+                        <label className="font-semibold text-center mb-1 text-[var(--text-secondary)]">
+                            Root Certs
+                        </label>
+
+                        <input
+                            placeholder="Enter Root CA ID"
+                            value={rootIdInput}
+                            onChange={(e) => setRootIdInput(e.target.value)}
+                            className="
+                            border border-[var(--border-color)] rounded-lg px-3 py-2 text-center shadow-sm
+                            bg-[var(--bg-primary)] text-[var(--text-primary)]
+
+                            dark:bg-[var(--bg-primary)] 
+                            dark:text-[var(--text-primary)]
+                            dark:border-[var(--border-color)]
+                        "
+                        />
+                    </div>
+
+                    {/* Intermediate ID */}
+                    <div className="flex flex-col">
+                        <label className="font-semibold text-center mb-1 text-[var(--text-secondary)]">
+                            Intermediate Certs
+                        </label>
+
+                        <select
+                            value={intermediateIdInput}
+                            onChange={(e) => setIntermediateIdInput(e.target.value)}
+                            className="
+                            border border-[var(--border-color)] rounded-lg px-3 py-2 text-center shadow-sm
+                            bg-[var(--bg-primary)] text-[var(--text-primary)]
+
+                            dark:bg-[var(--bg-primary)] 
+                            dark:text-[var(--text-primary)]
+                            dark:border-[var(--border-color)]
+                        "
+                        >
+                            <option value="">
+                                {intermediateOptions.length > 0
+                                    ? `Intermediates (${intermediateOptions.length})`
+                                    : "No intermediates"}
+                            </option>
+
+                            {intermediateOptions.map(i => (
+                                <option key={toId(i.id)} value={toId(i.id)}>
+                                    {i.id} — {i.common_name ?? ""}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Cert ID */}
+                    <div className="flex flex-col">
+                        <label className="font-semibold text-center mb-1 text-[var(--text-secondary)]">
+                            Certificates
+                        </label>
+
+                        <select
+                            value={certIdInput}
+                            onChange={(e) => setCertIdInput(e.target.value)}
+                            className="
+                            border border-[var(--border-color)] rounded-lg px-3 py-2 text-center shadow-sm
+                            bg-[var(--bg-primary)] text-[var(--text-primary)]
+
+                            dark:bg-[var(--bg-primary)] 
+                            dark:text-[var(--text-primary)]
+                            dark:border-[var(--border-color)]
+                        "
+                        >
+                            <option value="">
+                                {certOptions.length > 0
+                                    ? `Certificates (${certOptions.length})`
+                                    : "No certificates"}
+                            </option>
+
+                            {certOptions.map(c => (
+                                <option key={toId(c.id)} value={toId(c.id)}>
+                                    {c.id} — {c.common_name ?? ""}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Clear Button */}
+                    <div className="flex flex-col">
+                        <button
+                            onClick={() => {
+                                setRootIdInput("");
+                                setIntermediateIdInput("");
+                                setCertIdInput("");
+                                setIntermediateOptions([]);
+                                setCertOptions([]);
+                                applyFilters(roots, interByRoot, certsByIntermediate, "", "", "");
+                            }}
+                            className="
+        px-4 py-2 rounded-lg font-semibold text-xl
+        bg-gray-600 text-white
+        border border-gray-700
+        hover:bg-gray-700
+                            dark:bg-[var(--bg-primary)]
+                            dark:text-[var(--text-primary)]
+                            dark:border-[var(--border-color)]
+                            dark:hover:bg-[var(--bg-card)]
+                        "
+                        >
+                            Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    // when any of the filter inputs change, apply filters
+    useEffect(() => {
+        applyFilters();
+    }, [rootIdInput, intermediateIdInput, certIdInput, roots, interByRoot, certsByIntermediate]);
+
+    // When rootIdInput changes: populate intermediateOptions dropdown (all intermediates for that root)
+    useEffect(() => {
+        const rid = toId(rootIdInput);
+        if (!rid) {
+            setIntermediateOptions([]);
+            setIntermediateIdInput("");
+            setCertOptions([]);
+            setCertIdInput("");
+            return;
+        }
+
+        // find root object (allow numeric/string mismatch)
+        const matchedRoot = roots.find(r => toId(r?.id) === rid);
+
+        // gather intermediates from map or by scanning (defensive)
+        let matchedIntermediates: any[] = [];
+
+        if (matchedRoot) {
+            const listFromMap = interByRoot[toId(matchedRoot.id)] ?? [];
+            if (Array.isArray(listFromMap) && listFromMap.length > 0) {
+                matchedIntermediates = listFromMap;
+            } else {
+                matchedIntermediates = Object.values(interByRoot).flat().filter(i => toId(i?.parent_id) === toId(matchedRoot.id));
+            }
+        } else {
+            // If matchedRoot not found, try direct map key (maybe user entered id matching map key)
+            const directList = interByRoot[rid] ?? [];
+            if (Array.isArray(directList) && directList.length > 0) {
+                matchedIntermediates = directList;
+            }
+        }
+
+        // normalize to array
+        if (!Array.isArray(matchedIntermediates)) matchedIntermediates = [];
+
+        // set options (do NOT auto-select)
+        setIntermediateOptions(matchedIntermediates);
+        setIntermediateIdInput("");   // important: leave empty so user chooses
+        setCertOptions([]);
+        setCertIdInput("");
+    }, [rootIdInput, roots, interByRoot]);
+
+    // when intermediateIdInput changes: populate certOptions dropdown
+    useEffect(() => {
+        const iid = toId(intermediateIdInput);
+
+        if (!iid) {
+            setCertOptions([]);
+            setCertIdInput("");   // empty until user selects
+            return;
+        }
+
+        // Try map lookup first
+        let certList = certsByIntermediate[iid] ?? [];
+
+        // fallback: scan all
+        if (!Array.isArray(certList) || certList.length === 0) {
+            certList = Object.values(certsByIntermediate)
+                .flat()
+                .filter(c => toId(c?.parent_id) === iid);
+        }
+
+        setCertOptions(certList ?? []);
+
+        // IMPORTANT: do NOT auto-select anything
+        setCertIdInput("");
+    }, [intermediateIdInput, certsByIntermediate]);
+
+
 
     ///Alerts
     const renderAlerts = (p0: { certs: any[]; intermediates: Record<string, any[]>; }) => {
@@ -785,7 +776,7 @@ export default function UserCertManager() {
             );
 
         return (
-            <div className="p-6 mt-4 bg-white rounded-xl shadow-lg">
+            <div className="space-y-6 w-[90%] mx-auto p-6 mt-4 bg-white rounded-xl shadow-lg">
                 <h3 className="p-6 mt-4 bg-white rounded-xl shadow-lg text-3xl font-bold mb-8 text-red-700 text-center">
                     Expiring Certificates
                 </h3>
@@ -905,6 +896,7 @@ export default function UserCertManager() {
             </div>
         );
     };
+
     // --- DOWNLOAD ---
     const handleDownload = async () => {
         if (!certIdToDownload.trim()) {
@@ -987,6 +979,12 @@ export default function UserCertManager() {
 
 
     //SERVER
+    useEffect(() => {
+        if (activeTab === "servers") {
+            fetchServercerts();
+        }
+    }, [activeTab]);
+
     const fetchServercerts = async () => {
         setLoadingServers(true);
         setServerError("");
@@ -1008,7 +1006,7 @@ export default function UserCertManager() {
     };
     console.log('ssssssssssssssservers', servercerts)
     const renderServerCertsTable = () => (
-        <table className="min-w-full border border-gray-200 rounded-lg shadow">
+        <table className="w-[75%] mx-auto border border-gray-200 rounded-lg shadow-sm">
             <thead className="bg-gray-100">
                 <tr>
                     <th className="px-4 py-2 border">Status</th>
@@ -1082,7 +1080,7 @@ export default function UserCertManager() {
 
 
     const renderUserTable = () => (
-        <table className="min-w-full border border-gray-200 rounded-lg shadow-sm">
+        <table className="w-[75%] mx-auto border border-gray-200 rounded-lg shadow-sm">
             <thead className="bg-gray-100 text-gray-700 text-lg">
                 <tr>
                     <th className="px-4 py-2 border">Status</th>
@@ -1134,161 +1132,177 @@ export default function UserCertManager() {
     );
 
 
-    ////Filter
-    const renderCertFilters = () => (
-        <div className="p-6 flex justify-center mt-10">
-            <div
-                className="
-        w-[100%] min-w-[75%]
-        shadow-md rounded-xl p-6
-        border
-        bg-[var(--bg-card)]
-        border-[var(--border-color)]
-        text-[var(--text-primary)]
-    "
-            >
-                <div className="flex items-center gap-6">
-
-                    <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
-                        Organization ID
-                    </span>
-
-                    <input
-                        type="text"
-                        placeholder="--Enter Org ID--"
-                        value={orgId}
-                        onChange={(e) => setOrgId(e.target.value)}
-                        className="
-                text-2xl font-semibold text-center
-                py-2 px-3
-                bg-[var(--bg-primary)] text-[var(--text-primary)]
-                border border-[var(--border-color)]
-                rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500
-
-                w-[300px]   /* FIXED WIDTH */
-            "
-                    />
-                </div>
+    ////allcerts
+    useEffect(() => {
+        fetchallcerts();
+    }, [activeTab]);
 
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 items-end text-lg">
+    const fetchallcerts = async () => {
+        setLoading(true);
+        setError("");
 
-                    {/* Root ID */}
-                    <div className="flex flex-col">
-                        <label className="font-semibold text-center mb-1 text-[var(--text-secondary)]">
-                            Root Certs
-                        </label>
+        try {
+            console.log("Calling Certificate APIs...");
 
-                        <input
-                            placeholder="Enter Root CA ID"
-                            value={rootIdInput}
-                            onChange={(e) => setRootIdInput(e.target.value)}
-                            className="
-                            border border-[var(--border-color)] rounded-lg px-3 py-2 text-center shadow-sm
-                            bg-[var(--bg-primary)] text-[var(--text-primary)]
+            // REAL API CALLS
+            // const token = "YOUR_TOKEN_HERE";   // Replace with real token
 
-                            dark:bg-[var(--bg-primary)] 
-                            dark:text-[var(--text-primary)]
-                            dark:border-[var(--border-color)]
-                        "
-                        />
-                    </div>
+            // const rootallRes = await axios.get(
+            //     `${API_BASE_URL}/organizations/root-cas/`,
+            //     {
+            //         headers: {
+            //             Authorization: `Bearer ${token}`,
+            //             "Content-Type": "application/json"
+            //         }
+            //     })
+            // //  const rootallRes = await axios.get(`${API_BASE_URL}/organizations/root-cas/`);
+            // const intermediateallRes = await axios.get(`${API_BASE_URL}/intermediate-ca/`);
+            // const issuedcertsallRes = await axios.get(`${API_BASE_URL}/certificates/`);
+            // setIntermediateallcerts(intermediateRes.data);
+            // setAllcerts(allcertsRes.data);
+            //   setRootallcerts(rootallRes.data);
 
-                    {/* Intermediate ID */}
-                    <div className="flex flex-col">
-                        <label className="font-semibold text-center mb-1 text-[var(--text-secondary)]">
-                            Intermediate Certs
-                        </label>
+            // MOCK DATA (remove later)
+            const rootallRes = rootCAmockdata;
+            const intermediateallRes = intermediatemockdata;
+            const issuedcertsallRes = issuedcertsmockdata;
+            setRootallcerts(rootallRes);
+            setIntermediateallcerts(intermediateallRes);
+            setIssuedallcerts(issuedcertsallRes);
 
-                        <select
-                            value={intermediateIdInput}
-                            onChange={(e) => setIntermediateIdInput(e.target.value)}
-                            className="
-                            border border-[var(--border-color)] rounded-lg px-3 py-2 text-center shadow-sm
-                            bg-[var(--bg-primary)] text-[var(--text-primary)]
+            //console.log("Intermediate:", intermediateRes);
+            // console.log("All certs:", certificatesRes);
 
-                            dark:bg-[var(--bg-primary)] 
-                            dark:text-[var(--text-primary)]
-                            dark:border-[var(--border-color)]
-                        "
-                        >
-                            <option value="">
-                                {intermediateOptions.length > 0
-                                    ? `Intermediates (${intermediateOptions.length})`
-                                    : "No intermediates"}
-                            </option>
+        } catch (err) {
+            setError("Failed to fetch certificate data.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-                            {intermediateOptions.map(i => (
-                                <option key={toId(i.id)} value={toId(i.id)}>
-                                    {i.id} — {i.common_name ?? ""}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+    const renderRootallTable = () => (
+        <table className="w-[75%] mx-auto border border-gray-200 rounded-lg shadow-sm">
+            <thead className="bg-gray-100">
+                <tr>
+                    <th className="px-4 py-2 border">Status</th>
+                    <th className="px-4 py-2 border">ID</th>
+                    <th className="px-4 py-2 border">Common Name</th>
+                    <th className="px-4 py-2 border">Valid Until</th>
+                    <th className="px-4 py-2 border">Actions</th>
+                </tr>
+            </thead>
 
-                    {/* Cert ID */}
-                    <div className="flex flex-col">
-                        <label className="font-semibold text-center mb-1 text-[var(--text-secondary)]">
-                            Certificates
-                        </label>
+            <tbody>
+                {rootallcerts.map((cert) => {
+                    const days = daysRemaining(cert.valid_until);
+                    const status = getStatusStyles(cert.is_active, days);
 
-                        <select
-                            value={certIdInput}
-                            onChange={(e) => setCertIdInput(e.target.value)}
-                            className="
-                            border border-[var(--border-color)] rounded-lg px-3 py-2 text-center shadow-sm
-                            bg-[var(--bg-primary)] text-[var(--text-primary)]
-
-                            dark:bg-[var(--bg-primary)] 
-                            dark:text-[var(--text-primary)]
-                            dark:border-[var(--border-color)]
-                        "
-                        >
-                            <option value="">
-                                {certOptions.length > 0
-                                    ? `Certificates (${certOptions.length})`
-                                    : "No certificates"}
-                            </option>
-
-                            {certOptions.map(c => (
-                                <option key={toId(c.id)} value={toId(c.id)}>
-                                    {c.id} — {c.common_name ?? ""}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Clear Button */}
-                    <div className="flex flex-col">
-                        <button
-                            onClick={() => {
-                                setRootIdInput("");
-                                setIntermediateIdInput("");
-                                setCertIdInput("");
-                                setIntermediateOptions([]);
-                                setCertOptions([]);
-                                applyFilters(roots, interByRoot, certsByIntermediate, "", "", "");
-                            }}
-                            className="
-                            px-4 py-2 rounded-lg font-semibold text-xl
-                            bg-[var(--bg-primary)] text-[var(--text-primary)]
-                            border border-[var(--border-color)]
-                            hover:bg-[var(--bg-card)]
-
-                            dark:bg-[var(--bg-primary)]
-                            dark:text-[var(--text-primary)]
-                            dark:border-[var(--border-color)]
-                            dark:hover:bg-[var(--bg-card)]
-                        "
-                        >
-                            Clear Filters
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    return (
+                        <tr key={cert.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 border">
+                                <span className={`px-2 py-1 rounded text-sm ${status.className}`}>
+                                    {status.text}
+                                </span>
+                            </td>
+                            <td className="px-4 py-2 border">{cert.id}</td>
+                            <td className="px-4 py-2 border">{cert.common_name}</td>
+                            <td className="px-4 py-2 border">
+                                {new Date(cert.valid_until).toISOString().split("T")[0]}
+                            </td>
+                            <td className="px-4 py-2 border">
+                                <button className="underline text-blue-500">Download</button>
+                            </td>
+                        </tr>
+                    );
+                })}
+            </tbody>
+        </table>
     );
 
+    const renderIntermediateallTable = () => (
+        <table className="w-[75%] mx-auto border border-gray-200 rounded-lg shadow-sm">
+            <thead className="bg-gray-100">
+                <tr>
+                    <th className="px-4 py-2 border">Status</th>
+                    <th className="px-4 py-2 border">ID</th>
+                    <th className="px-4 py-2 border">Common Name</th>
+                    <th className="px-4 py-2 border">Valid Until</th>
+                    <th className="px-4 py-2 border">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {intermediateallcerts.map((cert) => {
+                    const days = daysRemaining(cert.valid_until);
+                    const status = getStatusStyles(cert.is_active, days);
+
+                    return (
+                        <tr key={cert.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 border">
+                                <span className={`px-2 py-1 rounded text-sm ${status.className}`}>
+                                    {status.text}
+                                </span>
+                            </td>
+                            <td className="px-4 py-2 border">{cert.id}</td>
+                            <td className="px-4 py-2 border">{cert.common_name}</td>
+                            <td className="px-4 py-2 border">
+                                {new Date(cert.valid_until).toISOString().split("T")[0]}
+                            </td>
+                            <td className="px-4 py-2 border">
+                                <button className="underline text-blue-500">Download</button>
+                            </td>
+                        </tr>
+                    );
+                })}
+            </tbody>
+        </table>
+    );
+    const renderIssuedCertsallTable = () => (
+        <table className="w-[75%] mx-auto border border-gray-200 rounded-lg shadow-sm">
+            <thead className="bg-gray-100">
+                <tr>
+                    <th className="px-4 py-2 border">Status</th>
+                    <th className="px-4 py-2 border">ID</th>
+                    <th className="px-4 py-2 border">Common Name</th>
+                    <th className="px-4 py-2 border">Valid Until</th>
+                    <th className="px-4 py-2 border">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {issuedallcerts.map((cert) => {
+                    const days = daysRemaining(cert.valid_until);
+                    const status = getStatusStyles(cert.is_active, days);
+
+                    return (
+                        <tr key={cert.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 border">
+                                <span className={`px-2 py-1 rounded text-sm ${status.className}`}>
+                                    {status.text}
+                                </span>
+                            </td>
+                            <td className="px-4 py-2 border">{cert.id}</td>
+                            <td className="px-4 py-2 border">{cert.common_name}</td>
+                            <td className="px-4 py-2 border">
+                                {new Date(cert.valid_until).toISOString().split("T")[0]}
+                            </td>
+                            <td className="px-4 py-2 border">
+                                <button className="underline text-blue-500">Download</button>
+                            </td>
+                        </tr>
+                    );
+                })}
+            </tbody>
+        </table>
+    );
+
+
+
+
+
+
+    //////OrgId Certs
     useEffect(() => {
         fetchOrgIdCerts(orgId);
     }, [orgId]);
@@ -1306,8 +1320,7 @@ export default function UserCertManager() {
             const res = await axios.get(
                 API_BASE_URL + "/organizations/" + orgId.trim() + "/certificates/"
             );
-
-            setOrgIdCerts(res.data || []);
+            setOrgIdCerts(res.data as OrgCertificate[]);
         } catch (err: any) {
             setOrgIdError("Failed to fetch certificates for this organization.");
             setOrgIdCerts([]);
@@ -1316,7 +1329,6 @@ export default function UserCertManager() {
         }
     };
 
-    // --------- UI RENDER: Certificates Table ----------
     const renderOrgIdCertificates = () => {
         if (loadingOrgIdCerts) return <div>Loading certificates…</div>;
         if (orgIdError) return <div className="text-red-600">{orgIdError}</div>;
@@ -1325,56 +1337,58 @@ export default function UserCertManager() {
             return <div className="text-gray-600">No certificates found for this organization.</div>;
 
         return (
-            <table className="min-w-full border border-gray-300 rounded-xl shadow bg-white">
-                <thead className="bg-gray-100 text-lg">
-                    <tr>
-                        <th className="px-4 py-3 border">Status</th>
-                        <th className="px-4 py-3 border">ID</th>
-                        <th className="px-4 py-3 border">Common Name</th>
-                        <th className="px-4 py-3 border">Key</th>
-                        <th className="px-4 py-3 border">Valid Until</th>
-                        <th className="px-4 py-3 border">Intermediate CA</th>
-                    </tr>
-                </thead>
+            <div className="py-6 flex justify-center">
+                <table className="py-6 w-[90%] border border-gray-300 rounded-xl shadow bg-white">
+                    <thead className="bg-gray-100 text-lg">
+                        <tr>
+                            <th className="px-4 py-3 border">Status</th>
+                            <th className="px-4 py-3 border">ID</th>
+                            <th className="px-4 py-3 border">Common Name</th>
+                            <th className="px-4 py-3 border">Key</th>
+                            <th className="px-4 py-3 border">Valid Until</th>
+                            <th className="px-4 py-3 border">Intermediate CA</th>
+                        </tr>
+                    </thead>
 
-                <tbody className="text-xl">
-                    {orgIdCerts.map((cert) => {
-                        const days = daysRemaining(cert.valid_until);
-                        const status = getStatusStyles(cert.is_active, days);
+                    <tbody className="text-xl">
+                        {orgIdCerts.map((cert) => {
+                            const days = daysRemaining(cert.valid_until);
+                            const status = getStatusStyles(cert.is_active, days);
 
-                        return (
-                            <tr key={cert.id} className="hover:bg-gray-50 text-lg">
-                                <td className="px-4 py-3 border">
-                                    <span className={"px-3 py-1 rounded text-sm font-semibold " + status.className}>
-                                        {status.text}
-                                    </span>
-                                </td>
+                            return (
+                                <tr key={cert.id} className="hover:bg-gray-50 text-lg">
+                                    <td className="px-4 py-3 border">
+                                        <span className={"px-3 py-1 rounded text-sm font-semibold " + status.className}>
+                                            {status.text}
+                                        </span>
+                                    </td>
 
-                                <td className="px-4 py-3 border font-bold text-gray-800">{cert.id}</td>
+                                    <td className="px-4 py-3 border font-bold text-gray-800">{cert.id}</td>
 
-                                <td className="px-4 py-3 border text-blue-900 font-bold">
-                                    {cert.common_name}
-                                </td>
+                                    <td className="px-4 py-3 border text-blue-900 font-bold">
+                                        {cert.common_name}
+                                    </td>
 
-                                <td className="px-4 py-3 border">{cert.key_length} bits</td>
+                                    <td className="px-4 py-3 border">{cert.key_length} bits</td>
 
-                                <td
-                                    className={
-                                        "px-4 py-3 border font-semibold " +
-                                        (days <= 30 ? "text-red-600" : "text-green-700")
-                                    }
-                                >
-                                    {new Date(cert.valid_until).toISOString().split("T")[0]}
-                                </td>
+                                    <td
+                                        className={
+                                            "px-4 py-3 border font-semibold " +
+                                            (days <= 30 ? "text-red-600" : "text-green-700")
+                                        }
+                                    >
+                                        {new Date(cert.valid_until).toISOString().split("T")[0]}
+                                    </td>
 
-                                <td className="px-4 py-3 border">
-                                    {cert.intermediate_ca_id || "—"}
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+                                    <td className="px-4 py-3 border">
+                                        {cert.intermediate_ca_id || "—"}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
         );
     };
 
@@ -1411,7 +1425,7 @@ export default function UserCertManager() {
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
                             className={`text-2xl font-semibold px-5 py-3 rounded-md transition-colors duration-200 ${activeTab === tab.key
-                                ? "text-white bg-[#1b2067]"
+                                ? "text-white bg-[#3740bb]"
                                 : "text-blue-800 hover:text-blue-600"
                                 }`}
                         >
@@ -1426,43 +1440,44 @@ export default function UserCertManager() {
                         <div className="w-full">
 
                             {/* SUB TABS */}
-                            <div className="flex space-x-4 border-b pb-2 mb-4">
+                            <div className="flex space-x-4 border-b pb-2 mb-4  ">
 
                                 <button
                                     onClick={() => setCertsSubTab("hierarchy")}
                                     className={
-                                        "px-4 py-2 rounded-t font-semibold " +
+                                        "px-4 py-2 rounded-t font-bold text-4x1 " +
                                         (certsSubTab === "hierarchy"
-                                            ? "bg-blue-600 text-white"
+                                            ? "bg-[#3740bb] text-white"
                                             : "bg-gray-200 text-gray-700 hover:bg-gray-300")
                                     }
                                 >
                                     Certificate Hierarchy
                                 </button>
 
-                                <button
-                                    onClick={() => setCertsSubTab("issued")}
-                                    className={
-                                        "px-4 py-2 rounded-t font-semibold " +
-                                        (certsSubTab === "issued"
-                                            ? "bg-blue-600 text-white"
-                                            : "bg-gray-200 text-gray-700 hover:bg-gray-300")
-                                    }
-                                >
-                                    Issued Org Certs
-                                </button>
 
                                 <button
                                     onClick={() => setCertsSubTab("alerts")}
                                     className={
                                         "px-4 py-2 rounded-t font-semibold " +
                                         (certsSubTab === "alerts"
-                                            ? "bg-blue-600 text-white"
+                                            ? "bg-[#3740bb] text-white"
                                             : "bg-gray-200 text-gray-700 hover:bg-gray-300")
                                     }
                                 >
                                     Alerts
                                 </button>
+                                <button
+                                    onClick={() => setCertsSubTab("issued")}
+                                    className={
+                                        "px-4 py-2 rounded-t font-semibold " +
+                                        (certsSubTab === "issued"
+                                            ? "bg-[#3740bb] text-white"
+                                            : "bg-gray-200 text-gray-700 hover:bg-gray-300")
+                                    }
+                                >
+                                    Issued Org Certs
+                                </button>
+
                             </div>
 
                             {/* SUBTAB CONTENT */}
@@ -1472,21 +1487,56 @@ export default function UserCertManager() {
                                     {renderExpandableTable()}
                                 </>
                             )}
-
-                            {certsSubTab === "issued" && (
-                                <>
-                                    {renderCertFilters()}
-                                    {renderOrgIdCertificates()}
-                                </>
-                            )}
-
                             {certsSubTab === "alerts" && (
                                 <>
                                     {renderCertFilters()}
                                     {renderAlerts({ certs, intermediates })}
                                 </>
                             )}
+
+                            {certsSubTab === "issued" && (
+                                <>
+                                    <div className="w-full flex justify-center">
+                                        <div
+                                            className="
+                    bg-[var(--bg-primary)]
+                    border border-[var(--border-color)]
+                    rounded-xl shadow-md
+                    p-5
+                    flex items-center gap-4
+                    w-[90%]
+                "
+                                        >
+                                            <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
+                                                Organization ID
+                                            </span>
+
+                                            <input
+                                                type="text"
+                                                placeholder="--Enter Org ID--"
+                                                value={orgId}
+                                                onChange={(e) => setOrgId(e.target.value)}
+                                                className="
+                        text-2xl font-semibold text-center
+        py-2 px-3
+        bg-gray-500 text-gray-100
+        border border-gray-500
+        rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500
+        w-[300px]
+    "
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {renderOrgIdCertificates()}
+                                </>
+                            )}
+
+
                         </div>
+
+
+
                     )}
 
 
