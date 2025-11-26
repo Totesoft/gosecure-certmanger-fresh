@@ -136,8 +136,6 @@ export const rootCAmockdata = [
 ]
 
 
-
-
 export const intermediatemockdata = [
     {
         "id": 1,
@@ -215,9 +213,85 @@ export const intermediatemockdata = [
         "serial_number": "6434876828805156834",
         "is_active": true,
         "created_at": "2025-11-14T15:05:08.617094"
+    },
+    {
+        "id": 8,
+        "root_ca_id": 5,
+        "common_name": "Root CA ID missing! Please ensure Root CA is loaded.",
+        "key_length": 2048,
+        "valid_from": "2025-11-15T07:43:44.648940",
+        "valid_until": "2028-11-14T07:43:44.648940",
+        "serial_number": "4414592799464521899",
+        "is_active": true,
+        "created_at": "2025-11-15T07:43:44.651900"
+    },
+    {
+        "id": 9,
+        "root_ca_id": 5,
+        "common_name": "string",
+        "key_length": 2048,
+        "valid_from": "2025-11-17T12:26:40.906823",
+        "valid_until": "2040-11-13T12:26:40.906823",
+        "serial_number": "7063504161813046477",
+        "is_active": true,
+        "created_at": "2025-11-17T12:26:40.909517"
+    },
+    {
+        "id": 12,
+        "root_ca_id": 11,
+        "common_name": "string",
+        "key_length": 2048,
+        "valid_from": "2025-11-24T13:31:16.967472",
+        "valid_until": "2040-11-20T13:31:16.967472",
+        "serial_number": "5639843091197701809",
+        "is_active": true,
+        "created_at": "2025-11-24T13:31:16.970726"
+    },
+    {
+        "id": 10,
+        "root_ca_id": 5,
+        "common_name": "string",
+        "key_length": 2048,
+        "valid_from": "2025-11-17T12:27:01.977126",
+        "valid_until": "2028-11-16T12:27:01.977126",
+        "serial_number": "16726297945336242531",
+        "is_active": true,
+        "created_at": "2025-11-17T12:27:01.979742"
+    },
+    {
+        "id": 11,
+        "root_ca_id": 12,
+        "common_name": "Testing Vpn",
+        "key_length": 2048,
+        "valid_from": "2025-11-17T15:25:49.466589",
+        "valid_until": "2028-11-16T15:25:49.466589",
+        "serial_number": "7953321919823029185",
+        "is_active": true,
+        "created_at": "2025-11-17T15:25:49.469602"
+    },
+    {
+        "id": 13,
+        "root_ca_id": 9,
+        "common_name": "Testing",
+        "key_length": 2048,
+        "valid_from": "2025-11-24T13:56:09.651031",
+        "valid_until": "2030-11-23T13:56:09.651031",
+        "serial_number": "14895764592335966751",
+        "is_active": true,
+        "created_at": "2025-11-24T13:56:09.654641"
+    },
+    {
+        "id": 14,
+        "root_ca_id": 8,
+        "common_name": "string",
+        "key_length": 2048,
+        "valid_from": "2025-11-25T12:19:31.044770",
+        "valid_until": "2040-11-21T12:19:31.044770",
+        "serial_number": "15819176065600086143",
+        "is_active": true,
+        "created_at": "2025-11-25T12:19:31.049343"
     }
 ]
-
 export const issuedcertsmockdata
     = [
         {
@@ -329,6 +403,30 @@ export const issuedcertsmockdata
             "created_at": "2025-11-14T14:25:30.627765"
         },
         {
+            "id": 13,
+            "intermediate_ca_id": 1,
+            "common_name": "string",
+            "certificate_type": "server",
+            "key_length": 2048,
+            "valid_from": "2025-11-17T10:24:01.263451",
+            "valid_until": "2026-11-17T10:24:01.263451",
+            "serial_number": "7294311737621192141",
+            "is_active": true,
+            "created_at": "2025-11-17T10:24:01.265993"
+        },
+        {
+            "id": 15,
+            "intermediate_ca_id": 2,
+            "common_name": "string",
+            "certificate_type": "server",
+            "key_length": 2048,
+            "valid_from": "2025-11-17T14:32:26.128394",
+            "valid_until": "2026-11-17T14:32:26.128394",
+            "serial_number": "14842349217451713289",
+            "is_active": true,
+            "created_at": "2025-11-17T14:32:26.131816"
+        },
+        {
             "id": 10,
             "intermediate_ca_id": 1,
             "common_name": "string",
@@ -339,6 +437,78 @@ export const issuedcertsmockdata
             "serial_number": "1061544153395070501",
             "is_active": true,
             "created_at": "2025-11-14T14:25:34.410441"
+        },
+        {
+            "id": 14,
+            "intermediate_ca_id": 1,
+            "common_name": "string",
+            "certificate_type": "server",
+            "key_length": 2048,
+            "valid_from": "2025-11-17T10:51:39.660109",
+            "valid_until": "2026-11-17T10:51:39.660109",
+            "serial_number": "9363656455750926217",
+            "is_active": true,
+            "created_at": "2025-11-17T10:51:39.662724"
+        },
+        {
+            "id": 12,
+            "intermediate_ca_id": 2,
+            "common_name": "string",
+            "certificate_type": "server",
+            "key_length": 2048,
+            "valid_from": "2025-11-15T06:37:03.214214",
+            "valid_until": "2026-11-15T06:37:03.214214",
+            "serial_number": "7550681937694809981",
+            "is_active": false,
+            "created_at": "2025-11-15T06:37:03.216352"
+        },
+        {
+            "id": 16,
+            "intermediate_ca_id": 2,
+            "common_name": "string",
+            "certificate_type": "user",
+            "key_length": 2048,
+            "valid_from": "2025-11-18T13:07:21.318352",
+            "valid_until": "2026-11-18T13:07:21.318352",
+            "serial_number": "15842368020898087659",
+            "is_active": true,
+            "created_at": "2025-11-18T13:07:21.324531"
+        },
+        {
+            "id": 11,
+            "intermediate_ca_id": 1,
+            "common_name": "string",
+            "certificate_type": "server",
+            "key_length": 2048,
+            "valid_from": "2025-11-15T06:22:24.020342",
+            "valid_until": "2026-11-15T06:22:24.020342",
+            "serial_number": "3619961327206599303",
+            "is_active": false,
+            "created_at": "2025-11-15T06:22:24.024083"
+        },
+        {
+            "id": 17,
+            "intermediate_ca_id": 1,
+            "common_name": "string",
+            "certificate_type": "server",
+            "key_length": 2048,
+            "valid_from": "2025-11-25T13:11:47.713919",
+            "valid_until": "2026-11-25T13:11:47.713919",
+            "serial_number": "9603179985902768943",
+            "is_active": true,
+            "created_at": "2025-11-25T13:11:47.720145"
+        },
+        {
+            "id": 18,
+            "intermediate_ca_id": 11,
+            "common_name": "string",
+            "certificate_type": "user",
+            "key_length": 2048,
+            "valid_from": "2025-11-25T13:17:32.966536",
+            "valid_until": "2026-11-25T13:17:32.966536",
+            "serial_number": "16450583186119488646",
+            "is_active": true,
+            "created_at": "2025-11-25T13:17:32.969561"
         }
     ]
 
@@ -415,6 +585,30 @@ export const usercertsmockdata =
             "serial_number": "13423368161583545335",
             "is_active": true,
             "created_at": "2025-11-14T14:00:01.375002"
+        },
+        {
+            "id": 16,
+            "intermediate_ca_id": 2,
+            "common_name": "string",
+            "certificate_type": "user",
+            "key_length": 2048,
+            "valid_from": "2025-11-18T13:07:21.318352",
+            "valid_until": "2026-11-18T13:07:21.318352",
+            "serial_number": "15842368020898087659",
+            "is_active": true,
+            "created_at": "2025-11-18T13:07:21.324531"
+        },
+        {
+            "id": 18,
+            "intermediate_ca_id": 11,
+            "common_name": "string",
+            "certificate_type": "user",
+            "key_length": 2048,
+            "valid_from": "2025-11-25T13:17:32.966536",
+            "valid_until": "2026-11-25T13:17:32.966536",
+            "serial_number": "16450583186119488646",
+            "is_active": true,
+            "created_at": "2025-11-25T13:17:32.969561"
         }
     ]
 export const servercertsmockdata = [
@@ -455,18 +649,6 @@ export const servercertsmockdata = [
         "created_at": "2025-11-14T14:25:30.627765"
     },
     {
-        "id": 11,
-        "intermediate_ca_id": 1,
-        "common_name": "string",
-        "certificate_type": "server",
-        "key_length": 2048,
-        "valid_from": "2025-11-15T06:22:24.020342",
-        "valid_until": "2026-11-15T06:22:24.020342",
-        "serial_number": "3619961327206599303",
-        "is_active": true,
-        "created_at": "2025-11-15T06:22:24.024083"
-    },
-    {
         "id": 13,
         "intermediate_ca_id": 1,
         "common_name": "string",
@@ -477,6 +659,18 @@ export const servercertsmockdata = [
         "serial_number": "7294311737621192141",
         "is_active": true,
         "created_at": "2025-11-17T10:24:01.265993"
+    },
+    {
+        "id": 15,
+        "intermediate_ca_id": 2,
+        "common_name": "string",
+        "certificate_type": "server",
+        "key_length": 2048,
+        "valid_from": "2025-11-17T14:32:26.128394",
+        "valid_until": "2026-11-17T14:32:26.128394",
+        "serial_number": "14842349217451713289",
+        "is_active": true,
+        "created_at": "2025-11-17T14:32:26.131816"
     },
     {
         "id": 10,
@@ -491,18 +685,6 @@ export const servercertsmockdata = [
         "created_at": "2025-11-14T14:25:34.410441"
     },
     {
-        "id": 12,
-        "intermediate_ca_id": 2,
-        "common_name": "string",
-        "certificate_type": "server",
-        "key_length": 2048,
-        "valid_from": "2025-11-15T06:37:03.214214",
-        "valid_until": "2026-11-15T06:37:03.214214",
-        "serial_number": "7550681937694809981",
-        "is_active": true,
-        "created_at": "2025-11-15T06:37:03.216352"
-    },
-    {
         "id": 14,
         "intermediate_ca_id": 1,
         "common_name": "string",
@@ -513,5 +695,41 @@ export const servercertsmockdata = [
         "serial_number": "9363656455750926217",
         "is_active": true,
         "created_at": "2025-11-17T10:51:39.662724"
+    },
+    {
+        "id": 12,
+        "intermediate_ca_id": 2,
+        "common_name": "string",
+        "certificate_type": "server",
+        "key_length": 2048,
+        "valid_from": "2025-11-15T06:37:03.214214",
+        "valid_until": "2026-11-15T06:37:03.214214",
+        "serial_number": "7550681937694809981",
+        "is_active": false,
+        "created_at": "2025-11-15T06:37:03.216352"
+    },
+    {
+        "id": 11,
+        "intermediate_ca_id": 1,
+        "common_name": "string",
+        "certificate_type": "server",
+        "key_length": 2048,
+        "valid_from": "2025-11-15T06:22:24.020342",
+        "valid_until": "2026-11-15T06:22:24.020342",
+        "serial_number": "3619961327206599303",
+        "is_active": false,
+        "created_at": "2025-11-15T06:22:24.024083"
+    },
+    {
+        "id": 17,
+        "intermediate_ca_id": 1,
+        "common_name": "string",
+        "certificate_type": "server",
+        "key_length": 2048,
+        "valid_from": "2025-11-25T13:11:47.713919",
+        "valid_until": "2026-11-25T13:11:47.713919",
+        "serial_number": "9603179985902768943",
+        "is_active": true,
+        "created_at": "2025-11-25T13:11:47.720145"
     }
 ]

@@ -3,9 +3,11 @@ import axios from "axios";
 import { Clock, AlertTriangle, CheckCircle } from "lucide-react";
 import { rootCAmockdata, intermediatemockdata, issuedcertsmockdata, usercertsmockdata, servercertsmockdata } from "./AdmnCertmanagerMockdata"
 import { token } from "@/components/token"
-
 import { renderHelp } from "@/components/Usercertmanager/Help";
 import { renderUserTable } from "@/components/Usercertmanager/usercerts";
+import { useTheme } from "@/context/ThemeContext";
+import ThemeSelector from "@/context/ThemeSelector";
+
 const API_BASE_URL = "https://pre-prod.be.anchorvpn.net/api/v1"; // adjust if needed
 
 // ------------------ INTERFACES ------------------
@@ -1391,11 +1393,24 @@ export default function UserCertManager() {
             </div>
         );
     };
-
+    function Header() {
+        return (
+            <div className="flex justify-end p-3">
+                <ThemeSelector />
+            </div>
+        );
+    }
 
     /////Main RETURN////
     return (
-        <div className="p-8 bg-white rounded-xl shadow-lg w-[75%] mx-auto">
+        <div
+            className="
+    min-h-screen w-[75%] mx-auto flex flex-col 
+    p-28 space-y-14
+    bg-[var(--bg-primary)] text-[var(--text-primary)]
+  "
+        >
+            {/* <div className="p-8 bg-white rounded-xl shadow-lg w-[75%] mx-auto"> */}
             {/* Header */}
             <header className="bg-[#1b2067] text-white py-8 px-8 text-center rounded-lg shadow-md">
                 <h1 className="text-5xl font-bold">GoSecure - AnchorVPN</h1>
@@ -1403,6 +1418,12 @@ export default function UserCertManager() {
                     User Certificate Management
                 </p>
                 <p className="text-blue-200 font-semibold text-left text-3xl mt-2">Welcome User</p>
+
+                <ThemeSelector />
+
+
+
+
             </header>
 
 
@@ -1412,7 +1433,7 @@ export default function UserCertManager() {
                 {/* Navigation Tabs */}
                 <nav className="w-full bg-blue-50 border-b px-10 py-5 flex justify-center gap-x-10">
                     {[
-                        { key: "certs", label: "My Certificates" },
+                        { key: "certs", label: "Certificates by OrgId" },
                         // { key: "alerts", label: "Alerts" },
                         { key: "download", label: "Download" },
                         { key: "servers", label: "Server Certs" },
@@ -1517,13 +1538,13 @@ export default function UserCertManager() {
                                                 value={orgId}
                                                 onChange={(e) => setOrgId(e.target.value)}
                                                 className="
-                        text-2xl font-semibold text-center
-        py-2 px-3
-        bg-gray-500 text-gray-100
-        border border-gray-500
-        rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500
-        w-[300px]
-    "
+                                                                    text-2xl font-semibold text-center
+                                                    py-2 px-3
+                                                    bg-gray-500 text-gray-100
+                                                    border border-gray-500
+                                                    rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500
+                                                    w-[300px]
+                                                "
                                             />
                                         </div>
                                     </div>

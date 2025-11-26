@@ -3,6 +3,8 @@ import { Routes, Route } from "react-router-dom";
 import CertsRoutes from "./routes";
 import { Loader } from "lucide-react";
 import { motion } from "framer-motion";
+import { ThemeProvider } from "./context/ThemeContext";
+import ThemeSelector from "./context/ThemeSelector";
 //import { KeycloakProviderWrapper, useKeycloak } from "gosecure-shell/KeycloakProvider";
 
 export default function App() {
@@ -58,8 +60,12 @@ function AppInner() {
   // }
 
   return (
-    <Routes>
-      <Route path="/*" element={<CertsRoutes />} />
-    </Routes>
+    <ThemeProvider>
+      <div>
+        <Routes>
+          <Route path="/*" element={<CertsRoutes />} />
+        </Routes>
+      </div>
+    </ThemeProvider>
   );
 }

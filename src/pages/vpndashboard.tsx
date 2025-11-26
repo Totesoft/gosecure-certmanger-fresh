@@ -240,15 +240,7 @@ const VpnDashboard = () => {
     const [error, setError] = useState<string | null>(null);
 
 
-    const sampleData = [
-        { name: "Mon", value: 30 },
-        { name: "Tue", value: 45 },
-        { name: "Wed", value: 32 },
-        { name: "Thu", value: 50 },
-        { name: "Fri", value: 42 },
-        { name: "Sat", value: 60 },
-        { name: "Sun", value: 38 },
-    ];
+
 
     // const dummyStatusData = [
     //     {
