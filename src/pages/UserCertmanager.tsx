@@ -257,7 +257,7 @@ export default function UserCertManager() {
     const renderExpandableTable = () => {
         if (certs.length === 0)
             return (
-                <div className="text-center text-gray-600 text-xl mt-4">
+                <div className="text-center text-theme-secondary text-xl mt-4">
                     No certificates found
                 </div>
             );
@@ -265,9 +265,7 @@ export default function UserCertManager() {
         return (
             <div className="space-y-6 w-[90%] mx-auto">
 
-                {/* ROOT CERTS HEADING */}
-                <h2 className="text-2xl font-extrabold text-gray-800 mb-2">
-
+                <h2 className="text-2xl font-extrabold text-theme-text mb-2">
                     Root Certificates
                 </h2>
 
@@ -279,170 +277,165 @@ export default function UserCertManager() {
                     const status = getStatusStyles(root.is_active, rem);
 
                     return (
-                        <div key={root.id} className="border rounded-xl shadow-sm bg-white">
+                        <div key={root.id} className="border rounded-xl shadow-sm bg-theme-card border-theme-border">
 
                             {/* ROOT CARD */}
                             <div
-                                className="p-6 cursor-pointer bg-blue-50 hover:bg-blue-100 flex justify-between items-center border-b border-blue-200"
-
+                                className="p-6 cursor-pointer bg-theme-header hover:bg-theme-headerHover flex flex-wrap justify-between items-center border-b border-theme-border"
                                 onClick={() => toggleRoot(root.id)}
                             >
-                                <div className="flex items-center gap-12 text-2xl">
+                                <div className="flex flex-wrap items-center gap-6 text-2xl">
 
                                     <span className={`px-4 py-1 rounded-full font-semibold text-xl ${status.className}`}>
                                         {status.text}
                                     </span>
 
-                                    <span className="font-bold text-blue-900 text-3xl">
+                                    <span className="font-bold text-theme-primary text-3xl">
                                         {root.common_name}
                                     </span>
 
-                                    <span className="font-bold text-gray-800 text-xl">
+                                    <span className="font-bold text-theme-text text-xl">
                                         ID: {root.id}
                                     </span>
 
-                                    <span className="text-gray-700 text-xl">
+                                    <span className="text-theme-secondary text-xl">
                                         {root.key_length} bits
                                     </span>
 
-                                    <span className={`font-semibold text-xl ${rem <= 30 ? "text-red-600" : "text-green-700"}`}>
+                                    <span className={`font-semibold text-xl ${rem <= 30 ? "text-red-500" : "text-green-600"}`}>
                                         Expires: {formatDate(root.valid_until)}
                                     </span>
 
-                                    <span className="font-bold text-blue-700 text-xl">
+                                    <span className="font-bold text-theme-primary text-xl">
                                         Intermediates: {interCount}
                                     </span>
 
                                 </div>
 
-                                <div className="text-5xl text-gray-700">
+                                <div className="text-5xl text-theme-text">
                                     {expandedRoot[root.id] ? "−" : "+"}
                                 </div>
                             </div>
 
-                            {/* INTERMEDIATES SECTION */}
+                            {/* INTERMEDIATES */}
                             {expandedRoot[root.id] && (
-                                <div className="p-6 space-y-5 border-t">
+                                <div className="p-6 space-y-5 border-t border-theme-border">
 
                                     {interCount > 0 ? (
                                         <>
-                                            {/* INTERMEDIATE HEAD */}
-                                            <h3 className="pl-40 text-2xl font-extrabold text-gray-700 ml-4">
+                                            <h3 className="xl:pl-40 text-2xl font-extrabold text-theme-text ml-4">
                                                 Intermediate Certificates
                                             </h3>
 
-                                            {/* MAP INTERMEDIATES HERE */}
                                             {rootIntermediates.map((int) => {
                                                 const remI = daysRemaining(int.valid_until);
                                                 const statusI = getStatusStyles(int.is_active, remI);
                                                 const leafCerts = int.issued_certificates || [];
 
                                                 return (
-                                                    <div key={int.id} className="bg-gray-50 rounded-xl border">
+                                                    <div key={int.id} className="bg-theme-subcard rounded-xl border border-theme-border">
 
-                                                        {/* INTERMEDIATE CARD */}
                                                         <div
-                                                            className="p-5 pl-30 cursor-pointer hover:bg-gray-100 flex justify-between items-center"
+                                                            className="p-5 xl:pl-30 cursor-pointer hover:bg-theme-hover flex flex-wrap justify-between items-center"
                                                             onClick={() => toggleInter(int.id)}
                                                         >
-                                                            <div className="flex items-center gap-12 text-xl ml-8">
+                                                            <div className="flex flex-wrap items-center gap-6 text-xl ml-2">
+
                                                                 <span className={`px-4 py-1 rounded-full font-semibold text-lg ${statusI.className}`}>
                                                                     {statusI.text}
                                                                 </span>
 
-                                                                <span className="font-bold text-blue-800 text-3xl">
+                                                                <span className="font-bold text-theme-primary text-3xl">
                                                                     {int.common_name}
                                                                 </span>
 
-                                                                <span className="font-bold text-gray-800 text-xl">
+                                                                <span className="font-bold text-theme-text text-xl">
                                                                     ID: {int.id}
                                                                 </span>
 
-                                                                <span className="text-gray-700 text-xl">
+                                                                <span className="text-theme-secondary text-xl">
                                                                     {int.key_length} bits
                                                                 </span>
 
-                                                                <span className={`font-semibold text-xl ${remI <= 30 ? "text-red-600" : "text-green-700"}`}>
+                                                                <span className={`font-semibold text-xl ${remI <= 30 ? "text-red-500" : "text-green-600"}`}>
                                                                     Expires: {formatDate(int.valid_until)}
                                                                 </span>
 
-                                                                <span className="font-bold text-blue-700 text-xl">
+                                                                <span className="font-bold text-theme-primary text-xl">
                                                                     Certificates: {leafCerts.length}
                                                                 </span>
+
                                                             </div>
 
-                                                            <div className="text-5xl text-gray-700">
+                                                            <div className="text-5xl text-theme-text">
                                                                 {expandedInter[int.id] ? "−" : "+"}
                                                             </div>
                                                         </div>
 
-                                                        {/* LEAF CERTIFICATES SECTION */}
+                                                        {/* LEAF CERTIFICATES */}
                                                         {expandedInter[int.id] && (
-                                                            <div className="p-5 pl-60 space-y-4 border-t">
+                                                            <div className="p-5 xl:pl-60 space-y-4 border-t border-theme-border">
 
                                                                 {leafCerts.length > 0 ? (
                                                                     <>
-                                                                        <h4 className="pl-60 text-xl font-bold text-gray-600 ml-12">
+                                                                        <h4 className="xl:pl-60 text-xl font-bold text-theme-secondary ml-4">
                                                                             Issued Certificates
                                                                         </h4>
 
-                                                                        <table className="ml-20 w-[90%] text-left border-collapse">
-                                                                            <thead>
-                                                                                <tr className="border-b text-lg font-semibold text-gray-700">
-                                                                                    <th className="py-2">Status</th>
-                                                                                    <th className="py-2">Common Name</th>
-                                                                                    <th className="py-2">ID</th>
-                                                                                    <th className="py-2">Key Length</th>
-                                                                                    <th className="py-2">Expiry</th>
-                                                                                </tr>
-                                                                            </thead>
+                                                                        <div className="overflow-x-auto">
+                                                                            <table className="ml-4 w-[90%] text-left border-collapse min-w-[600px]">
+                                                                                <thead>
+                                                                                    <tr className="border-b border-theme-border text-lg font-semibold text-theme-text">
+                                                                                        <th className="py-2">Status</th>
+                                                                                        <th className="py-2">Common Name</th>
+                                                                                        <th className="py-2">ID</th>
+                                                                                        <th className="py-2">Key Length</th>
+                                                                                        <th className="py-2">Expiry</th>
+                                                                                    </tr>
+                                                                                </thead>
 
-                                                                            <tbody>
-                                                                                {leafCerts.map((leaf: LeafCertificate) => {
-                                                                                    const remL = daysRemaining(leaf.valid_until);
-                                                                                    const statusL = getStatusStyles(leaf.is_active, remL);
+                                                                                <tbody>
+                                                                                    {leafCerts.map((leaf) => {
+                                                                                        const remL = daysRemaining(leaf.valid_until);
+                                                                                        const statusL = getStatusStyles(leaf.is_active, remL);
 
-                                                                                    return (
-                                                                                        <tr key={leaf.id} className="border-b hover:bg-gray-50 text-xl">
-                                                                                            <td className="py-3">
-                                                                                                <span className={`px-4 py-1 rounded-full ${statusL.className}`}>
-                                                                                                    {statusL.text}
-                                                                                                </span>
-                                                                                            </td>
+                                                                                        return (
+                                                                                            <tr key={leaf.id} className="border-b border-theme-border hover:bg-theme-hover text-xl">
+                                                                                                <td className="py-3">
+                                                                                                    <span className={`px-4 py-1 rounded-full ${statusL.className}`}>
+                                                                                                        {statusL.text}
+                                                                                                    </span>
+                                                                                                </td>
 
-                                                                                            <td className="py-3 font-bold text-blue-900">{leaf.common_name}</td>
-                                                                                            <td className="py-3 font-semibold text-gray-800">{leaf.id}</td>
-                                                                                            <td className="py-3 text-gray-700">{leaf.key_length} bits</td>
+                                                                                                <td className="py-3 font-bold text-theme-primary">{leaf.common_name}</td>
+                                                                                                <td className="py-3 font-semibold text-theme-text">{leaf.id}</td>
+                                                                                                <td className="py-3 text-theme-secondary">{leaf.key_length} bits</td>
 
-                                                                                            <td
-                                                                                                className={`py-3 font-semibold ${remL <= 30 ? "text-red-600" : "text-green-700"
-                                                                                                    }`}
-                                                                                            >
-                                                                                                {formatDate(leaf.valid_until)}
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    );
-                                                                                })}
-                                                                            </tbody>
+                                                                                                <td className={`py-3 font-semibold ${remL <= 30 ? "text-red-500" : "text-green-600"}`}>
+                                                                                                    {formatDate(leaf.valid_until)}
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        );
+                                                                                    })}
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
 
-                                                                        </table>
                                                                     </>
                                                                 ) : (
-                                                                    <div className="text-gray-600 text-lg ml-12">
+                                                                    <div className="text-theme-secondary text-lg ml-4">
                                                                         No issued certificates available
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         )}
 
-
                                                     </div>
                                                 );
                                             })}
                                         </>
                                     ) : (
-                                        // NO INTERMEDIATES → ONLY THIS MESSAGE
-                                        <div className="text-gray-600 text-xl ml-4">
+                                        <div className="text-theme-secondary text-xl ml-4">
                                             No intermediate certificates available
                                         </div>
                                     )}
@@ -993,11 +986,11 @@ export default function UserCertManager() {
         console.log('ssssssssssssssservers', servercerts)
 
         try {
-            // const res = await axios.get(`${API_BASE_URL}/certificates/server/`);
-            // setServers(res.data || []);
-            // console.log("API RESPONSE:", res.data);
-            const serverRes = servercertsmockdata;   // mock array
-            setServercerts(serverRes);
+            const res = await axios.get(`${API_BASE_URL}/certificates/server/`);
+            setServercerts(res.data || []);
+            console.log("API RESPONSE:", res.data);
+            // const serverRes = servercertsmockdata;   // mock array
+            // setServercerts(serverRes);
 
         } catch (err) {
             console.error("Fetch servers error:", err);
@@ -1062,13 +1055,13 @@ export default function UserCertManager() {
         setErrorUser("");
 
         try {
-            // const userRes = await axios.get(`${API_BASE_URL}/certificates/user/`);
-            // setUsercerts(userRes.data);
+            const userRes = await axios.get(`${API_BASE_URL}/certificates/user/`);
+            setUsercerts(userRes.data);
 
-            const userRes = usercertsmockdata;
-            setUsercerts(userRes);
+            // const userRes = usercertsmockdata;
+            // setUsercerts(userRes);
 
-            //   console.log("User certificates:", usercertsmockdata);
+            //   console.log("User certificates:", usercerts);
         } catch (err) {
             setErrorUser("Failed to fetch user certificates");
         } finally {
@@ -1076,8 +1069,11 @@ export default function UserCertManager() {
         }
     };
 
+
     useEffect(() => {
-        fetchUserCerts();
+        if (activeTab === "user") {
+            fetchUserCerts();
+        }
     }, [activeTab]);
 
 
@@ -1135,8 +1131,11 @@ export default function UserCertManager() {
 
 
     ////allcerts
+
     useEffect(() => {
-        fetchallcerts();
+        if (activeTab === "allcerts") {
+            fetchallcerts();
+        }
     }, [activeTab]);
 
 
@@ -1147,33 +1146,34 @@ export default function UserCertManager() {
         try {
             console.log("Calling Certificate APIs...");
 
-            // REAL API CALLS
-            // const token = "YOUR_TOKEN_HERE";   // Replace with real token
+            ////    REAL API CALLS
+            //   const token = "YOUR_TOKEN_HERE";   // Replace with real token
 
             // const rootallRes = await axios.get(
-            //     `${API_BASE_URL}/organizations/root-cas/`,
+            //     `${API_BASE_URL}/root-cas/`,
             //     {
             //         headers: {
             //             Authorization: `Bearer ${token}`,
             //             "Content-Type": "application/json"
             //         }
             //     })
-            // //  const rootallRes = await axios.get(`${API_BASE_URL}/organizations/root-cas/`);
-            // const intermediateallRes = await axios.get(`${API_BASE_URL}/intermediate-ca/`);
+            //const rootallRes = await axios.get(`${API_BASE_URL}/organizations/root-cas/`);
+            const intermediateallRes = await axios.get(`${API_BASE_URL}/intermediate-ca/`);
             // const issuedcertsallRes = await axios.get(`${API_BASE_URL}/certificates/`);
-            // setIntermediateallcerts(intermediateRes.data);
-            // setAllcerts(allcertsRes.data);
+
             //   setRootallcerts(rootallRes.data);
+            setIntermediateallcerts(intermediateallRes.data);
+            // setIssuedallcerts(issuedcertsallRes.data);
 
-            // MOCK DATA (remove later)
-            const rootallRes = rootCAmockdata;
-            const intermediateallRes = intermediatemockdata;
-            const issuedcertsallRes = issuedcertsmockdata;
-            setRootallcerts(rootallRes);
-            setIntermediateallcerts(intermediateallRes);
-            setIssuedallcerts(issuedcertsallRes);
+            ///////// MOCK DATA (remove later)
+            // const rootallRes = rootCAmockdata;
+            // const intermediateallRes = intermediatemockdata;
+            // const issuedcertsallRes = issuedcertsmockdata;
+            // setRootallcerts(rootallRes);
+            // setIntermediateallcerts(intermediateallRes);
+            // setIssuedallcerts(issuedcertsallRes);
 
-            //console.log("Intermediate:", intermediateRes);
+            //console.log("Interrrrmediate:", intermediateallRes.data);
             // console.log("All certs:", certificatesRes);
 
         } catch (err) {
@@ -1183,44 +1183,44 @@ export default function UserCertManager() {
         }
     };
 
-    const renderRootallTable = () => (
-        <table className="w-[75%] mx-auto border border-gray-200 rounded-lg shadow-sm">
-            <thead className="bg-gray-100">
-                <tr>
-                    <th className="px-4 py-2 border">Status</th>
-                    <th className="px-4 py-2 border">ID</th>
-                    <th className="px-4 py-2 border">Common Name</th>
-                    <th className="px-4 py-2 border">Valid Until</th>
-                    <th className="px-4 py-2 border">Actions</th>
-                </tr>
-            </thead>
+    // const renderRootallTable = () => (
+    //     <table className="w-[75%] mx-auto border border-gray-200 rounded-lg shadow-sm">
+    //         <thead className="bg-gray-100">
+    //             <tr>
+    //                 <th className="px-4 py-2 border">Status</th>
+    //                 <th className="px-4 py-2 border">ID</th>
+    //                 <th className="px-4 py-2 border">Common Name</th>
+    //                 <th className="px-4 py-2 border">Valid Until</th>
+    //                 <th className="px-4 py-2 border">Actions</th>
+    //             </tr>
+    //         </thead>
 
-            <tbody>
-                {rootallcerts.map((cert) => {
-                    const days = daysRemaining(cert.valid_until);
-                    const status = getStatusStyles(cert.is_active, days);
+    //         <tbody>
+    //             {rootallcerts.map((cert) => {
+    //                 const days = daysRemaining(cert.valid_until);
+    //                 const status = getStatusStyles(cert.is_active, days);
 
-                    return (
-                        <tr key={cert.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-2 border">
-                                <span className={`px-2 py-1 rounded text-sm ${status.className}`}>
-                                    {status.text}
-                                </span>
-                            </td>
-                            <td className="px-4 py-2 border">{cert.id}</td>
-                            <td className="px-4 py-2 border">{cert.common_name}</td>
-                            <td className="px-4 py-2 border">
-                                {new Date(cert.valid_until).toISOString().split("T")[0]}
-                            </td>
-                            <td className="px-4 py-2 border">
-                                <button className="underline text-blue-500">Download</button>
-                            </td>
-                        </tr>
-                    );
-                })}
-            </tbody>
-        </table>
-    );
+    //                 return (
+    //                     <tr key={cert.id} className="hover:bg-gray-50">
+    //                         <td className="px-4 py-2 border">
+    //                             <span className={`px-2 py-1 rounded text-sm ${status.className}`}>
+    //                                 {status.text}
+    //                             </span>
+    //                         </td>
+    //                         <td className="px-4 py-2 border">{cert.id}</td>
+    //                         <td className="px-4 py-2 border">{cert.common_name}</td>
+    //                         <td className="px-4 py-2 border">
+    //                             {new Date(cert.valid_until).toISOString().split("T")[0]}
+    //                         </td>
+    //                         <td className="px-4 py-2 border">
+    //                             <button className="underline text-blue-500">Download</button>
+    //                         </td>
+    //                     </tr>
+    //                 );
+    //             })}
+    //         </tbody>
+    //     </table>
+    // );
 
     const renderIntermediateallTable = () => (
         <table className="w-[75%] mx-auto border border-gray-200 rounded-lg shadow-sm">
@@ -1418,34 +1418,29 @@ export default function UserCertManager() {
                     User Certificate Management
                 </p>
                 <p className="text-blue-200 font-semibold text-left text-3xl mt-2">Welcome User</p>
-
-                <ThemeSelector />
-
-
-
-
             </header>
+            <span className="text-2xl text-right font-extrabold text-[var(--text-primary)] whitespace-nowrap">
+                <ThemeSelector />
+            </span>
 
 
 
             {/* Main App Layout */}
             <div className="bg-gray-100 min-h-screen flex flex-col rounded-t-2xl shadow-inner">
                 {/* Navigation Tabs */}
-                <nav className="w-full bg-blue-50 border-b px-10 py-5 flex justify-center gap-x-10">
+                <nav className="w-full bg-blue-50 border-b px-4 py-3 flex flex-wrap justify-center gap-4">
                     {[
                         { key: "certs", label: "Certificates by OrgId" },
-                        // { key: "alerts", label: "Alerts" },
                         { key: "download", label: "Download" },
                         { key: "servers", label: "Server Certs" },
                         { key: "user", label: "User Certs" },
                         { key: "allcerts", label: "All Certificates" },
-
                         { key: "help", label: "Help" },
                     ].map((tab) => (
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
-                            className={`text-2xl font-semibold px-5 py-3 rounded-md transition-colors duration-200 ${activeTab === tab.key
+                            className={`text-lg font-semibold px-4 py-2 rounded-md transition-colors duration-200 ${activeTab === tab.key
                                 ? "text-white bg-[#3740bb]"
                                 : "text-blue-800 hover:text-blue-600"
                                 }`}
@@ -1604,7 +1599,7 @@ export default function UserCertManager() {
                             </div>
 
                             {/* SUB TAB RENDER LOGIC */}
-                            {allcertSubTab === "root" && renderRootallTable()}
+                            {/* {allcertSubTab === "root" && renderRootallTable()} */}
 
                             {allcertSubTab === "intermediate" && renderIntermediateallTable()}
                             {allcertSubTab === "issued" && renderIssuedCertsallTable()}

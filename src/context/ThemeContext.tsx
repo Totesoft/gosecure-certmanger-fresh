@@ -1,11 +1,7 @@
-import { createContext, useEffect, useState, useContext } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
+const ThemeContext = createContext();
 const THEME_KEY = "tote-theme";
-
-const ThemeContext = createContext({
-    theme: "system",
-    setTheme: (value: string) => { }
-});
 
 export function ThemeProvider({ children }) {
     const [theme, setTheme] = useState("system");
@@ -19,38 +15,23 @@ export function ThemeProvider({ children }) {
     function applyTheme(mode) {
         const root = document.documentElement;
 
+        // Remove all theme classes
+        root.classList.remove("light", "dark", "blue");
+
         if (mode === "light") {
-            root.classList.remove("dark");
             root.classList.add("light");
-        } else if (mode === "blue") {
-            root.classList.remove("dark", "light");
-            root.classList.add("blue");
         }
         else if (mode === "dark") {
-            root.classList.remove("light");
             root.classList.add("dark");
-        } else {
-            const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-            root.classList.toggle("dark", isDark);
-            root.classList.toggle("light", !isDark);
         }
-
-
-
+        else if (mode === "blue") {
+            root.classList.add("blue");
+        }
+        else if (mode === "system") {
+            const useDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            root.classList.add(useDark ? "dark" : "light");
+        }
     }
-
-    useEffect(() => {
-        if (theme === "system") {
-            const listener = window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-                applyTheme("system");
-            });
-
-            return () =>
-                window.matchMedia("(prefers-color-scheme: dark)").removeEventListener("change", listener);
-        }
-
-
-    }, [theme]);
 
     function updateTheme(value) {
         setTheme(value);
@@ -65,6 +46,4 @@ export function ThemeProvider({ children }) {
     );
 }
 
-export function useTheme() {
-    return useContext(ThemeContext);
-}
+export const useTheme = () => useContext(ThemeContext);

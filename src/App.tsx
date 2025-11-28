@@ -4,7 +4,6 @@ import CertsRoutes from "./routes";
 import { Loader } from "lucide-react";
 import { motion } from "framer-motion";
 import { ThemeProvider } from "./context/ThemeContext";
-import ThemeSelector from "./context/ThemeSelector";
 //import { KeycloakProviderWrapper, useKeycloak } from "gosecure-shell/KeycloakProvider";
 
 export default function App() {
