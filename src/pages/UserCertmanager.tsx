@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Clock, AlertTriangle, CheckCircle } from "lucide-react";
+import { Card, Badge } from "@totesoft/ui-kit"
+import { cn } from "@/lib/utils";
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell
+} from "@/components/ui/table";
+
 import { rootCAmockdata, intermediatemockdata, issuedcertsmockdata, usercertsmockdata, servercertsmockdata } from "./AdmnCertmanagerMockdata"
 import { token } from "@/components/token"
 import { renderHelp } from "@/components/Usercertmanager/Help";
@@ -141,6 +152,8 @@ export default function UserCertManager() {
     const [loadingOrgIdCerts, setLoadingOrgIdCerts] = useState(false);
     const [orgIdError, setOrgIdError] = useState<string | null>(null);
 
+
+
     // ------------------ HELPERS ------------------
     const toggleRoot = (id: string) => {
         setExpandedRoot(prev => ({
@@ -265,9 +278,8 @@ export default function UserCertManager() {
         return (
             <div className="space-y-6 w-[90%] mx-auto">
 
-                {/* ROOT CERTS HEADING */}
-                <h2 className="text-2xl font-extrabold text-gray-800 mb-2">
-
+                {/* Root Title */}
+                <h2 className="text-2xl font-extrabold text-foreground mb-2">
                     Root Certificates
                 </h2>
 
@@ -279,180 +291,206 @@ export default function UserCertManager() {
                     const status = getStatusStyles(root.is_active, rem);
 
                     return (
-                        <div key={root.id} className="border rounded-xl shadow-sm bg-white">
-
-                            {/* ROOT CARD */}
+                        <Card
+                            key={root.id}
+                            className="rounded-xl shadow-sm border border-border overflow-hidden bg-card"
+                        >
+                            {/* ROOT HEADER */}
                             <div
-                                className="p-6 cursor-pointer bg-blue-50 hover:bg-blue-100 flex justify-between items-center border-b border-blue-200"
-
                                 onClick={() => toggleRoot(root.id)}
+                                className={cn(
+                                    "p-6 cursor-pointer flex justify-between items-center border-b",
+                                    "bg-muted hover:bg-muted/70 border-border"
+                                )}
                             >
                                 <div className="flex items-center gap-12 text-2xl">
 
-                                    <span className={`px-4 py-1 rounded-full font-semibold text-xl ${status.className}`}>
+                                    <Badge className={cn("px-4 py-1 text-xl", status.className)}>
                                         {status.text}
-                                    </span>
+                                    </Badge>
 
-                                    <span className="font-bold text-blue-900 text-3xl">
+                                    <span className="font-bold text-primary text-3xl">
                                         {root.common_name}
                                     </span>
 
-                                    <span className="font-bold text-gray-800 text-xl">
+                                    <span className="font-semibold text-foreground/80 text-xl">
                                         ID: {root.id}
                                     </span>
 
-                                    <span className="text-gray-700 text-xl">
+                                    <span className="text-muted-foreground text-xl">
                                         {root.key_length} bits
                                     </span>
 
-                                    <span className={`font-semibold text-xl ${rem <= 30 ? "text-red-600" : "text-green-700"}`}>
+                                    <span
+                                        className={cn(
+                                            "font-semibold text-xl",
+                                            rem <= 30 ? "text-destructive" : "text-green-600"
+                                        )}
+                                    >
                                         Expires: {formatDate(root.valid_until)}
                                     </span>
 
-                                    <span className="font-bold text-blue-700 text-xl">
+                                    <span className="font-semibold text-primary text-xl">
                                         Intermediates: {interCount}
                                     </span>
-
                                 </div>
 
-                                <div className="text-5xl text-gray-700">
+                                <div className="text-5xl text-muted-foreground">
                                     {expandedRoot[root.id] ? "−" : "+"}
                                 </div>
                             </div>
 
-                            {/* INTERMEDIATES SECTION */}
                             {expandedRoot[root.id] && (
-                                <div className="p-6 space-y-5 border-t">
+                                <div className="p-6 space-y-5">
 
                                     {interCount > 0 ? (
                                         <>
-                                            {/* INTERMEDIATE HEAD */}
-                                            <h3 className="pl-40 text-2xl font-extrabold text-gray-700 ml-4">
+                                            <h3 className="pl-40 text-2xl font-extrabold text-foreground/90">
                                                 Intermediate Certificates
                                             </h3>
 
-                                            {/* MAP INTERMEDIATES HERE */}
                                             {rootIntermediates.map((int) => {
                                                 const remI = daysRemaining(int.valid_until);
                                                 const statusI = getStatusStyles(int.is_active, remI);
                                                 const leafCerts = int.issued_certificates || [];
 
                                                 return (
-                                                    <div key={int.id} className="bg-gray-50 rounded-xl border">
-
-                                                        {/* INTERMEDIATE CARD */}
+                                                    <Card
+                                                        key={int.id}
+                                                        className="bg-muted border border-border rounded-xl"
+                                                    >
+                                                        {/* INTERMEDIATE HEADER */}
                                                         <div
-                                                            className="p-5 pl-30 cursor-pointer hover:bg-gray-100 flex justify-between items-center"
                                                             onClick={() => toggleInter(int.id)}
+                                                            className="p-5 cursor-pointer hover:bg-muted/70 flex justify-between items-center"
                                                         >
                                                             <div className="flex items-center gap-12 text-xl ml-8">
 
-                                                                <span className={`px-4 py-1 rounded-full font-semibold text-lg ${statusI.className}`}>
+                                                                <Badge className={cn("px-4 py-1 text-lg", statusI.className)}>
                                                                     {statusI.text}
-                                                                </span>
+                                                                </Badge>
 
-                                                                <span className="font-bold text-blue-800 text-3xl">
+                                                                <span className="font-bold text-primary text-3xl">
                                                                     {int.common_name}
                                                                 </span>
 
-                                                                <span className="font-bold text-gray-800 text-xl">
+                                                                <span className="font-semibold text-foreground/80 text-xl">
                                                                     ID: {int.id}
                                                                 </span>
 
-                                                                <span className="text-gray-700 text-xl">
+                                                                <span className="text-muted-foreground text-xl">
                                                                     {int.key_length} bits
                                                                 </span>
 
-                                                                <span className={`font-semibold text-xl ${remI <= 30 ? "text-red-600" : "text-green-700"}`}>
+                                                                <span
+                                                                    className={cn(
+                                                                        "font-semibold text-xl",
+                                                                        remI <= 30 ? "text-destructive" : "text-green-600"
+                                                                    )}
+                                                                >
                                                                     Expires: {formatDate(int.valid_until)}
                                                                 </span>
 
-                                                                <span className="font-bold text-blue-700 text-xl">
+                                                                <span className="font-semibold text-primary text-xl">
                                                                     Certificates: {leafCerts.length}
                                                                 </span>
-
                                                             </div>
 
-                                                            <div className="text-5xl text-gray-700">
+                                                            <div className="text-5xl text-muted-foreground">
                                                                 {expandedInter[int.id] ? "−" : "+"}
                                                             </div>
                                                         </div>
 
-                                                        {/* LEAF CERTIFICATES SECTION */}
+                                                        {/* LEAF CERTS */}
                                                         {expandedInter[int.id] && (
-                                                            <div className="p-5 pl-60 space-y-4 border-t">
+                                                            <div className="p-6 pl-12 space-y-4 border-t border-border">
 
                                                                 {leafCerts.length > 0 ? (
                                                                     <>
-                                                                        <h4 className="pl-60 text-xl font-bold text-gray-600 ml-12">
+                                                                        <h4 className="text-xl font-bold text-muted-foreground ml-12">
                                                                             Issued Certificates
                                                                         </h4>
 
-                                                                        <table className="ml-20 w-[90%] text-left border-collapse">
-                                                                            <thead>
-                                                                                <tr className="border-b text-lg font-semibold text-gray-700">
-                                                                                    <th className="py-2">Status</th>
-                                                                                    <th className="py-2">Common Name</th>
-                                                                                    <th className="py-2">ID</th>
-                                                                                    <th className="py-2">Key Length</th>
-                                                                                    <th className="py-2">Expiry</th>
-                                                                                </tr>
-                                                                            </thead>
+                                                                        <Table className="w-[90%] ml-20">
+                                                                            <TableHeader>
+                                                                                <TableRow>
+                                                                                    <TableHead>Status</TableHead>
+                                                                                    <TableHead>Common Name</TableHead>
+                                                                                    <TableHead>ID</TableHead>
+                                                                                    <TableHead>Key Length</TableHead>
+                                                                                    <TableHead>Expiry</TableHead>
+                                                                                </TableRow>
+                                                                            </TableHeader>
 
-                                                                            <tbody>
-                                                                                {leafCerts.map((leaf: LeafCertificate) => {
+                                                                            <TableBody>
+                                                                                {leafCerts.map((leaf: {
+                                                                                    valid_until: string | number | Date; is_active: boolean | undefined;
+                                                                                    id: boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> |
+                                                                                    Iterable<React.ReactNode> | React.Key | null | undefined;
+                                                                                    common_name: string | number | boolean | React.ReactElement<any, string |
+                                                                                        React.JSXElementConstructor<any>> | Iterable<React.ReactNode> |
+                                                                                    React.ReactPortal | null | undefined; key_length: string | number | boolean |
+                                                                                    React.ReactElement<any, string | React.JSXElementConstructor<any>> |
+                                                                                    Iterable<React.ReactNode> | React.ReactPortal | null | undefined;
+                                                                                }) => {
                                                                                     const remL = daysRemaining(leaf.valid_until);
                                                                                     const statusL = getStatusStyles(leaf.is_active, remL);
 
                                                                                     return (
-                                                                                        <tr key={leaf.id} className="border-b hover:bg-gray-50 text-xl">
-                                                                                            <td className="py-3">
-                                                                                                <span className={`px-4 py-1 rounded-full ${statusL.className}`}>
+                                                                                        <TableRow key={leaf.id} className="text-xl">
+                                                                                            <TableCell>
+                                                                                                <Badge className={statusL.className}>
                                                                                                     {statusL.text}
-                                                                                                </span>
-                                                                                            </td>
+                                                                                                </Badge>
+                                                                                            </TableCell>
 
-                                                                                            <td className="py-3 font-bold text-blue-900">{leaf.common_name}</td>
-                                                                                            <td className="py-3 font-semibold text-gray-800">{leaf.id}</td>
-                                                                                            <td className="py-3 text-gray-700">{leaf.key_length} bits</td>
+                                                                                            <TableCell className="font-bold text-primary">
+                                                                                                {leaf.common_name}
+                                                                                            </TableCell>
 
-                                                                                            <td
-                                                                                                className={`py-3 font-semibold ${remL <= 30 ? "text-red-600" : "text-green-700"
-                                                                                                    }`}
+                                                                                            <TableCell className="font-semibold text-foreground/80">
+                                                                                                {leaf.id}
+                                                                                            </TableCell>
+
+                                                                                            <TableCell className="text-muted-foreground">
+                                                                                                {leaf.key_length} bits
+                                                                                            </TableCell>
+
+                                                                                            <TableCell
+                                                                                                className={cn(
+                                                                                                    "font-semibold",
+                                                                                                    remL <= 30
+                                                                                                        ? "text-destructive"
+                                                                                                        : "text-green-600"
+                                                                                                )}
                                                                                             >
                                                                                                 {formatDate(leaf.valid_until)}
-                                                                                            </td>
-                                                                                        </tr>
+                                                                                            </TableCell>
+                                                                                        </TableRow>
                                                                                     );
                                                                                 })}
-                                                                            </tbody>
-
-                                                                        </table>
+                                                                            </TableBody>
+                                                                        </Table>
                                                                     </>
                                                                 ) : (
-                                                                    <div className="text-gray-600 text-lg ml-12">
+                                                                    <div className="text-muted-foreground text-lg ml-12">
                                                                         No issued certificates available
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         )}
-
-
-                                                    </div>
+                                                    </Card>
                                                 );
                                             })}
                                         </>
                                     ) : (
-                                        // NO INTERMEDIATES → ONLY THIS MESSAGE
-                                        <div className="text-gray-600 text-xl ml-4">
+                                        <div className="text-muted-foreground text-xl ml-4">
                                             No intermediate certificates available
                                         </div>
                                     )}
-
                                 </div>
                             )}
-
-                        </div>
+                        </Card>
                     );
                 })}
             </div>
@@ -540,32 +578,12 @@ export default function UserCertManager() {
                 className="
         w-[90%] min-w-[75%]
         shadow-md rounded-xl p-6
-        border
-        bg-[var(--bg-card)]
-        border-[var(--border-color)]
         text-[var(--text-primary)]
     "
             >
                 <div className="flex items-center gap-6">
 
-                    <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
-                        Organization ID
-                    </span>
 
-                    <input
-                        type="text"
-                        placeholder="--Enter Org ID--"
-                        value={orgId}
-                        onChange={(e) => setOrgId(e.target.value)}
-                        className="
-        text-2xl font-semibold text-center
-        py-2 px-3
-        bg-gray-500 text-gray-100
-        border border-gray-500
-        rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500
-        w-[300px]
-    "
-                    />
 
                 </div>
 
@@ -1297,20 +1315,35 @@ export default function UserCertManager() {
     return (
         <div
             className="
-    min-h-screen w-[75%] mx-auto flex flex-col 
-    p-28 space-y-14
-    bg-[var(--bg-primary)] text-[var(--text-primary)]
-  "
+        min-h-screen w-[75%] mx-auto flex flex-col 
+        p-10 space-y-14
+        bg-[var(--bg-primary)] 
+        text-[var(--text-primary)]
+        border border-[var(--border-color)]
+        rounded-xl
+    "
         >
             {/* <div className="p-8 bg-white rounded-xl shadow-lg w-[75%] mx-auto"> */}
             {/* Header */}
-            <header className="bg-[var(--header-bg)] text-[var(--header-text)] py-8 px-8 text-center rounded-lg shadow-md">
+            <header className="
+    bg-[var(--header-bg)]
+    text-[var(--header-text)]
+    py-8 px-8 text-center
+    rounded-lg shadow-md
+">
                 <h1 className="text-5xl font-bold">GoSecure - AnchorVPN</h1>
-                <p className="text-blue-200 font-semibold text-3xl mt-2">
+
+                <p className="font-semibold text-3xl mt-2     text-[var(--header-text)]
+">
                     User Certificate Management
                 </p>
-                <p className="text-blue-200 font-semibold text-left text-3xl mt-2">Welcome User</p>
+
+                <p className="font-semibold text-left text-3xl mt-2     text-[var(--header-text)]
+">
+                    Welcome User
+                </p>
             </header>
+
             <span className="text-2xl text-right font-extrabold text-[var(--text-primary)] whitespace-nowrap">
                 <ThemeSelector />
             </span>
@@ -1347,8 +1380,8 @@ export default function UserCertManager() {
                             className={`
                     text-lg font-semibold px-4 py-2 rounded-md transition-colors duration-200
                     ${activeTab === tab.key
-                                    ? "bg-[var(--accent-primary)] text-[var(--accent-text)]"
-                                    : "text-[var(--text-primary)] hover:text-[var(--text-secondary)]"
+                                    ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                    : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
                                 }
                 `}
                         >
@@ -1366,6 +1399,44 @@ export default function UserCertManager() {
         text-[var(--text-primary)]
     "
                 >
+
+
+
+                    <div
+                        className="
+                    bg-[var(--bg-card)]
+                    border border-[var(--border-color)]
+                    rounded-xl shadow-md
+                    p-5
+                    flex items-center gap-4
+flex-wrap w-full                "
+                    >
+                        <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
+                            Organization ID
+                        </span>
+
+                        <input
+                            type="text"
+                            placeholder="--Enter Org ID--"
+                            value={orgId}
+                            onChange={(e) => setOrgId(e.target.value)}
+                            className="
+                        text-2xl font-semibold text-center
+                        py-2 px-3
+                        bg-[var(--bg-input)]
+                        text-[var(--text-primary)]
+                        border border-[var(--border-color)]
+                        rounded-lg shadow-sm
+                        focus:ring-2 focus:ring-[var(--accent-color)]
+                        w-[300px]
+                    "
+                        />
+                        {/* {renderCertFilters()} */}
+
+                    </div>
+
+
+
                     {activeTab === "certs" && (
                         <div className="w-full">
 
@@ -1428,6 +1499,7 @@ export default function UserCertManager() {
                             {/* SUBTAB CONTENT */}
                             {certsSubTab === "hierarchy" && (
                                 <>
+
                                     {renderCertFilters()}
                                     {renderExpandableTable()}
                                 </>
@@ -1435,37 +1507,7 @@ export default function UserCertManager() {
                             {certsSubTab === "alerts" && (
                                 <>
                                     <div className="w-full flex justify-center">
-                                        <div
-                                            className="
-                    bg-[var(--bg-card)]
-                    border border-[var(--border-color)]
-                    rounded-xl shadow-md
-                    p-5
-                    flex items-center gap-4
-                    w-[90%]
-                "
-                                        >
-                                            <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
-                                                Organization ID
-                                            </span>
 
-                                            <input
-                                                type="text"
-                                                placeholder="--Enter Org ID--"
-                                                value={orgId}
-                                                onChange={(e) => setOrgId(e.target.value)}
-                                                className="
-                        text-2xl font-semibold text-center
-                        py-2 px-3
-                        bg-[var(--bg-input)]
-                        text-[var(--text-primary)]
-                        border border-[var(--border-color)]
-                        rounded-lg shadow-sm
-                        focus:ring-2 focus:ring-[var(--accent-color)]
-                        w-[300px]
-                    "
-                                            />
-                                        </div>
                                     </div>
                                     {renderAlerts({ certs, intermediates })}
                                 </>
@@ -1474,37 +1516,6 @@ export default function UserCertManager() {
                             {certsSubTab === "issued" && (
                                 <>
                                     <div className="w-full flex justify-center">
-                                        <div
-                                            className="
-                    bg-[var(--bg-card)]
-                    border border-[var(--border-color)]
-                    rounded-xl shadow-md
-                    p-5
-                    flex items-center gap-4
-                    w-[90%]
-                "
-                                        >
-                                            <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
-                                                Organization ID
-                                            </span>
-
-                                            <input
-                                                type="text"
-                                                placeholder="--Enter Org ID--"
-                                                value={orgId}
-                                                onChange={(e) => setOrgId(e.target.value)}
-                                                className="
-                        text-2xl font-semibold text-center
-                        py-2 px-3
-                        bg-[var(--bg-input)]
-                        text-[var(--text-primary)]
-                        border border-[var(--border-color)]
-                        rounded-lg shadow-sm
-                        focus:ring-2 focus:ring-[var(--accent-color)]
-                        w-[300px]
-                    "
-                                            />
-                                        </div>
                                     </div>
 
                                     {renderOrgIdCertificates()}
