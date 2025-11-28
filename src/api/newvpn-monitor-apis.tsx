@@ -1,19 +1,18 @@
 import axios from "axios";
 import { MonitoringFailureMessage } from "@/urls/toasts"; // optional custom toast
-//import Toast from "@totesoft/ui-kit"
 // Base API URL
 //const API_BASE = "/api/monitoring";
 const API_BASE = "https://pre-prod.be.anchorvpn.net/api/v1/monitoring";
 
-export const getMonitoringHealth = async () => {
-    try {
-        const res = await axios.get(`${API_BASE}/health`);
-        return { success: true, data: res.data };
-    } catch {
-        MonitoringFailureMessage("Failed to load monitoring health");
-        return { success: false, data: [] };
-    }
-};
+// export const getMonitoringHealth = async () => {
+//     try {
+//         const res = await axios.get(`${API_BASE}/health`);
+//         return { success: true, data: res.data };
+//     } catch {
+//         MonitoringFailureMessage("Failed to load monitoring health");
+//         return { success: false, data: [] };
+//     }
+// };
 
 
 /** ✅ Get Monitoring Status */

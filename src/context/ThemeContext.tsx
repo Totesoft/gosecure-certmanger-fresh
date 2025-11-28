@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, type SetStateAction } from "react";
 
 const ThemeContext = createContext();
 const THEME_KEY = "tote-theme";
@@ -33,7 +33,7 @@ export function ThemeProvider({ children }) {
         }
     }
 
-    function updateTheme(value) {
+    function updateTheme(value: SetStateAction<string>) {
         setTheme(value);
         localStorage.setItem(THEME_KEY, value);
         applyTheme(value);

@@ -59,12 +59,12 @@ function AppInner() {
   // }
 
   return (
-    <ThemeProvider>
-      <div>
-        <Routes>
-          <Route path="/*" element={<CertsRoutes />} />
-        </Routes>
-      </div>
-    </ThemeProvider>
+    // <ThemeProvider>
+    <div>
+      <Routes>
+        <Route path="/*" element={<CertsRoutes />} />
+      </Routes>
+    </div>
+    // </ThemeProvider>
   );
 }
