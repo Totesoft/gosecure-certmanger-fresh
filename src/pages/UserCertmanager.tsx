@@ -10,6 +10,9 @@ import { useAllCerts } from "@/hooks/useAllCerts"; // adjust path
 import DownloadCert from "@/components/Usercertmanager/Downloadcert";
 import RenderAlerts from "@/components/Usercertmanager/renderAlerts";  // adjust path
 import { useOrgIdCertificates } from "@/components/Usercertmanager/OrgIdCerts"
+//import ExpandHierarchyTable from "@/components/Usercertmanager/ExpandHierarchyTable";
+//import { useCertHierarchyFetcher } from "@/components/Usercertmanager/certHierarchyFetcher";
+
 import {
     Table,
     TableHeader,
@@ -176,6 +179,32 @@ export default function UserCertManager() {
     };
 
 
+    // const {
+    //     certs,
+    //     intermediates,
+    //     expandedRoot,
+    //     expandedInter,
+    //     toggleRoot,
+    //     toggleInter,
+    //     daysRemaining,
+    //     getStatusStyles,
+    //     formatDate,
+    //     //     renderCertFilters
+    // } = useCertHierarchyFetcher(orgId, {
+    //     // any required options or callbacks
+    //     setCerts: () => { },
+    //     setInterByRoot: () => { },
+    //     setCertsByIntermediate: () => { },
+    //     setIntermediates: () => { },
+    //     setIntermediateOptions: () => { },
+    //     setCertOptions: () => { },
+    //     setLoading: () => { },
+    //     setError: () => { },
+    //     applyFilters: () => { },
+    //     toId: (x) => x
+    // });
+
+
 
     // Fetch Certs--Entire Hierarchy when orgId changes
     useEffect(() => {
@@ -255,7 +284,7 @@ export default function UserCertManager() {
         return () => { cancelled = true; };
     }, [orgId]);
 
-    ////Hierarchy Table
+    //Hierarchy Table
     const renderExpandableTable = () => {
         if (certs.length === 0)
             return (
@@ -266,7 +295,22 @@ export default function UserCertManager() {
 
         return (
             <div className="space-y-6 w-[90%] mx-auto">
+                {/* <div className="p-5 flex items-center gap-4 flex-nowrap w-full">
+                    <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
+                        Organization ID
+                    </span>
 
+                    <input
+                        type="text"
+                        placeholder="--Enter Org ID--"
+                        value={orgId}
+                        onChange={(e) => setOrgId(e.target.value)}
+                        className="text-2xl font-semibold text-center py-2 px-3 bg-[var(--bg-input)]
+                                        text-[var(--text-primary)] border border-[var(--border-color)] 
+                                        rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--accent-color)] w-[300px]"
+                    />
+                    {renderCertFilters()}
+                </div> */}
                 {/* Root Title */}
                 <h2 className="text-2xl font-extrabold text-foreground mb-2">
                     Root Certificates
@@ -805,198 +849,207 @@ export default function UserCertManager() {
                 <p className="font-semibold text-left text-3xl mt-2     text-[var(--header-text)]">
                     Welcome User
                 </p>
+
             </header>
 
-            {/* Header Row: Tabs on the left, ThemeSelector on the right */}
-            <div className="w-full flex items-center justify-between px-4 py-3 
-    bg-[var(--bg-primary)] text-[var(--text-primary)] border-b">
 
+            {/* Main App Layout */}
+            <div
+                className=" min-h-screen flex flex-col rounded-t-2xl shadow-inner bg-[var(--bg-secondary)]
+                text-[var(--text-primary)] "
+            >
                 {/* Navigation Tabs */}
-                <nav className="flex flex-wrap gap-3">
-                    {[
-                        { key: "certs", label: "Certificates by OrgId" },
-                        { key: "download", label: "Download" },
-                        { key: "servers", label: "Server Certs" },
-                        { key: "user", label: "User Certs" },
-                        { key: "allcerts", label: "All Certificates" },
-                        { key: "help", label: "Help" },
-                    ].map((tab) => (
-                        <button
-                            key={tab.key}
-                            onClick={() => setActiveTab(tab.key)}
-                            className={`text-lg font-semibold px-4 py-2 rounded-md transition-colors duration-200
+                <nav
+                    className="w-full border-b px-4 py-3 flex items-center bg-[var(--bg-primary)] text-[var(--text-primary)]"
+                >
+                    {/* This wrapper keeps tabs centered */}
+                    <div className="flex-1 flex justify-center gap-4">
+                        {[
+                            { key: "certs", label: "Certificates by OrgId" },
+                            { key: "download", label: "Download" },
+                            { key: "servers", label: "Server Certs" },
+                            { key: "user", label: "User Certs" },
+                            { key: "allcerts", label: "All Certificates" },
+                            { key: "help", label: "Help" },
+                        ].map((tab) => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className={`text-lg font-semibold px-4 py-2 rounded-md transition-colors duration-200
                     ${activeTab === tab.key
-                                    ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                    : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
-                                }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
+                                        ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"
+                                        : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+                                    }
+                `}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Theme Selector aligned RIGHT */}
+                    <div className="flex justify-end w-[15%]">
+                        <ThemeSelector />
+                    </div>
                 </nav>
 
-                {/* Theme selector on right */}
-                <div className="text-2xl font-extrabold">
-                    <ThemeSelector />
-                </div>
-            </div>
 
+                {/* Active Tab Content */}
+                <main
+                    className="flex-grow p-8 bg-[var(--bg-primary)] text-[var(--text-primary)]" >
 
-            {/* Active Tab Content */}
-            <main
-                className="flex-grow p-8 bg-[var(--bg-primary)] text-[var(--text-primary)]" >
+                    {activeTab === "certs" && (
+                        <div className="w-full">
 
-                {activeTab === "certs" && (
-                    <div className="w-full">
-
-                        {/* SUB TABS */}
-                        <div
-                            className="flex space-x-4 pb-2 mb-4 border-b border-[var(--border-color)]
+                            {/* SUB TABS */}
+                            <div
+                                className="flex space-x-4 pb-2 mb-4 border-b border-[var(--border-color)]
                                         text-[var(--text-primary)] bg-[var(--bg-primary)]">
 
-                            <button
-                                onClick={() => setCertsSubTab("hierarchy")}
-                                className={`px-4 py-2 rounded-t font-bold text-lg transition-colors` +
-                                    (
-                                        certsSubTab === "hierarchy"
-                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
-                                    )
-                                }
-                            >
-                                Certificate Hierarchy
-                            </button>
-                            <button
-                                onClick={() => setCertsSubTab("alerts")}
-                                className={
-                                    "px-4 py-2 rounded-t font-semibold " +
-                                    (certsSubTab === "alerts"
-                                        ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                        : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
-                                }
-                            >
-                                Alerts
-                            </button>
-                            <button
-                                onClick={() => setCertsSubTab("issued")}
-                                className={
-                                    "px-4 py-2 rounded-t font-semibold " +
-                                    (certsSubTab === "issued"
-                                        ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                        : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
-                                }
-                            >
-                                Issued Org Certs
-                            </button>
-
-                        </div>
-                        <div
-                            // className="bg-[var(--bg-card)] border border-[var(--border-color)]
-                            //         rounded-xl shadow-md p-5 flex items-center gap-4 flex-wrap w-full">
-                            className="p-5 flex items-center gap-4 flex-nowrap w-full">
-                            <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
-                                Organization ID
-                            </span>
-
-                            <input
-                                type="text"
-                                placeholder="--Enter Org ID--"
-                                value={orgId}
-                                onChange={(e) => setOrgId(e.target.value)}
-                                className="text-2xl font-semibold text-center py-2 px-3 bg-[var(--bg-input)]
-                                        text-[var(--text-primary)] border border-[var(--border-color)] 
-                                        rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--accent-color)] w-[300px]"
-                            />
-                        </div>
-
-
-                        {/* SUBTAB CONTENT */}
-                        {certsSubTab === "hierarchy" && (
-                            <>
-                                {renderCertFilters()}
-                                {renderExpandableTable()}
-                            </>
-                        )}
-                        {certsSubTab === "alerts" && (
-                            <>
-                                {RenderAlerts({
-                                    certs, intermediates,
-                                    loading: false,
-                                    error: null,
-                                    daysRemaining: function (date: string): number {
-                                        throw new Error("Function not implemented.");
+                                <button
+                                    onClick={() => setCertsSubTab("hierarchy")}
+                                    className={`px-4 py-2 rounded-t font-bold text-lg transition-colors` +
+                                        (
+                                            certsSubTab === "hierarchy"
+                                                ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                                : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
+                                        )
                                     }
-                                })}
-                            </>
-                        )}
-                        {certsSubTab === "issued" && renderOrgIdCertificates()}
-                    </div>
-                )}
-                {activeTab === "download" && <DownloadCert />}
-                {activeTab === "servers" && (<RenderServerCertsTable servercerts={servercerts} />)}
-                {activeTab === "user" && <RenderUserCertsTable usercerts={usercerts} />}
-                {activeTab === "allcerts" && (
-                    <div className="p-4">
+                                >
+                                    Certificate Hierarchy
+                                </button>
+                                <button
+                                    onClick={() => setCertsSubTab("alerts")}
+                                    className={
+                                        "px-4 py-2 rounded-t font-semibold " +
+                                        (certsSubTab === "alerts"
+                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
+                                    }
+                                >
+                                    Alerts
+                                </button>
+                                <button
+                                    onClick={() => setCertsSubTab("issued")}
+                                    className={
+                                        "px-4 py-2 rounded-t font-semibold " +
+                                        (certsSubTab === "issued"
+                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
+                                    }
+                                >
+                                    Issued Org Certs
+                                </button>
+                                <span className="text-2xl text-right font-extrabold text-[var(--text-primary)] whitespace-nowrap">
+                                    Organization ID
+                                </span>
 
-                        {/* SUB TABS */}
-                        <div className="flex gap-4 mb-4 border-b pb-3 border-[var(--border-color)]">
-                            <button
-                                onClick={() => setAllcertSubTab("root")}
-                                className={`
+                                <input
+                                    type="text"
+                                    placeholder="--Enter Org ID--"
+                                    value={orgId}
+                                    onChange={(e) => setOrgId(e.target.value)}
+                                    className="text-2xl font-semibold text-center py-2 px-3 bg-[var(--bg-input)]
+                                        text-[var(--text-primary)] border border-[var(--border-color)] 
+                                        rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--accent-color)] w-[150px]"
+                                />
+                            </div>
+                            {/* <div
+                                className="bg-[var(--bg-card)] border border-[var(--border-color)]
+                                        rounded-xl shadow-md p-5 flex items-center gap-4 flex-wrap w-full">
+
+
+                            </div> */}
+
+
+                            {/* SUBTAB CONTENT */}
+                            {certsSubTab === "hierarchy" && (
+                                <>
+
+                                    {renderCertFilters()}
+                                    {renderExpandableTable()}
+                                </>
+                            )}
+                            {certsSubTab === "alerts" && (
+                                <>
+                                    <RenderAlerts
+                                        certs={certs}
+                                        intermediates={intermediates}
+                                        loading={false}
+                                        error={null}
+                                        orgId={orgId}
+                                        setOrgId={setOrgId}
+                                    />
+                                </>
+                            )}
+                            {certsSubTab === "issued" && renderOrgIdCertificates()}
+                        </div>
+                    )}
+                    {activeTab === "download" && <DownloadCert />}
+                    {activeTab === "servers" && (<RenderServerCertsTable servercerts={servercerts} />)}
+                    {activeTab === "user" && <RenderUserCertsTable usercerts={usercerts} />}
+                    {activeTab === "allcerts" && (
+                        <div className="p-4">
+
+                            {/* SUB TABS */}
+                            <div className="flex gap-4 mb-4 border-b pb-3 border-[var(--border-color)]">
+                                <button
+                                    onClick={() => setAllcertSubTab("root")}
+                                    className={`
                                 px-4 py-2 text-lg font-semibold rounded
             ${allcertSubTab === "root"
-                                        ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                        : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
-                                    }
+                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
+                                        }
         `}
-                            >
-                                Root Certificates
-                            </button>
+                                >
+                                    Root Certificates
+                                </button>
 
-                            <button
-                                onClick={() => setAllcertSubTab("intermediate")}
-                                className={`px-4 py-2 text-lg font-semibold rounded
+                                <button
+                                    onClick={() => setAllcertSubTab("intermediate")}
+                                    className={`px-4 py-2 text-lg font-semibold rounded
             ${allcertSubTab === "intermediate"
-                                        ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                        : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "}
+                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "}
         `}
-                            >
-                                Intermediate Certs
-                            </button>
+                                >
+                                    Intermediate Certs
+                                </button>
 
-                            <button
-                                onClick={() => setAllcertSubTab("issued")}
-                                className={`px-4 py-2 text-lg font-semibold rounded
+                                <button
+                                    onClick={() => setAllcertSubTab("issued")}
+                                    className={`px-4 py-2 text-lg font-semibold rounded
             ${allcertSubTab === "issued"
-                                        ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                        : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "}
+                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "}
         `}
-                            >
-                                Issued Certificates
-                            </button>
+                                >
+                                    Issued Certificates
+                                </button>
+                            </div>
+
+                            {/* SUB TAB RENDER LOGIC */}
+                            {allcertSubTab === "root" && renderRootallTable()}
+
+                            {allcertSubTab === "intermediate" && renderIntermediateallTable()}
+                            {allcertSubTab === "issued" && renderIssuedCertsallTable()}
+                            {/* {certSubTab === "root" && renderRootCertsTable()} */}
+
                         </div>
+                    )}
 
-                        {/* SUB TAB RENDER LOGIC */}
-                        {allcertSubTab === "root" && renderRootallTable()}
+                    {activeTab === "help" && renderHelp()}
+                </main>
 
-                        {allcertSubTab === "intermediate" && renderIntermediateallTable()}
-                        {allcertSubTab === "issued" && renderIssuedCertsallTable()}
-                        {/* {certSubTab === "root" && renderRootCertsTable()} */}
-
-                    </div>
-                )}
-
-                {activeTab === "help" && renderHelp()}
-            </main>
-
-            {/* Footer */}
-            <footer className="w-full text-center py-4 text-gray-500 text-sm border-t">
-                © GoSecure 2025
-            </footer>
-        </div>
+                {/* Footer */}
+                <footer className="w-full text-center py-4 text-gray-500 text-sm border-t">
+                    © GoSecure 2025
+                </footer>
+            </div >
 
 
-
+        </div >
 
 
     );

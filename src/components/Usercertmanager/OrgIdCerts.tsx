@@ -70,7 +70,11 @@ export const useOrgIdCertificates = (orgId: string) => {
         if (orgIdCerts.length === 0) return <div className="text-gray-600 dark:text-gray-400">No certificates found for this organization.</div>;
 
         return (
+
+
             <div className="py-6 flex justify-center">
+
+
                 <Table className="w-[90%] border border-gray-300 dark:border-gray-700 rounded-xl shadow bg-white dark:bg-gray-900">
                     <TableHeader className="bg-gray-100 dark:bg-gray-800 text-lg">
                         <TableRow>

@@ -300,7 +300,7 @@ export default function MonitoringStatus() {
     useEffect(() => {
         async function fetchStatus() {
             try {
-                const response = await fetch("https://pre-prod.be.anchorvpn.net/api/v1/intermediate-ca/", {
+                const response = await fetch("https://pre-prod.be.anchorvpn.net/api/v1/organizations/1/root-ca/`", {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
