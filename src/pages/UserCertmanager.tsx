@@ -3,6 +3,13 @@ import axios from "axios";
 import { Clock, AlertTriangle, CheckCircle } from "lucide-react";
 import { Card, Badge } from "@totesoft/ui-kit"
 import { cn } from "@/lib/utils";
+
+import { useServerCerts, RenderServerCertsTable } from "@/hooks/useServerCerts";
+import { useUserCerts, RenderUserCertsTable } from "@/hooks/useUserCerts"
+import { useAllCerts } from "@/hooks/useAllCerts"; // adjust path
+import DownloadCert from "@/components/Usercertmanager/Downloadcert";
+import RenderAlerts from "@/components/Usercertmanager/renderAlerts";  // adjust path
+import { useOrgIdCertificates } from "@/components/Usercertmanager/OrgIdCerts"
 import {
     Table,
     TableHeader,
@@ -10,15 +17,13 @@ import {
     TableHead,
     TableRow,
     TableCell
-} from "@/components/ui/table";
-
+} from "@/components/ui/Table";
 import { rootCAmockdata, intermediatemockdata, issuedcertsmockdata, usercertsmockdata, servercertsmockdata } from "./AdmnCertmanagerMockdata"
 import { token } from "@/components/token"
 import { renderHelp } from "@/components/Usercertmanager/Help";
-import { renderUserTable } from "@/components/Usercertmanager/usercerts";
 import { useTheme } from "@/context/ThemeContext";
 import ThemeSelector from "@/context/ThemeSelector";
-//import { fetchallcerts, renderRootallTable, renderIntermediateallTable, renderIssuedCertsallTable } from "@/components/Allcerts.jsx";
+
 const API_BASE_URL = "https://pre-prod.be.anchorvpn.net/api/v1"; // adjust if needed
 
 // ------------------ INTERFACES ------------------
@@ -123,36 +128,20 @@ export default function UserCertManager() {
     // helper: safe id -> normalized string
     const toId = (v: any) => (v === null || v === undefined ? "" : String(v).trim());
     const [activeTab, setActiveTab] = useState("certs");
-    const [certIdToDownload, setCertIdToDownload] = useState("");
-    const [downloading, setDownloading] = useState(false);
-    const [downloadMessage, setDownloadMessage] = useState("");
-    const [certTypeToDownload, setCertTypeToDownload] = useState("");
-    const [servercerts, setServercerts] = useState<ServerCertificate[]>([]);
-    const [loadingServers, setLoadingServers] = useState(false);
-    const [serverError, setServerError] = useState("");
-    const [usercerts, setUsercerts] = useState<UserCertificate[]>([]);
-    const [loadingUser, setLoadingUser] = useState(false);
-    const [errorUser, setErrorUser] = useState("");
+
 
     const [expandedRoot, setExpandedRoot] = useState<ExpandState>({});
     const [expandedInter, setExpandedInter] = useState<ExpandState>({});
 
-    const [rootallcerts, setRootallcerts] = useState<RootCertificate[]>([]);
-    const [intermediateallcerts, setIntermediateallcerts] = useState<IntermediateCertificate[]>([]);
-    const [issuedallcerts, setIssuedallcerts] = useState<LeafCertificate[]>([]);
+
     const [allcertSubTab, setAllcertSubTab] = useState<
         "intermediate" | "issued" | "root"
     >("intermediate");
     const [certsSubTab, setCertsSubTab] = useState("hierarchy");
-
-    // const [hierarchySubTab, setHierarchySubTab] = useState("hierarchy");
-    // const [issuedSubTab, setIssuedSubTab] = useState("issued");
-    // const [alertsSubTab, setAlertsSubTab] = useState("alerts");
-    const [orgIdCerts, setOrgIdCerts] = useState<OrgCertificate[]>([]);
-    const [loadingOrgIdCerts, setLoadingOrgIdCerts] = useState(false);
-    const [orgIdError, setOrgIdError] = useState<string | null>(null);
-
-
+    const { servercerts, fetchServercerts } = useServerCerts();
+    const { usercerts, fetchUserCerts } = useUserCerts()
+    const { renderRootallTable, renderIntermediateallTable, renderIssuedCertsallTable, fetchAllCerts } = useAllCerts();
+    const { renderOrgIdCertificates } = useOrgIdCertificates(orgId);
 
     // ------------------ HELPERS ------------------
     const toggleRoot = (id: string) => {
@@ -178,7 +167,7 @@ export default function UserCertManager() {
 
     const getStatusStyles = (isActive: boolean | undefined, remainingDays: number) => {
         if (!isActive)
-            return { text: "Inactive", icon: <Clock size={16} />, className: "bg-gray-200 text-gray-600" };
+            return { text: "Inactive", icon: <Clock size={16} />, className: "bg-red-200 text-gray-600" };
         if (remainingDays <= 10)
             return { text: "Expiring Soon", icon: <AlertTriangle size={16} />, className: "bg-red-100 text-red-700" };
         if (remainingDays <= 30)
@@ -573,7 +562,7 @@ export default function UserCertManager() {
     };
     ////Filter
     const renderCertFilters = () => (
-        <div className="p-6 flex justify-center mt-10">
+        <div className=" flex justify-center">
             <div
                 className="
         w-[90%] min-w-[75%]
@@ -581,14 +570,7 @@ export default function UserCertManager() {
         text-[var(--text-primary)]
     "
             >
-                <div className="flex items-center gap-6">
-
-
-
-                </div>
-
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 items-end text-lg">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-2 items-end text-lg">
 
                     {/* Root ID */}
                     <div className="flex flex-col">
@@ -603,11 +585,9 @@ export default function UserCertManager() {
                             className="
                             border border-[var(--border-color)] rounded-lg px-3 py-2 text-center shadow-sm
                             bg-[var(--bg-primary)] text-[var(--text-primary)]
-
                             dark:bg-[var(--bg-primary)] 
                             dark:text-[var(--text-primary)]
-                            dark:border-[var(--border-color)]
-                        "
+                            dark:border-[var(--border-color)]"
                         />
                     </div>
 
@@ -779,227 +759,6 @@ export default function UserCertManager() {
     }, [intermediateIdInput, certsByIntermediate]);
 
 
-
-    ///Alerts
-    const renderAlerts = (p0: { certs: any[]; intermediates: Record<string, any[]>; }) => {
-        const EXPIRY_THRESHOLD = 1500; // show certs expiring in 30 days///////////////////////////////////////
-
-        if (loading)
-            return <p className="p-6 mt-4 bg-white rounded-xl shadow-lg">Loading certificates...</p>;
-
-        if (error)
-            return <p className="p-6 mt-4 bg-white rounded-xl shadow-lg">{error}</p>;
-
-        if (!certs || certs.length === 0)
-            return (
-                <p className="p-6 mt-4 bg-white rounded-xl shadow-lg">
-                    No certificates found.
-                </p>
-            );
-
-        return (
-            <div className="space-y-6 w-[90%] mx-auto p-6 mt-4 bg-white rounded-xl shadow-lg">
-                <h3 className="p-6 mt-4 bg-white rounded-xl shadow-lg text-3xl font-bold mb-8 text-red-700 text-center">
-                    Expiring Certificates
-                </h3>
-
-                <table className="min-w-full border border-gray-300 rounded-xl shadow bg-white">
-                    <thead className="text-white text-lg">
-                        <tr>
-                            <th className="bg-red-400 px-6 py-3 text-left w-1/3">Root CA</th>
-                            <th className="bg-red-400 px-6 py-3 text-left w-1/3">Intermediate CAs</th>
-                            <th className="bg-red-400 px-6 py-3 text-left w-1/3">Issued Certificates</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {certs.map((rootCa) => {
-                            const rootRemaining = daysRemaining(rootCa.valid_until);
-                            const intList = intermediates[rootCa.id] || [];
-
-                            const rootExpiring = rootRemaining <= EXPIRY_THRESHOLD;
-
-                            // Check if any intermediate or issued certs expire soon
-                            const intermediateExpiring = intList.some(
-                                (int) => daysRemaining(int.valid_until) <= EXPIRY_THRESHOLD
-                            );
-
-                            const issuedExpiring = intList.some((int) =>
-                                int.issued_certificates?.some(
-                                    (leaf: { valid_until: string | number | Date; }) => daysRemaining(leaf.valid_until) <= EXPIRY_THRESHOLD
-                                )
-                            );
-
-                            // If nothing under this root CA is expiring, skip row
-                            if (!rootExpiring && !intermediateExpiring && !issuedExpiring)
-                                return null;
-
-                            return (
-                                <tr key={rootCa.id} className="align-top hover:bg-gray-50">
-
-                                    {/* ROOT COLUMN */}
-                                    <td className="border border-gray-300 px-6 py-6 align-top">
-                                        {rootExpiring ? (
-                                            <div className="space-y-2 p-4 bg-red-100 border border-red-300 rounded-lg">
-                                                <div className="text-2xl font-bold text-red-800">
-                                                    {rootCa.common_name}
-                                                </div>
-                                                <div className="text-lg text-gray-700">
-                                                    ID: {rootCa.id}
-                                                </div>
-                                                <div className="text-lg text-red-600 font-semibold">
-                                                    Expires: {new Date(rootCa.valid_until).toLocaleDateString()}
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <p className="italic text-gray-400">No expiring root CA.</p>
-                                        )}
-                                    </td>
-
-                                    {/* INTERMEDIATES COLUMN */}
-                                    <td className="border border-gray-300 px-6 py-6 align-top">
-                                        {intList
-                                            .filter((int) => daysRemaining(int.valid_until) <= EXPIRY_THRESHOLD)
-                                            .map((int) => (
-                                                <div
-                                                    key={int.id}
-                                                    className="mb-4 p-4 bg-orange-100 border border-orange-300 rounded-lg"
-                                                >
-                                                    <div className="text-xl font-semibold text-orange-800">
-                                                        {int.common_name}
-                                                    </div>
-                                                    <div className="text-lg text-gray-700">ID: {int.id}</div>
-                                                    <div className="text-lg text-red-600 font-semibold">
-                                                        Expires: {new Date(int.valid_until).toLocaleDateString()}
-                                                    </div>
-                                                </div>
-                                            ))}
-
-                                        {intList.filter((int) => daysRemaining(int.valid_until) <= EXPIRY_THRESHOLD).length === 0 && (
-                                            <p className="italic text-gray-400">No expiring intermediates.</p>
-                                        )}
-                                    </td>
-
-                                    {/* ISSUED CERTIFICATES COLUMN */}
-                                    <td className="border border-gray-300 px-6 py-6 align-top">
-                                        {intList.map((int) =>
-                                            int.issued_certificates
-                                                ?.filter((leaf: { valid_until: string | number | Date; }) => daysRemaining(leaf.valid_until) <= EXPIRY_THRESHOLD)
-                                                .map((leaf: { id: boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.Key | null | undefined; common_name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; valid_until: string | number | Date; }) => (
-                                                    <div
-                                                        key={leaf.id}
-                                                        className="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded-lg"
-                                                    >
-                                                        <div className="text-xl font-semibold text-yellow-800">
-                                                            {leaf.common_name}
-                                                        </div>
-                                                        <div className="text-lg text-gray-700">ID: {leaf.id}</div>
-                                                        <div className="text-lg text-red-600 font-semibold">
-                                                            Expires: {new Date(leaf.valid_until).toLocaleDateString()}
-                                                        </div>
-                                                    </div>
-                                                ))
-                                        )}
-
-                                        {intList.every(
-                                            (int) =>
-                                                !int.issued_certificates?.some(
-                                                    (leaf: { valid_until: string | number | Date; }) => daysRemaining(leaf.valid_until) <= EXPIRY_THRESHOLD
-                                                )
-                                        ) && (
-                                                <p className="italic text-gray-400">No expiring issued certs.</p>
-                                            )}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-        );
-    };
-
-    // --- DOWNLOAD ---
-    const handleDownload = async () => {
-        if (!certIdToDownload.trim()) {
-            setDownloadMessage("Please enter a certificate ID.");
-            return;
-        }
-        setDownloading(true);
-        setDownloadMessage("");
-        try {
-            const url = `${API_BASE_URL}/certificates/${certIdToDownload}/download/`;
-            const res = await axios.get(url, { responseType: "blob" });
-            const blob = new Blob([res.data], { type: "application/x-x509-ca-cert" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `${certIdToDownload}.crt`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            setDownloadMessage("Certificate downloaded successfully.");
-        } catch (err) {
-            console.error("Download failed", err);
-            setDownloadMessage("Failed to download certificate. Check the ID.");
-        } finally {
-            setDownloading(false);
-        }
-    };
-
-    const renderDownloadTab = () => (
-        <div className="p-8 max-w-lg mx-auto">
-            <h2 className="text-3xl font-bold mb-6 text-gray-800">Download Certificate</h2>
-
-            {/* Certificate Type Dropdown */}
-            <label className="block text-lg font-medium mb-2 text-gray-700">
-                Select Certificate Type
-            </label>
-            <select
-                value={certTypeToDownload}
-                onChange={(e) => setCertTypeToDownload(e.target.value)}
-                className="border border-gray-400 rounded-lg p-3 w-full mb-5 text-lg bg-white"
-            >
-                <option value="">-- Select Certificate Type --</option>
-                <option value="root">Root CA</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="issued">Issued Certificate</option>
-            </select>
-
-            {/* Certificate ID Input */}
-            <label className="block text-lg font-medium mb-2 text-gray-700">
-                Certificate ID
-            </label>
-            <input
-                type="text"
-                placeholder="Enter Certificate ID"
-                value={certIdToDownload}
-                onChange={(e) => setCertIdToDownload(e.target.value)} // keeps this independent of certType
-                className="border border-gray-400 rounded-lg p-3 w-full mb-5 text-lg"
-            />
-
-            {/* Download Button */}
-            <button
-                onClick={handleDownload}
-                disabled={downloading}
-                className={`px-6 py-3 w-full text-white text-lg font-medium rounded-lg transition ${downloading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
-                    }`}
-            >
-                {downloading ? "Downloading..." : "Download"}
-            </button>
-
-            {/* Download Message */}
-            {downloadMessage && (
-                <p className="mt-5 text-lg font-semibold text-center text-gray-700">
-                    {downloadMessage}
-                </p>
-            )}
-        </div>
-    );
-
-
-
     //SERVER
     useEffect(() => {
         if (activeTab === "servers") {
@@ -1007,302 +766,20 @@ export default function UserCertManager() {
         }
     }, [activeTab]);
 
-    const fetchServercerts = async () => {
-        setLoadingServers(true);
-        setServerError("");
-        console.log('ssssssssssssssservers', servercerts)
-
-        try {
-            const res = await axios.get(`${API_BASE_URL}/certificates/server/`);
-            setServercerts(res.data || []);
-            console.log("API RESPONSE:", res.data);
-            // const serverRes = servercertsmockdata;   // mock array
-            // setServercerts(serverRes);
-
-        } catch (err) {
-            console.error("Fetch servers error:", err);
-            setServerError("Failed to fetch server certificates");
-        } finally {
-            setLoadingServers(false);
-        }
-    };
-    console.log('ssssssssssssssservers', servercerts)
-    const renderServerCertsTable = () => (
-        <table className="w-[75%] mx-auto border border-gray-200 rounded-lg shadow-sm">
-            <thead className="bg-gray-100">
-                <tr>
-                    <th className="px-4 py-2 border">Status</th>
-                    <th className="px-4 py-2 border">ID</th>
-                    <th className="px-4 py-2 border">Common Name</th>
-                    <th className="px-4 py-2 border">Intermediate CA</th>
-                    <th className="px-4 py-2 border">Valid Until</th>
-                    {/* <th className="px-4 py-2 border">Actions</th> */}
-                </tr>
-            </thead>
-
-            <tbody>
-                {servercerts.map((cert) => {
-                    const days = daysRemaining(cert.valid_until);
-                    const status = getStatusStyles(cert.is_active, days);
-
-                    return (
-                        <tr key={cert.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-2 border">
-                                <span className={"px-2 py-1 rounded text-sm " + status.className}>
-                                    {status.text}
-                                </span>
-                            </td>
-
-                            <td className="px-4 py-2 border">{cert.id}</td>
-
-                            <td className="px-4 py-2 border">{cert.common_name}</td>
-
-                            <td className="px-4 py-2 border">{cert.intermediate_ca_id}</td>
-
-                            <td className="px-4 py-2 border">
-                                {new Date(cert.valid_until).toISOString().split("T")[0]}
-                            </td>
-
-                            <td className="px-4 py-2 border">
-                                {/* <button className="underline text-blue-500">
-                                    Download
-                                </button> */}
-                            </td>
-                        </tr>
-                    );
-                })}
-            </tbody>
-        </table>
-    );
-
-
     ////User
-    const fetchUserCerts = async () => {
-        setLoadingUser(true);
-        setErrorUser("");
-
-        try {
-            const userRes = await axios.get(`${API_BASE_URL}/certificates/user/`);
-            setUsercerts(userRes.data);
-
-            // const userRes = usercertsmockdata;
-            // setUsercerts(userRes);
-
-            //   console.log("User certificates:", usercerts);
-        } catch (err) {
-            setErrorUser("Failed to fetch user certificates");
-        } finally {
-            setLoadingUser(false);
-        }
-    };
-
-
     useEffect(() => {
         if (activeTab === "user") {
             fetchUserCerts();
         }
     }, [activeTab]);
 
-
-    const renderUserTable = () => (
-        <table className="w-[75%] mx-auto border border-gray-200 rounded-lg shadow-sm">
-            <thead className="bg-gray-100 text-gray-700 text-lg">
-                <tr>
-                    <th className="px-4 py-2 border">Status</th>
-                    <th className="px-4 py-2 border">ID</th>
-                    <th className="px-4 py-2 border">Common Name</th>
-                    <th className="px-4 py-2 border">Valid Until</th>
-                    {/* <th className="px-4 py-2 border">Actions</th> */}
-                </tr>
-            </thead>
-
-            <tbody>
-                {usercerts.map((cert) => {
-                    const remaining = daysRemaining(cert.valid_until);
-                    const status = getStatusStyles(cert.is_active, remaining);
-
-                    return (
-                        <tr key={cert.id} className="border-b hover:bg-gray-50">
-
-                            {/* Status */}
-                            <td className="px-4 py-2 border">
-                                <span className={`inline-flex items-center gap-1 px-2 py-1 text-sm rounded ${status.className}`}>
-                                    {status.icon} {status.text}
-                                </span>
-                            </td>
-
-                            {/* ID */}
-                            <td className="px-4 py-2 border">{cert.id}</td>
-
-                            {/* Common Name */}
-                            <td className="px-4 py-2 border">{cert.common_name}</td>
-
-                            {/* Valid Until — only date (YYYY-MM-DD) */}
-                            <td className="px-4 py-2 border">
-                                {new Date(cert.valid_until).toISOString().split("T")[0]}
-                            </td>
-
-                            {/* Actions */}
-                            {/* <td className="px-4 py-2 border">
-                                <button className="underline text-blue-500">
-                                    Download
-                                </button>
-                            </td> */}
-
-                        </tr>
-                    );
-                })}
-            </tbody>
-        </table>
-    );
-
-
     ////allcerts
-
     useEffect(() => {
         if (activeTab === "allcerts") {
-            fetchallcerts();
+            fetchAllCerts();
         }
     }, [activeTab]);
 
-
-    const fetchallcerts = async () => {
-        setLoading(true);
-        setError("");
-
-        try {
-            console.log("Calling Certificate APIs...");
-
-            ////    REAL API CALLS
-            //   const token = "YOUR_TOKEN_HERE";   // Replace with real token
-
-            // const rootallRes = await axios.get(
-            //     `${API_BASE_URL}/root-cas/`,
-            //     {
-            //         headers: {
-            //             Authorization: `Bearer ${token}`,
-            //             "Content-Type": "application/json"
-            //         }
-            //     })
-            //const rootallRes = await axios.get(`${API_BASE_URL}/organizations/root-cas/`);
-            const intermediateallRes = await axios.get(`${API_BASE_URL}/intermediate-ca/`);
-            // const issuedcertsallRes = await axios.get(`${API_BASE_URL}/certificates/`);
-
-            //   setRootallcerts(rootallRes.data);
-            setIntermediateallcerts(intermediateallRes.data);
-            // setIssuedallcerts(issuedcertsallRes.data);
-
-            ///////// MOCK DATA (remove later)
-            // const rootallRes = rootCAmockdata;
-            // const intermediateallRes = intermediatemockdata;
-            // const issuedcertsallRes = issuedcertsmockdata;
-            // setRootallcerts(rootallRes);
-            // setIntermediateallcerts(intermediateallRes);
-            // setIssuedallcerts(issuedcertsallRes);
-
-            //console.log("Interrrrmediate:", intermediateallRes.data);
-            // console.log("All certs:", certificatesRes);
-
-        } catch (err) {
-            setError("Failed to fetch certificate data.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-
-
-
-    //////OrgId Certs
-    useEffect(() => {
-        fetchOrgIdCerts(orgId);
-    }, [orgId]);
-    const fetchOrgIdCerts = async (orgId: string) => {
-        if (!orgId.trim()) {
-            setOrgIdError("Please enter a valid organization ID.");
-            setOrgIdCerts([]);
-            return;
-        }
-
-        setOrgIdError("");
-        setLoadingOrgIdCerts(true);
-
-        try {
-            const res = await axios.get(
-                API_BASE_URL + "/organizations/" + orgId.trim() + "/certificates/"
-            );
-            setOrgIdCerts(res.data as OrgCertificate[]);
-        } catch (err: any) {
-            setOrgIdError("Failed to fetch certificates for this organization.");
-            setOrgIdCerts([]);
-        } finally {
-            setLoadingOrgIdCerts(false);
-        }
-    };
-
-    const renderOrgIdCertificates = () => {
-        if (loadingOrgIdCerts) return <div>Loading certificates…</div>;
-        if (orgIdError) return <div className="text-red-600">{orgIdError}</div>;
-
-        if (orgIdCerts.length === 0)
-            return <div className="text-gray-600">No certificates found for this organization.</div>;
-
-        return (
-            <div className="py-6 flex justify-center">
-                <table className="py-6 w-[90%] border border-gray-300 rounded-xl shadow bg-white">
-                    <thead className="bg-gray-100 text-lg">
-                        <tr>
-                            <th className="px-4 py-3 border">Status</th>
-                            <th className="px-4 py-3 border">ID</th>
-                            <th className="px-4 py-3 border">Common Name</th>
-                            <th className="px-4 py-3 border">Key</th>
-                            <th className="px-4 py-3 border">Valid Until</th>
-                            <th className="px-4 py-3 border">Intermediate CA</th>
-                        </tr>
-                    </thead>
-
-                    <tbody className="text-xl">
-                        {orgIdCerts.map((cert) => {
-                            const days = daysRemaining(cert.valid_until);
-                            const status = getStatusStyles(cert.is_active, days);
-
-                            return (
-                                <tr key={cert.id} className="hover:bg-gray-50 text-lg">
-                                    <td className="px-4 py-3 border">
-                                        <span className={"px-3 py-1 rounded text-sm font-semibold " + status.className}>
-                                            {status.text}
-                                        </span>
-                                    </td>
-
-                                    <td className="px-4 py-3 border font-bold text-gray-800">{cert.id}</td>
-
-                                    <td className="px-4 py-3 border text-blue-900 font-bold">
-                                        {cert.common_name}
-                                    </td>
-
-                                    <td className="px-4 py-3 border">{cert.key_length} bits</td>
-
-                                    <td
-                                        className={
-                                            "px-4 py-3 border font-semibold " +
-                                            (days <= 30 ? "text-red-600" : "text-green-700")
-                                        }
-                                    >
-                                        {new Date(cert.valid_until).toISOString().split("T")[0]}
-                                    </td>
-
-                                    <td className="px-4 py-3 border">
-                                        {cert.intermediate_ca_id || "—"}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-        );
-    };
     function Header() {
         return (
             <div className="flex justify-end p-3">
@@ -1314,58 +791,28 @@ export default function UserCertManager() {
     /////Main RETURN////
     return (
         <div
-            className="
-        min-h-screen w-[75%] mx-auto flex flex-col 
-        p-10 space-y-14
-        bg-[var(--bg-primary)] 
-        text-[var(--text-primary)]
-        border border-[var(--border-color)]
-        rounded-xl
-    "
+            className="min-h-screen w-[75%] mx-auto flex flex-col p-10 space-y-14 bg-[var(--bg-primary)] 
+        text-[var(--text-primary)] border border-[var(--border-color)] rounded-xl "
         >
             {/* <div className="p-8 bg-white rounded-xl shadow-lg w-[75%] mx-auto"> */}
             {/* Header */}
-            <header className="
-    bg-[var(--header-bg)]
-    text-[var(--header-text)]
-    py-8 px-8 text-center
-    rounded-lg shadow-md
-">
+            <header className=" bg-[var(--header-bg)] text-[var(--header-text)] py-8 px-8 text-center
+                rounded-lg shadow-md">
                 <h1 className="text-5xl font-bold">GoSecure - AnchorVPN</h1>
-
-                <p className="font-semibold text-3xl mt-2     text-[var(--header-text)]
-">
+                <p className="font-semibold text-3xl mt-2     text-[var(--header-text)]">
                     User Certificate Management
                 </p>
-
-                <p className="font-semibold text-left text-3xl mt-2     text-[var(--header-text)]
-">
+                <p className="font-semibold text-left text-3xl mt-2     text-[var(--header-text)]">
                     Welcome User
                 </p>
             </header>
 
-            <span className="text-2xl text-right font-extrabold text-[var(--text-primary)] whitespace-nowrap">
-                <ThemeSelector />
-            </span>
+            {/* Header Row: Tabs on the left, ThemeSelector on the right */}
+            <div className="w-full flex items-center justify-between px-4 py-3 
+    bg-[var(--bg-primary)] text-[var(--text-primary)] border-b">
 
-
-
-            {/* Main App Layout */}
-            <div
-                className="
-        min-h-screen flex flex-col rounded-t-2xl shadow-inner
-        bg-[var(--bg-secondary)]
-        text-[var(--text-primary)]
-    "
-            >
                 {/* Navigation Tabs */}
-                <nav
-                    className="
-            w-full border-b px-4 py-3 flex flex-wrap justify-center gap-4
-            bg-[var(--bg-primary)]
-            text-[var(--text-primary)]
-        "
-                >
+                <nav className="flex flex-wrap gap-3">
                     {[
                         { key: "certs", label: "Certificates by OrgId" },
                         { key: "download", label: "Download" },
@@ -1377,227 +824,179 @@ export default function UserCertManager() {
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
-                            className={`
-                    text-lg font-semibold px-4 py-2 rounded-md transition-colors duration-200
+                            className={`text-lg font-semibold px-4 py-2 rounded-md transition-colors duration-200
                     ${activeTab === tab.key
                                     ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
                                     : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
-                                }
-                `}
+                                }`}
                         >
                             {tab.label}
                         </button>
                     ))}
                 </nav>
 
-
-                {/* Active Tab Content */}
-                <main
-                    className="
-        flex-grow p-8
-        bg-[var(--bg-primary)]
-        text-[var(--text-primary)]
-    "
-                >
-
-
-
-                    <div
-                        className="
-                    bg-[var(--bg-card)]
-                    border border-[var(--border-color)]
-                    rounded-xl shadow-md
-                    p-5
-                    flex items-center gap-4
-flex-wrap w-full                "
-                    >
-                        <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
-                            Organization ID
-                        </span>
-
-                        <input
-                            type="text"
-                            placeholder="--Enter Org ID--"
-                            value={orgId}
-                            onChange={(e) => setOrgId(e.target.value)}
-                            className="
-                        text-2xl font-semibold text-center
-                        py-2 px-3
-                        bg-[var(--bg-input)]
-                        text-[var(--text-primary)]
-                        border border-[var(--border-color)]
-                        rounded-lg shadow-sm
-                        focus:ring-2 focus:ring-[var(--accent-color)]
-                        w-[300px]
-                    "
-                        />
-                        {/* {renderCertFilters()} */}
-
-                    </div>
-
-
-
-                    {activeTab === "certs" && (
-                        <div className="w-full">
-
-                            {/* SUB TABS */}
-                            <div
-                                className="
-        flex
-        space-x-4
-        pb-2
-        mb-4
-        border-b
-        border-[var(--border-color)]
-        text-[var(--text-primary)]
-        bg-[var(--bg-primary)]
-    "
-                            >
-
-                                <button
-                                    onClick={() => setCertsSubTab("hierarchy")}
-                                    className={
-                                        `
-        px-4 py-2 rounded-t font-bold text-lg transition-colors
-        ` +
-                                        (
-                                            certsSubTab === "hierarchy"
-                                                ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                                : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
-                                        )
-                                    }
-                                >
-                                    Certificate Hierarchy
-                                </button>
-
-
-                                <button
-                                    onClick={() => setCertsSubTab("alerts")}
-                                    className={
-                                        "px-4 py-2 rounded-t font-semibold " +
-                                        (certsSubTab === "alerts"
-                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
-                                    }
-                                >
-                                    Alerts
-                                </button>
-                                <button
-                                    onClick={() => setCertsSubTab("issued")}
-                                    className={
-                                        "px-4 py-2 rounded-t font-semibold " +
-                                        (certsSubTab === "issued"
-                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
-                                    }
-                                >
-                                    Issued Org Certs
-                                </button>
-
-                            </div>
-
-                            {/* SUBTAB CONTENT */}
-                            {certsSubTab === "hierarchy" && (
-                                <>
-
-                                    {renderCertFilters()}
-                                    {renderExpandableTable()}
-                                </>
-                            )}
-                            {certsSubTab === "alerts" && (
-                                <>
-                                    <div className="w-full flex justify-center">
-
-                                    </div>
-                                    {renderAlerts({ certs, intermediates })}
-                                </>
-                            )}
-
-                            {certsSubTab === "issued" && (
-                                <>
-                                    <div className="w-full flex justify-center">
-                                    </div>
-
-                                    {renderOrgIdCertificates()}
-                                </>
-                            )}
-
-
-                        </div>
-
-
-
-                    )}
-
-
-                    {/* {activeTab === "alerts" && renderAlerts({ certs, intermediates })} */}
-                    {activeTab === "download" && renderDownloadTab()}
-                    {activeTab === "servers" && renderServerCertsTable()}
-                    {activeTab === "user" && renderUserTable()}
-                    {activeTab === "allcerts" && (
-                        <div className="p-4">
-
-                            {/* SUB TABS */}
-                            <div className="flex gap-4 mb-4 border-b pb-3 border-[var(--border-color)]">
-                                <button
-                                    onClick={() => setAllcertSubTab("root")}
-                                    className={`
-            px-4 py-2 text-lg font-semibold rounded
-            ${allcertSubTab === "root"
-                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
-                                        }
-        `}
-                                >
-                                    Root Certificates
-                                </button>
-
-                                <button
-                                    onClick={() => setAllcertSubTab("intermediate")}
-                                    className={`
-            px-4 py-2 text-lg font-semibold rounded
-            ${allcertSubTab === "intermediate"
-                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "}
-        `}
-                                >
-                                    Intermediate Certs
-                                </button>
-
-                                <button
-                                    onClick={() => setAllcertSubTab("issued")}
-                                    className={`
-            px-4 py-2 text-lg font-semibold rounded
-            ${allcertSubTab === "issued"
-                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "}
-        `}
-                                >
-                                    Issued Certificates
-                                </button>
-                            </div>
-
-                            {/* SUB TAB RENDER LOGIC */}
-                            {/* {allcertSubTab === "root" && renderRootallTable()} */}
-
-                            {allcertSubTab === "intermediate" && renderIntermediateallTable()}
-                            {allcertSubTab === "issued" && renderIssuedCertsallTable()}
-                            {/* {certSubTab === "root" && renderRootCertsTable()} */}
-
-                        </div>
-                    )}
-
-                    {activeTab === "help" && renderHelp()}
-                </main>
-
-                {/* Footer */}
-                <footer className="w-full text-center py-4 text-gray-500 text-sm border-t">
-                    © GoSecure 2025
-                </footer>
+                {/* Theme selector on right */}
+                <div className="text-2xl font-extrabold">
+                    <ThemeSelector />
+                </div>
             </div>
 
 
+            {/* Active Tab Content */}
+            <main
+                className="flex-grow p-8 bg-[var(--bg-primary)] text-[var(--text-primary)]" >
+
+                {activeTab === "certs" && (
+                    <div className="w-full">
+
+                        {/* SUB TABS */}
+                        <div
+                            className="flex space-x-4 pb-2 mb-4 border-b border-[var(--border-color)]
+                                        text-[var(--text-primary)] bg-[var(--bg-primary)]">
+
+                            <button
+                                onClick={() => setCertsSubTab("hierarchy")}
+                                className={`px-4 py-2 rounded-t font-bold text-lg transition-colors` +
+                                    (
+                                        certsSubTab === "hierarchy"
+                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
+                                    )
+                                }
+                            >
+                                Certificate Hierarchy
+                            </button>
+                            <button
+                                onClick={() => setCertsSubTab("alerts")}
+                                className={
+                                    "px-4 py-2 rounded-t font-semibold " +
+                                    (certsSubTab === "alerts"
+                                        ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                        : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
+                                }
+                            >
+                                Alerts
+                            </button>
+                            <button
+                                onClick={() => setCertsSubTab("issued")}
+                                className={
+                                    "px-4 py-2 rounded-t font-semibold " +
+                                    (certsSubTab === "issued"
+                                        ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                        : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
+                                }
+                            >
+                                Issued Org Certs
+                            </button>
+
+                        </div>
+                        <div
+                            // className="bg-[var(--bg-card)] border border-[var(--border-color)]
+                            //         rounded-xl shadow-md p-5 flex items-center gap-4 flex-wrap w-full">
+                            className="p-5 flex items-center gap-4 flex-nowrap w-full">
+                            <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
+                                Organization ID
+                            </span>
+
+                            <input
+                                type="text"
+                                placeholder="--Enter Org ID--"
+                                value={orgId}
+                                onChange={(e) => setOrgId(e.target.value)}
+                                className="text-2xl font-semibold text-center py-2 px-3 bg-[var(--bg-input)]
+                                        text-[var(--text-primary)] border border-[var(--border-color)] 
+                                        rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--accent-color)] w-[300px]"
+                            />
+                        </div>
+
+
+                        {/* SUBTAB CONTENT */}
+                        {certsSubTab === "hierarchy" && (
+                            <>
+                                {renderCertFilters()}
+                                {renderExpandableTable()}
+                            </>
+                        )}
+                        {certsSubTab === "alerts" && (
+                            <>
+                                {RenderAlerts({
+                                    certs, intermediates,
+                                    loading: false,
+                                    error: null,
+                                    daysRemaining: function (date: string): number {
+                                        throw new Error("Function not implemented.");
+                                    }
+                                })}
+                            </>
+                        )}
+                        {certsSubTab === "issued" && renderOrgIdCertificates()}
+                    </div>
+                )}
+                {activeTab === "download" && <DownloadCert />}
+                {activeTab === "servers" && (<RenderServerCertsTable servercerts={servercerts} />)}
+                {activeTab === "user" && <RenderUserCertsTable usercerts={usercerts} />}
+                {activeTab === "allcerts" && (
+                    <div className="p-4">
+
+                        {/* SUB TABS */}
+                        <div className="flex gap-4 mb-4 border-b pb-3 border-[var(--border-color)]">
+                            <button
+                                onClick={() => setAllcertSubTab("root")}
+                                className={`
+                                px-4 py-2 text-lg font-semibold rounded
+            ${allcertSubTab === "root"
+                                        ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                        : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
+                                    }
+        `}
+                            >
+                                Root Certificates
+                            </button>
+
+                            <button
+                                onClick={() => setAllcertSubTab("intermediate")}
+                                className={`px-4 py-2 text-lg font-semibold rounded
+            ${allcertSubTab === "intermediate"
+                                        ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                        : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "}
+        `}
+                            >
+                                Intermediate Certs
+                            </button>
+
+                            <button
+                                onClick={() => setAllcertSubTab("issued")}
+                                className={`px-4 py-2 text-lg font-semibold rounded
+            ${allcertSubTab === "issued"
+                                        ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
+                                        : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "}
+        `}
+                            >
+                                Issued Certificates
+                            </button>
+                        </div>
+
+                        {/* SUB TAB RENDER LOGIC */}
+                        {allcertSubTab === "root" && renderRootallTable()}
+
+                        {allcertSubTab === "intermediate" && renderIntermediateallTable()}
+                        {allcertSubTab === "issued" && renderIssuedCertsallTable()}
+                        {/* {certSubTab === "root" && renderRootCertsTable()} */}
+
+                    </div>
+                )}
+
+                {activeTab === "help" && renderHelp()}
+            </main>
+
+            {/* Footer */}
+            <footer className="w-full text-center py-4 text-gray-500 text-sm border-t">
+                © GoSecure 2025
+            </footer>
         </div>
+
+
+
 
 
     );
