@@ -1,4 +1,4 @@
-export interface LeafCertificate {
+export type LeafCertificate {
     id: number;
     intermediate_ca_id: number;
     common_name: string;
@@ -11,7 +11,7 @@ export interface LeafCertificate {
     created_at: string;         // ISO datetime
 }
 
-export interface IntermediateCertificate {
+export type IntermediateCertificate {
     id: number;
     root_ca_id: number;
     common_name: string;
@@ -25,7 +25,7 @@ export interface IntermediateCertificate {
     issued_certificates?: LeafCertificate[];
 }
 
-export interface RootCertificate {
+export type RootCertificate {
     id: number;
     organization_id: number;
     common_name: string;
@@ -38,7 +38,7 @@ export interface RootCertificate {
     intermediates?: IntermediateCertificate[];
 }
 
-export interface ServerCertificate {
+export type ServerCertificate {
     id: number;
     intermediate_ca_id: number;
     common_name: string;
@@ -51,7 +51,7 @@ export interface ServerCertificate {
     created_at: string;
 }
 
-export interface UserCertificate {
+export type UserCertificate {
     id: number;
     intermediate_ca_id: number;
     common_name: string;
@@ -63,9 +63,9 @@ export interface UserCertificate {
     is_active: boolean;
     created_at: string;
 }
-type ExpandState = Record<string, boolean>;
+export type ExpandState = Record<string, boolean>;
 
-interface OrgCertificate {
+export type OrgCertificate {
     id: string;
     common_name: string;
     key_length: number;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 interface RenderAlertsProps {
     certs: any[];
@@ -6,22 +6,21 @@ interface RenderAlertsProps {
     loading: boolean;
     error: string | null;
     orgId: string;
-    setOrgId: (value: string) => void;
 }
 
 const RenderAlerts: React.FC<RenderAlertsProps> = ({
     certs,
     intermediates,
     loading,
-    error
+    error,
+    orgId
 }) => {
+    const [expiryThreshold, setExpiryThreshold] = useState(30);
 
     const daysRemaining = (validUntil: string | number | Date) => {
         const diff = new Date(validUntil).getTime() - Date.now();
         return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
     };
-
-    const EXPIRY_THRESHOLD = 1500;
 
     if (loading)
         return (
@@ -45,37 +44,61 @@ const RenderAlerts: React.FC<RenderAlertsProps> = ({
         );
 
     return (
-        <div className="w-[90%] mx-auto p-2 mt-4 rounded-xl shadow-lg bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+        <div className="w-[90%] mx-auto p-4 mt-4 rounded-xl shadow-lg bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+            {/* Threshold input */}
+            <div className="mb-4 flex justify-center items-center">
+                <label className="font-semibold mr-2 text-blue-700 dark:text-blue-400">
+                    Expiry Threshold (days):
+                </label>
+                <input
+                    type="number"
+                    min={1}
+                    value={expiryThreshold}
+                    onChange={(e) => setExpiryThreshold(Number(e.target.value))}
+                    className="border px-2 py-1 rounded w-20 
+                               bg-blue-50 dark:bg-blue-900 
+                               text-blue-900 dark:text-blue-200 
+                               border-blue-300 dark:border-blue-700"
+                />
+            </div>
 
-            <h3 className="p-2 mt-4 mb-4 rounded-xl text-3xl font-bold text-center text-red-700 dark:text-red-400">
-                Expiring Certificates
+            <h3 className="p-2 mt-4 mb-4 rounded-xl text-3xl font-bold text-center 
+                           bg-blue-100 dark:bg-blue-800 text-blue-900 dark:text-blue-200">
+                Expiring Certificates for {orgId}
             </h3>
 
-            <table className="min-w-full border rounded-xl shadow overflow-hidden border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <thead className="text-lg text-white">
+            <table
+                className="min-w-full border rounded-xl shadow overflow-hidden"
+                style={{
+                    borderColor: "var(--border-color)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)"
+                }}
+            >
+                <thead className="text-lg">
                     <tr>
-                        <th className="bg-red-400 dark:bg-red-600 px-6 py-3 text-left w-1/3">Root CA</th>
-                        <th className="bg-orange-400 dark:bg-orange-600 px-6 py-3 text-left w-1/3">Intermediate CAs</th>
-                        <th className="bg-yellow-400 dark:bg-yellow-600 px-6 py-3 text-left w-1/3">Issued Certificates</th>
+                        <th style={{ backgroundColor: "var(--accent-primary)", color: "var(--text-on-accent)" }} className="px-6 py-3 text-left w-1/3">Root CA</th>
+                        <th style={{ backgroundColor: "var(--accent-primary)", color: "var(--text-on-accent)" }} className="px-6 py-3 text-left w-1/3">Intermediate CAs</th>
+                        <th style={{ backgroundColor: "var(--accent-primary)", color: "var(--text-on-accent)" }} className="px-6 py-3 text-left w-1/3">Issued Certificates</th>
                     </tr>
                 </thead>
+
 
                 <tbody>
                     {certs.map((rootCa) => {
                         const rootRemaining = daysRemaining(rootCa.valid_until);
                         const intList = intermediates[rootCa.id] || [];
 
-                        const rootExpiring = rootRemaining <= EXPIRY_THRESHOLD;
-                        const intermediateExpiring = intList.some(int => daysRemaining(int.valid_until) <= EXPIRY_THRESHOLD);
+                        const rootExpiring = rootRemaining <= expiryThreshold;
+                        const intermediateExpiring = intList.some(int => daysRemaining(int.valid_until) <= expiryThreshold);
                         const issuedExpiring = intList.some(int =>
-                            int.issued_certificates?.some(leaf => daysRemaining(leaf.valid_until) <= EXPIRY_THRESHOLD)
+                            int.issued_certificates?.some(leaf => daysRemaining(leaf.valid_until) <= expiryThreshold)
                         );
 
                         if (!rootExpiring && !intermediateExpiring && !issuedExpiring) return null;
 
                         return (
                             <tr key={rootCa.id} className="align-top hover:bg-gray-50 dark:hover:bg-gray-700">
-
                                 {/* ROOT CA */}
                                 <td className="border border-gray-300 dark:border-gray-700 px-6 py-6 align-top">
                                     {rootExpiring ? (
@@ -83,9 +106,7 @@ const RenderAlerts: React.FC<RenderAlertsProps> = ({
                                             <div className="text-2xl font-bold text-red-800 dark:text-red-400">
                                                 {rootCa.common_name}
                                             </div>
-                                            <div className="text-lg text-gray-700 dark:text-gray-300">
-                                                ID: {rootCa.id}
-                                            </div>
+                                            <div className="text-lg text-gray-700 dark:text-gray-300">ID: {rootCa.id}</div>
                                             <div className="text-lg font-semibold text-red-600 dark:text-red-300">
                                                 Expires: {new Date(rootCa.valid_until).toLocaleDateString()}
                                             </div>
@@ -98,7 +119,7 @@ const RenderAlerts: React.FC<RenderAlertsProps> = ({
                                 {/* INTERMEDIATES */}
                                 <td className="border border-gray-300 dark:border-gray-700 px-6 py-6 align-top">
                                     {intList
-                                        .filter(int => daysRemaining(int.valid_until) <= EXPIRY_THRESHOLD)
+                                        .filter(int => daysRemaining(int.valid_until) <= expiryThreshold)
                                         .map(int => (
                                             <div key={int.id} className="mb-4 p-4 bg-orange-100 dark:bg-orange-900 border border-orange-300 dark:border-orange-700 rounded-lg">
                                                 <div className="text-xl font-semibold text-orange-800 dark:text-orange-300">
@@ -110,16 +131,16 @@ const RenderAlerts: React.FC<RenderAlertsProps> = ({
                                                 </div>
                                             </div>
                                         ))}
-                                    {intList.filter(int => daysRemaining(int.valid_until) <= EXPIRY_THRESHOLD).length === 0 && (
+                                    {intList.filter(int => daysRemaining(int.valid_until) <= expiryThreshold).length === 0 && (
                                         <p className="italic text-gray-400 dark:text-gray-500">No expiring intermediates.</p>
                                     )}
                                 </td>
 
                                 {/* ISSUED CERTIFICATES */}
                                 <td className="border border-gray-300 dark:border-gray-700 px-6 py-6 align-top">
-                                    {intList.map(int =>
+                                    {intList.flatMap(int =>
                                         int.issued_certificates
-                                            ?.filter(leaf => daysRemaining(leaf.valid_until) <= EXPIRY_THRESHOLD)
+                                            ?.filter(leaf => daysRemaining(leaf.valid_until) <= expiryThreshold)
                                             .map(leaf => (
                                                 <div key={leaf.id} className="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg">
                                                     <div className="text-xl font-semibold text-yellow-800 dark:text-yellow-300">
@@ -133,7 +154,7 @@ const RenderAlerts: React.FC<RenderAlertsProps> = ({
                                             ))
                                     )}
                                     {intList.every(int =>
-                                        !int.issued_certificates?.some(leaf => daysRemaining(leaf.valid_until) <= EXPIRY_THRESHOLD)
+                                        !int.issued_certificates?.some(leaf => daysRemaining(leaf.valid_until) <= expiryThreshold)
                                     ) && (
                                             <p className="italic text-gray-400 dark:text-gray-500">No expiring issued certs.</p>
                                         )}

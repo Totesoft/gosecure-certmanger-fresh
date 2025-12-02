@@ -52,10 +52,11 @@ export function RenderUserCertsTable({ usercerts }: { usercerts: UserCertificate
             <Table className="w-full">
                 <TableHeader className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100">
                     <TableRow>
-                        <TableHead className="border-r dark:border-gray-700">Status</TableHead>
                         <TableHead className="border-r dark:border-gray-700">ID</TableHead>
                         <TableHead className="border-r dark:border-gray-700">Common Name</TableHead>
                         <TableHead className="dark:border-gray-700">Valid Until</TableHead>
+                        <TableHead className="border-r dark:border-gray-700">Status</TableHead>
+
                     </TableRow>
                 </TableHeader>
 
@@ -69,12 +70,6 @@ export function RenderUserCertsTable({ usercerts }: { usercerts: UserCertificate
                                 key={cert.id}
                                 className="hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100"
                             >
-                                {/* STATUS */}
-                                <TableCell className="border-r dark:border-gray-700">
-                                    <span className={`px-3 py-1 rounded text-sm font-semibold ${status.className}`}>
-                                        {status.text}
-                                    </span>
-                                </TableCell>
 
                                 {/* ID */}
                                 <TableCell className="border-r dark:border-gray-700 font-bold">
@@ -94,6 +89,12 @@ export function RenderUserCertsTable({ usercerts }: { usercerts: UserCertificate
                                         }`}
                                 >
                                     {new Date(cert.valid_until).toISOString().split("T")[0]}
+                                </TableCell>
+                                {/* STATUS */}
+                                <TableCell className="border-r dark:border-gray-700">
+                                    <span className={`px-3 py-1 rounded text-sm font-semibold ${status.className}`}>
+                                        {status.text}
+                                    </span>
                                 </TableCell>
                             </TableRow>
                         );

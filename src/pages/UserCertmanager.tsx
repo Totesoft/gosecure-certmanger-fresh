@@ -3,108 +3,22 @@ import axios from "axios";
 import { Clock, AlertTriangle, CheckCircle } from "lucide-react";
 import { Card, Badge } from "@totesoft/ui-kit"
 import { cn } from "@/lib/utils";
-
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/Table";
 import { useServerCerts, RenderServerCertsTable } from "@/hooks/useServerCerts";
 import { useUserCerts, RenderUserCertsTable } from "@/hooks/useUserCerts"
 import { useAllCerts } from "@/hooks/useAllCerts"; // adjust path
 import DownloadCert from "@/components/Usercertmanager/Downloadcert";
 import RenderAlerts from "@/components/Usercertmanager/renderAlerts";  // adjust path
 import { useOrgIdCertificates } from "@/components/Usercertmanager/OrgIdCerts"
-//import ExpandHierarchyTable from "@/components/Usercertmanager/ExpandHierarchyTable";
-//import { useCertHierarchyFetcher } from "@/components/Usercertmanager/certHierarchyFetcher";
-
-import {
-    Table,
-    TableHeader,
-    TableBody,
-    TableHead,
-    TableRow,
-    TableCell
-} from "@/components/ui/Table";
-import { rootCAmockdata, intermediatemockdata, issuedcertsmockdata, usercertsmockdata, servercertsmockdata } from "./AdmnCertmanagerMockdata"
-import { token } from "@/components/token"
 import { renderHelp } from "@/components/Usercertmanager/Help";
-import { useTheme } from "@/context/ThemeContext";
+
+//import { rootCAmockdata, intermediatemockdata, issuedcertsmockdata, usercertsmockdata, servercertsmockdata } from "./AdmnCertmanagerMockdata"
+//import { token } from "@/components/token"
 import ThemeSelector from "@/context/ThemeSelector";
+import type { ExpandState, LeafCertificate, IntermediateCertificate, RootCertificate, ServerCertificate, UserCertificate, OrgCertificate } from "@/types/UserCerttypes"
 
 const API_BASE_URL = "https://pre-prod.be.anchorvpn.net/api/v1"; // adjust if needed
 
-// ------------------ INTERFACES ------------------
-export interface LeafCertificate {
-    id: number;
-    intermediate_ca_id: number;
-    common_name: string;
-    certificate_type: string;   // "server" | "user" | etc.
-    key_length: number;
-    valid_from: string;         // ISO datetime
-    valid_until: string;        // ISO datetime
-    serial_number: string;
-    is_active: boolean;
-    created_at: string;         // ISO datetime
-}
-
-export interface IntermediateCertificate {
-    id: number;
-    root_ca_id: number;
-    common_name: string;
-    key_length: number;
-    valid_from: string;       // ISO datetime
-    valid_until: string;      // ISO datetime
-    serial_number: string;
-    is_active: boolean;
-    created_at: string;       // ISO datetime
-
-    issued_certificates?: LeafCertificate[];
-}
-
-export interface RootCertificate {
-    id: number;
-    organization_id: number;
-    common_name: string;
-    key_length: number;
-    valid_from: string;      // ISO datetime
-    valid_until: string;     // ISO datetime
-    serial_number: string;
-    is_active: boolean;
-    created_at: string;      // ISO datetime
-    intermediates?: IntermediateCertificate[];
-}
-
-export interface ServerCertificate {
-    id: number;
-    intermediate_ca_id: number;
-    common_name: string;
-    certificate_type: string;
-    key_length: number;
-    valid_from: string;
-    valid_until: string;
-    serial_number: string;
-    is_active: boolean;
-    created_at: string;
-}
-
-export interface UserCertificate {
-    id: number;
-    intermediate_ca_id: number;
-    common_name: string;
-    certificate_type: string;
-    key_length: number;
-    valid_from: string;
-    valid_until: string;
-    serial_number: string;
-    is_active: boolean;
-    created_at: string;
-}
-type ExpandState = Record<string, boolean>;
-
-interface OrgCertificate {
-    id: string;
-    common_name: string;
-    key_length: number;
-    valid_until: string;
-    is_active: boolean;
-    intermediate_ca_id?: string | null;
-}
 export default function UserCertManager() {
     // raw fetched data (full tree)
     const [roots, setRoots] = useState<any[]>([]);
@@ -120,23 +34,16 @@ export default function UserCertManager() {
     const [rootIdInput, setRootIdInput] = useState(""); // acts as root filter + trigger for dropdown population
     const [intermediateIdInput, setIntermediateIdInput] = useState("");
     const [certIdInput, setCertIdInput] = useState("");
-
     const [intermediateOptions, setIntermediateOptions] = useState<any[]>([]);
     const [certOptions, setCertOptions] = useState<any[]>([]);
-
     // simple UI state
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
     // helper: safe id -> normalized string
     const toId = (v: any) => (v === null || v === undefined ? "" : String(v).trim());
     const [activeTab, setActiveTab] = useState("certs");
-
-
     const [expandedRoot, setExpandedRoot] = useState<ExpandState>({});
     const [expandedInter, setExpandedInter] = useState<ExpandState>({});
-
-
     const [allcertSubTab, setAllcertSubTab] = useState<
         "intermediate" | "issued" | "root"
     >("intermediate");
@@ -177,34 +84,6 @@ export default function UserCertManager() {
             return { text: "Warning", icon: <AlertTriangle size={16} />, className: "bg-yellow-100 text-yellow-700" };
         return { text: "Active", icon: <CheckCircle size={16} />, className: "bg-green-100 text-green-700" };
     };
-
-
-    // const {
-    //     certs,
-    //     intermediates,
-    //     expandedRoot,
-    //     expandedInter,
-    //     toggleRoot,
-    //     toggleInter,
-    //     daysRemaining,
-    //     getStatusStyles,
-    //     formatDate,
-    //     //     renderCertFilters
-    // } = useCertHierarchyFetcher(orgId, {
-    //     // any required options or callbacks
-    //     setCerts: () => { },
-    //     setInterByRoot: () => { },
-    //     setCertsByIntermediate: () => { },
-    //     setIntermediates: () => { },
-    //     setIntermediateOptions: () => { },
-    //     setCertOptions: () => { },
-    //     setLoading: () => { },
-    //     setError: () => { },
-    //     applyFilters: () => { },
-    //     toId: (x) => x
-    // });
-
-
 
     // Fetch Certs--Entire Hierarchy when orgId changes
     useEffect(() => {
@@ -295,22 +174,8 @@ export default function UserCertManager() {
 
         return (
             <div className="space-y-6 w-[90%] mx-auto">
-                {/* <div className="p-5 flex items-center gap-4 flex-nowrap w-full">
-                    <span className="text-2xl font-extrabold text-[var(--text-primary)] whitespace-nowrap">
-                        Organization ID
-                    </span>
+                {renderCertFilters()}
 
-                    <input
-                        type="text"
-                        placeholder="--Enter Org ID--"
-                        value={orgId}
-                        onChange={(e) => setOrgId(e.target.value)}
-                        className="text-2xl font-semibold text-center py-2 px-3 bg-[var(--bg-input)]
-                                        text-[var(--text-primary)] border border-[var(--border-color)] 
-                                        rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--accent-color)] w-[300px]"
-                    />
-                    {renderCertFilters()}
-                </div> */}
                 {/* Root Title */}
                 <h2 className="text-2xl font-extrabold text-foreground mb-2">
                     Root Certificates
@@ -338,17 +203,15 @@ export default function UserCertManager() {
                             >
                                 <div className="flex items-center gap-12 text-2xl">
 
-                                    <Badge className={cn("px-4 py-1 text-xl", status.className)}>
-                                        {status.text}
-                                    </Badge>
+                                    <span className="font-semibold text-foreground/80 text-xl">
+                                        ID: {root.id}
+                                    </span>
 
                                     <span className="font-bold text-primary text-3xl">
                                         {root.common_name}
                                     </span>
 
-                                    <span className="font-semibold text-foreground/80 text-xl">
-                                        ID: {root.id}
-                                    </span>
+
 
                                     <span className="text-muted-foreground text-xl">
                                         {root.key_length} bits
@@ -367,10 +230,13 @@ export default function UserCertManager() {
                                         Intermediates: {interCount}
                                     </span>
                                 </div>
-
+                                <Badge className={cn("px-4 py-1 text-xl", status.className)}>
+                                    {status.text}
+                                </Badge>
                                 <div className="text-5xl text-muted-foreground">
                                     {expandedRoot[root.id] ? "−" : "+"}
                                 </div>
+
                             </div>
 
                             {expandedRoot[root.id] && (
@@ -398,18 +264,15 @@ export default function UserCertManager() {
                                                             className="p-5 cursor-pointer hover:bg-muted/70 flex justify-between items-center"
                                                         >
                                                             <div className="flex items-center gap-12 text-xl ml-8">
-
-                                                                <Badge className={cn("px-4 py-1 text-lg", statusI.className)}>
-                                                                    {statusI.text}
-                                                                </Badge>
+                                                                <span className="font-semibold text-foreground/80 text-xl">
+                                                                    ID: {int.id}
+                                                                </span>
 
                                                                 <span className="font-bold text-primary text-3xl">
                                                                     {int.common_name}
                                                                 </span>
 
-                                                                <span className="font-semibold text-foreground/80 text-xl">
-                                                                    ID: {int.id}
-                                                                </span>
+
 
                                                                 <span className="text-muted-foreground text-xl">
                                                                     {int.key_length} bits
@@ -428,6 +291,10 @@ export default function UserCertManager() {
                                                                     Certificates: {leafCerts.length}
                                                                 </span>
                                                             </div>
+                                                            <Badge className={cn("px-4 py-1 text-lg", statusI.className)}>
+                                                                {statusI.text}
+                                                            </Badge>
+
 
                                                             <div className="text-5xl text-muted-foreground">
                                                                 {expandedInter[int.id] ? "−" : "+"}
@@ -447,11 +314,12 @@ export default function UserCertManager() {
                                                                         <Table className="w-[90%] ml-20">
                                                                             <TableHeader>
                                                                                 <TableRow>
-                                                                                    <TableHead>Status</TableHead>
-                                                                                    <TableHead>Common Name</TableHead>
                                                                                     <TableHead>ID</TableHead>
+                                                                                    <TableHead>Common Name</TableHead>
                                                                                     <TableHead>Key Length</TableHead>
                                                                                     <TableHead>Expiry</TableHead>
+                                                                                    <TableHead>Status</TableHead>
+
                                                                                 </TableRow>
                                                                             </TableHeader>
 
@@ -471,19 +339,15 @@ export default function UserCertManager() {
 
                                                                                     return (
                                                                                         <TableRow key={leaf.id} className="text-xl">
-                                                                                            <TableCell>
-                                                                                                <Badge className={statusL.className}>
-                                                                                                    {statusL.text}
-                                                                                                </Badge>
+                                                                                            <TableCell className="font-semibold text-foreground/80">
+                                                                                                {leaf.id}
                                                                                             </TableCell>
+
 
                                                                                             <TableCell className="font-bold text-primary">
                                                                                                 {leaf.common_name}
                                                                                             </TableCell>
 
-                                                                                            <TableCell className="font-semibold text-foreground/80">
-                                                                                                {leaf.id}
-                                                                                            </TableCell>
 
                                                                                             <TableCell className="text-muted-foreground">
                                                                                                 {leaf.key_length} bits
@@ -498,6 +362,11 @@ export default function UserCertManager() {
                                                                                                 )}
                                                                                             >
                                                                                                 {formatDate(leaf.valid_until)}
+                                                                                            </TableCell>
+                                                                                            <TableCell>
+                                                                                                <Badge className={statusL.className}>
+                                                                                                    {statusL.text}
+                                                                                                </Badge>
                                                                                             </TableCell>
                                                                                         </TableRow>
                                                                                     );
@@ -531,8 +400,7 @@ export default function UserCertManager() {
     };
 
 
-    // applyFilters: produces certs + intermediates states (UI-ready)
-    // accepts optional params so callers can pass freshly fetched data
+    // applyFilters: produces certs + intermediates states (UI-ready)// accepts optional params so callers can pass freshly fetched data
     const applyFilters = (
         rootsBase = roots,
         interBase = interByRoot,
@@ -604,7 +472,7 @@ export default function UserCertManager() {
         setCerts(filteredRoots);
         setIntermediates(finalInter);
     };
-    ////Filter
+    //Filter
     const renderCertFilters = () => (
         <div className=" flex justify-center">
             <div
@@ -729,11 +597,11 @@ export default function UserCertManager() {
         </div>
     );
 
+    //UseEffect
     // when any of the filter inputs change, apply filters
     useEffect(() => {
         applyFilters();
     }, [rootIdInput, intermediateIdInput, certIdInput, roots, interByRoot, certsByIntermediate]);
-
     // When rootIdInput changes: populate intermediateOptions dropdown (all intermediates for that root)
     useEffect(() => {
         const rid = toId(rootIdInput);
@@ -744,13 +612,10 @@ export default function UserCertManager() {
             setCertIdInput("");
             return;
         }
-
         // find root object (allow numeric/string mismatch)
         const matchedRoot = roots.find(r => toId(r?.id) === rid);
-
         // gather intermediates from map or by scanning (defensive)
         let matchedIntermediates: any[] = [];
-
         if (matchedRoot) {
             const listFromMap = interByRoot[toId(matchedRoot.id)] ?? [];
             if (Array.isArray(listFromMap) && listFromMap.length > 0) {
@@ -775,7 +640,6 @@ export default function UserCertManager() {
         setCertOptions([]);
         setCertIdInput("");
     }, [rootIdInput, roots, interByRoot]);
-
     // when intermediateIdInput changes: populate certOptions dropdown
     useEffect(() => {
         const iid = toId(intermediateIdInput);
@@ -801,36 +665,23 @@ export default function UserCertManager() {
         // IMPORTANT: do NOT auto-select anything
         setCertIdInput("");
     }, [intermediateIdInput, certsByIntermediate]);
-
-
-    //SERVER
     useEffect(() => {
         if (activeTab === "servers") {
             fetchServercerts();
         }
     }, [activeTab]);
-
-    ////User
     useEffect(() => {
         if (activeTab === "user") {
             fetchUserCerts();
         }
     }, [activeTab]);
-
-    ////allcerts
     useEffect(() => {
         if (activeTab === "allcerts") {
             fetchAllCerts();
         }
     }, [activeTab]);
 
-    function Header() {
-        return (
-            <div className="flex justify-end p-3">
-                <ThemeSelector />
-            </div>
-        );
-    }
+
 
     /////Main RETURN////
     return (
@@ -849,10 +700,7 @@ export default function UserCertManager() {
                 <p className="font-semibold text-left text-3xl mt-2     text-[var(--header-text)]">
                     Welcome User
                 </p>
-
             </header>
-
-
             {/* Main App Layout */}
             <div
                 className=" min-h-screen flex flex-col rounded-t-2xl shadow-inner bg-[var(--bg-secondary)]
@@ -886,14 +734,11 @@ export default function UserCertManager() {
                             </button>
                         ))}
                     </div>
-
                     {/* Theme Selector aligned RIGHT */}
                     <div className="flex justify-end w-[15%]">
                         <ThemeSelector />
                     </div>
                 </nav>
-
-
                 {/* Active Tab Content */}
                 <main
                     className="flex-grow p-8 bg-[var(--bg-primary)] text-[var(--text-primary)]" >
@@ -908,7 +753,7 @@ export default function UserCertManager() {
 
                                 <button
                                     onClick={() => setCertsSubTab("hierarchy")}
-                                    className={`px-4 py-2 rounded-t font-bold text-lg transition-colors` +
+                                    className={`px-4 py-2 rounded-md font-bold text-lg transition-colors` +
                                         (
                                             certsSubTab === "hierarchy"
                                                 ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
@@ -940,6 +785,12 @@ export default function UserCertManager() {
                                 >
                                     Issued Org Certs
                                 </button>
+
+                            </div>
+                            <div
+                            // className="bg-[var(--bg-card)] border border-[var(--border-color)]
+                            //         rounded-xl shadow-md p-5 flex items-center gap-4 flex-wrap w-full"
+                            >
                                 <span className="text-2xl text-right font-extrabold text-[var(--text-primary)] whitespace-nowrap">
                                     Organization ID
                                 </span>
@@ -953,20 +804,13 @@ export default function UserCertManager() {
                                         text-[var(--text-primary)] border border-[var(--border-color)] 
                                         rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--accent-color)] w-[150px]"
                                 />
+
                             </div>
-                            {/* <div
-                                className="bg-[var(--bg-card)] border border-[var(--border-color)]
-                                        rounded-xl shadow-md p-5 flex items-center gap-4 flex-wrap w-full">
-
-
-                            </div> */}
-
-
                             {/* SUBTAB CONTENT */}
                             {certsSubTab === "hierarchy" && (
                                 <>
 
-                                    {renderCertFilters()}
+                                    {/* {renderCertFilters()} */}
                                     {renderExpandableTable()}
                                 </>
                             )}
@@ -1028,29 +872,20 @@ export default function UserCertManager() {
                                     Issued Certificates
                                 </button>
                             </div>
-
                             {/* SUB TAB RENDER LOGIC */}
                             {allcertSubTab === "root" && renderRootallTable()}
-
                             {allcertSubTab === "intermediate" && renderIntermediateallTable()}
                             {allcertSubTab === "issued" && renderIssuedCertsallTable()}
                             {/* {certSubTab === "root" && renderRootCertsTable()} */}
-
                         </div>
                     )}
-
                     {activeTab === "help" && renderHelp()}
                 </main>
-
                 {/* Footer */}
                 <footer className="w-full text-center py-4 text-gray-500 text-sm border-t">
                     © GoSecure 2025
                 </footer>
             </div >
-
-
         </div >
-
-
     );
 }

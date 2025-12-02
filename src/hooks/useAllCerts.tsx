@@ -123,9 +123,7 @@ export const useAllCerts = () => {
             <Table>
                 <TableHeader>
                     <TableRow className="bg-gray-100 dark:bg-gray-800">
-                        <TableHead className="border-r dark:border-gray-700 font-semibold text-gray-900 dark:text-gray-100">
-                            Status
-                        </TableHead>
+
                         <TableHead className="border-r dark:border-gray-700 font-semibold">
                             ID
                         </TableHead>
@@ -135,8 +133,11 @@ export const useAllCerts = () => {
                         <TableHead className="border-r dark:border-gray-700 font-semibold">
                             Valid Until
                         </TableHead>
-                        <TableHead className="font-semibold">
+                        {/* <TableHead className="font-semibold">
                             Actions
+                        </TableHead> */}
+                        <TableHead className="border-r dark:border-gray-700 font-semibold text-gray-900 dark:text-gray-100">
+                            Status
                         </TableHead>
                     </TableRow>
                 </TableHeader>
@@ -151,14 +152,7 @@ export const useAllCerts = () => {
                                 key={cert.id}
                                 className="hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100"
                             >
-                                {/* STATUS */}
-                                <TableCell className="border-r dark:border-gray-700">
-                                    <span
-                                        className={`px-3 py-1 rounded text-sm font-semibold ${status.className}`}
-                                    >
-                                        {status.text}
-                                    </span>
-                                </TableCell>
+
 
                                 {/* ID */}
                                 <TableCell className="border-r dark:border-gray-700 font-bold">
@@ -181,10 +175,18 @@ export const useAllCerts = () => {
                                 </TableCell>
 
                                 {/* ACTIONS */}
-                                <TableCell>
+                                {/* <TableCell>
                                     <button className="underline text-blue-600 dark:text-blue-400">
                                         Download
                                     </button>
+                                </TableCell> */}
+                                {/* STATUS */}
+                                <TableCell className="border-r dark:border-gray-700">
+                                    <span
+                                        className={`px-3 py-1 rounded text-sm font-semibold ${status.className}`}
+                                    >
+                                        {status.text}
+                                    </span>
                                 </TableCell>
                             </TableRow>
                         );
@@ -200,9 +202,7 @@ export const useAllCerts = () => {
             <Table>
                 <TableHeader>
                     <TableRow className="bg-gray-100 dark:bg-gray-800">
-                        <TableHead className="border-r dark:border-gray-700 font-semibold text-gray-900 dark:text-gray-100">
-                            Status
-                        </TableHead>
+
                         <TableHead className="border-r dark:border-gray-700 font-semibold">
                             ID
                         </TableHead>
@@ -212,8 +212,11 @@ export const useAllCerts = () => {
                         <TableHead className="border-r dark:border-gray-700 font-semibold">
                             Valid Until
                         </TableHead>
-                        <TableHead className="font-semibold">
+                        {/* <TableHead className="font-semibold">
                             Actions
+                        </TableHead> */}
+                        <TableHead className="border-r dark:border-gray-700 font-semibold text-gray-900 dark:text-gray-100">
+                            Status
                         </TableHead>
                     </TableRow>
                 </TableHeader>
@@ -228,14 +231,7 @@ export const useAllCerts = () => {
                                 key={cert.id}
                                 className="hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100"
                             >
-                                {/* STATUS */}
-                                <TableCell className="border-r dark:border-gray-700">
-                                    <span
-                                        className={`px-3 py-1 rounded text-sm font-semibold ${status.className}`}
-                                    >
-                                        {status.text}
-                                    </span>
-                                </TableCell>
+
 
                                 {/* ID */}
                                 <TableCell className="border-r dark:border-gray-700 font-bold">
@@ -258,10 +254,18 @@ export const useAllCerts = () => {
                                 </TableCell>
 
                                 {/* ACTIONS */}
-                                <TableCell>
+                                {/* <TableCell>
                                     <button className="underline text-blue-600 dark:text-blue-400">
                                         Download
                                     </button>
+                                </TableCell> */}
+                                {/* STATUS */}
+                                <TableCell className="border-r dark:border-gray-700">
+                                    <span
+                                        className={`px-3 py-1 rounded text-sm font-semibold ${status.className}`}
+                                    >
+                                        {status.text}
+                                    </span>
                                 </TableCell>
                             </TableRow>
                         );
@@ -276,9 +280,7 @@ export const useAllCerts = () => {
             <Table>
                 <TableHeader>
                     <TableRow className="bg-gray-100 dark:bg-gray-800">
-                        <TableHead className="border-r dark:border-gray-700 font-semibold text-gray-900 dark:text-gray-100">
-                            Status
-                        </TableHead>
+
                         <TableHead className="border-r dark:border-gray-700 font-semibold">
                             ID
                         </TableHead>
@@ -288,8 +290,11 @@ export const useAllCerts = () => {
                         <TableHead className="border-r dark:border-gray-700 font-semibold">
                             Valid Until
                         </TableHead>
-                        <TableHead className="font-semibold">
+                        {/* <TableHead className="font-semibold">
                             Actions
+                        </TableHead> */}
+                        <TableHead className="border-r dark:border-gray-700 font-semibold text-gray-900 dark:text-gray-100">
+                            Status
                         </TableHead>
                     </TableRow>
                 </TableHeader>
@@ -304,14 +309,6 @@ export const useAllCerts = () => {
                                 key={cert.id}
                                 className="hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100"
                             >
-                                {/* STATUS */}
-                                <TableCell className="border-r dark:border-gray-700">
-                                    <span
-                                        className={`px-3 py-1 rounded text-sm font-semibold ${status.className}`}
-                                    >
-                                        {status.text}
-                                    </span>
-                                </TableCell>
 
                                 {/* ID */}
                                 <TableCell className="border-r dark:border-gray-700 font-bold">
@@ -326,19 +323,28 @@ export const useAllCerts = () => {
                                 {/* VALID UNTIL */}
                                 <TableCell
                                     className={`border-r dark:border-gray-700 font-semibold ${days <= 30
-                                            ? "text-red-600 dark:text-red-400"
-                                            : "text-green-700 dark:text-green-300"
+                                        ? "text-red-600 dark:text-red-400"
+                                        : "text-green-700 dark:text-green-300"
                                         }`}
                                 >
                                     {new Date(cert.valid_until).toISOString().split("T")[0]}
                                 </TableCell>
 
                                 {/* ACTIONS */}
-                                <TableCell>
+                                {/* <TableCell>
                                     <button className="underline text-blue-600 dark:text-blue-400">
                                         Download
                                     </button>
+                                </TableCell> */}
+                                {/* STATUS */}
+                                <TableCell className="border-r dark:border-gray-700">
+                                    <span
+                                        className={`px-3 py-1 rounded text-sm font-semibold ${status.className}`}
+                                    >
+                                        {status.text}
+                                    </span>
                                 </TableCell>
+
                             </TableRow>
                         );
                     })}
@@ -346,10 +352,6 @@ export const useAllCerts = () => {
             </Table>
         </div>
     );
-
-
-
-
 
     return {
         renderRootallTable,

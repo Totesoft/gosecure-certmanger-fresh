@@ -95,11 +95,7 @@ export const useOrgIdCertificates = (orgId: string) => {
                             return (
                                 <TableRow key={cert.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
 
-                                    <TableCell className="border dark:border-gray-700">
-                                        <span className={`px-3 py-1 rounded text-sm font-semibold ${status.className}`}>
-                                            {status.text}
-                                        </span>
-                                    </TableCell>
+
 
                                     <TableCell className="border dark:border-gray-700 font-bold">
                                         {cert.id}
@@ -115,6 +111,11 @@ export const useOrgIdCertificates = (orgId: string) => {
 
                                     <TableCell className={`border dark:border-gray-700 font-semibold ${days <= 30 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-300"}`}>
                                         {new Date(cert.valid_until).toISOString().split("T")[0]}
+                                    </TableCell>
+                                    <TableCell className="border dark:border-gray-700">
+                                        <span className={`px-3 py-1 rounded text-sm font-semibold ${status.className}`}>
+                                            {status.text}
+                                        </span>
                                     </TableCell>
 
                                     <TableCell className="border dark:border-gray-700">
