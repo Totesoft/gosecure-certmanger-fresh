@@ -78,11 +78,11 @@ export const useOrgIdCertificates = (orgId: string) => {
                 <Table className="w-[90%] border border-gray-300 dark:border-gray-700 rounded-xl shadow bg-white dark:bg-gray-900">
                     <TableHeader className="bg-gray-100 dark:bg-gray-800 text-lg">
                         <TableRow>
-                            <TableHead className="border dark:border-gray-700">Status</TableHead>
                             <TableHead className="border dark:border-gray-700">ID</TableHead>
                             <TableHead className="border dark:border-gray-700">Common Name</TableHead>
                             <TableHead className="border dark:border-gray-700">Key</TableHead>
                             <TableHead className="border dark:border-gray-700">Valid Until</TableHead>
+                            <TableHead className="border dark:border-gray-700">Status</TableHead>
                             <TableHead className="border dark:border-gray-700">Intermediate CA</TableHead>
                         </TableRow>
                     </TableHeader>
