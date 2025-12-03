@@ -6,6 +6,7 @@ interface RenderAlertsProps {
     loading: boolean;
     error: string | null;
     orgId: string;
+    setOrgId: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const RenderAlerts: React.FC<RenderAlertsProps> = ({
@@ -92,7 +93,7 @@ const RenderAlerts: React.FC<RenderAlertsProps> = ({
                         const rootExpiring = rootRemaining <= expiryThreshold;
                         const intermediateExpiring = intList.some(int => daysRemaining(int.valid_until) <= expiryThreshold);
                         const issuedExpiring = intList.some(int =>
-                            int.issued_certificates?.some(leaf => daysRemaining(leaf.valid_until) <= expiryThreshold)
+                            int.issued_certificates?.some((leaf: { valid_until: string | number | Date; }) => daysRemaining(leaf.valid_until) <= expiryThreshold)
                         );
 
                         if (!rootExpiring && !intermediateExpiring && !issuedExpiring) return null;
@@ -140,8 +141,8 @@ const RenderAlerts: React.FC<RenderAlertsProps> = ({
                                 <td className="border border-gray-300 dark:border-gray-700 px-6 py-6 align-top">
                                     {intList.flatMap(int =>
                                         int.issued_certificates
-                                            ?.filter(leaf => daysRemaining(leaf.valid_until) <= expiryThreshold)
-                                            .map(leaf => (
+                                            ?.filter((leaf: { valid_until: string | number | Date; }) => daysRemaining(leaf.valid_until) <= expiryThreshold)
+                                            .map((leaf: { id: boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.Key | null | undefined; common_name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; valid_until: string | number | Date; }) => (
                                                 <div key={leaf.id} className="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg">
                                                     <div className="text-xl font-semibold text-yellow-800 dark:text-yellow-300">
                                                         {leaf.common_name}

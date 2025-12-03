@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Clock, AlertTriangle, CheckCircle } from "lucide-react";
-import { Card, Badge } from "@totesoft/ui-kit"
+import { Card, CardHeader, CardTitle, CardContent, Badge } from "@totesoft/ui-kit"
 import { cn } from "@/lib/utils";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/Table";
 import { useServerCerts, RenderServerCertsTable } from "@/hooks/useServerCerts";
@@ -68,23 +68,30 @@ export default function UserCertManager() {
         }));
     };
 
-    const formatDate = (d: string) => new Date(d).toLocaleDateString();
+    function formatDate(value: string | number | Date) {
+        if (!value) return "";
+
+        const date = value instanceof Date ? value : new Date(value);
+
+        if (isNaN(date.getTime())) return "";
+
+        return date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+        });
+    }
 
     const daysRemaining = (validUntil: string | number | Date) => {
         const diff = new Date(validUntil).getTime() - Date.now();
         return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
     };
 
-    const getStatusStyles = (isActive: boolean | undefined, remainingDays: number) => {
-        if (!isActive)
-            return { text: "Inactive", icon: <Clock size={16} />, className: "bg-red-200 text-gray-600" };
-        if (remainingDays <= 10)
-            return { text: "Expiring Soon", icon: <AlertTriangle size={16} />, className: "bg-red-100 text-red-700" };
-        if (remainingDays <= 30)
-            return { text: "Warning", icon: <AlertTriangle size={16} />, className: "bg-yellow-100 text-yellow-700" };
-        return { text: "Active", icon: <CheckCircle size={16} />, className: "bg-green-100 text-green-700" };
+    const getStatusStyles = (isActive: boolean, days: number) => {
+        if (!isActive) return { text: "Inactive", className: "bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-200" };
+        if (days <= 30) return { text: "Expiring Soon", className: "bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200" };
+        return { text: "Active", className: "bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200" };
     };
-
     // Fetch Certs--Entire Hierarchy when orgId changes
     useEffect(() => {
         let cancelled = false;
@@ -163,6 +170,31 @@ export default function UserCertManager() {
         return () => { cancelled = true; };
     }, [orgId]);
 
+
+
+    const totalRoots = certs.length;
+
+    // Count all intermediate certs in the intermediates map
+    const totalIntermediates = Object.values(intermediates).reduce(
+        (acc, arr) => acc + arr.length,
+        0
+    );
+
+    // Count ALL leaf certs for ALL intermediates
+    const totalLeafCertificates = Object.values(intermediates).reduce(
+        (acc, arr) =>
+            acc +
+            arr.reduce(
+                (innerAcc, int) =>
+                    innerAcc + (int.issued_certificates?.length || 0),
+                0
+            ),
+        0
+    );
+
+
+
+
     //Hierarchy Table
     const renderExpandableTable = () => {
         if (certs.length === 0)
@@ -173,12 +205,26 @@ export default function UserCertManager() {
             );
 
         return (
-            <div className="space-y-6 w-[90%] mx-auto">
-                {renderCertFilters()}
+            <div>
+                <div className="w-full p-4  flex items-center justify-around text-xl font-extrabold text-foreground">
+                    <div>
+                        Root Certificates : <span className="text-primary">{totalRoots}</span>
+                    </div>
+                    <div>
+                        Intermediate Certificates : <span className="text-primary">{totalIntermediates}</span>
+                    </div>
+                    <div>
+                        Issued Certificates : <span className="text-primary">{totalLeafCertificates}</span>
+                    </div>
+                </div>
 
-                {/* Root Title */}
-                <h2 className="text-2xl font-extrabold text-foreground mb-2">
-                    Root Certificates
+                <div className="space-y-6 w-full mx-auto">
+                    {renderCertFilters()}
+
+                </div>
+
+                <h2 className="text-2xl font-extrabold text-primary mb-2">
+                    Root Certificates:    {totalRoots}
                 </h2>
 
                 {certs.map((root) => {
@@ -193,7 +239,6 @@ export default function UserCertManager() {
                             key={root.id}
                             className="rounded-xl shadow-sm border border-border overflow-hidden bg-card"
                         >
-                            {/* ROOT HEADER */}
                             <div
                                 onClick={() => toggleRoot(root.id)}
                                 className={cn(
@@ -202,7 +247,6 @@ export default function UserCertManager() {
                                 )}
                             >
                                 <div className="flex items-center gap-12 text-2xl">
-
                                     <span className="font-semibold text-foreground/80 text-xl">
                                         ID: {root.id}
                                     </span>
@@ -210,8 +254,6 @@ export default function UserCertManager() {
                                     <span className="font-bold text-primary text-3xl">
                                         {root.common_name}
                                     </span>
-
-
 
                                     <span className="text-muted-foreground text-xl">
                                         {root.key_length} bits
@@ -230,18 +272,18 @@ export default function UserCertManager() {
                                         Intermediates: {interCount}
                                     </span>
                                 </div>
+
                                 <Badge className={cn("px-4 py-1 text-xl", status.className)}>
                                     {status.text}
                                 </Badge>
+
                                 <div className="text-5xl text-muted-foreground">
                                     {expandedRoot[root.id] ? "−" : "+"}
                                 </div>
-
                             </div>
 
                             {expandedRoot[root.id] && (
                                 <div className="p-6 space-y-5">
-
                                     {interCount > 0 ? (
                                         <>
                                             <h3 className="pl-40 text-2xl font-extrabold text-foreground/90">
@@ -258,7 +300,6 @@ export default function UserCertManager() {
                                                         key={int.id}
                                                         className="bg-muted border border-border rounded-xl"
                                                     >
-                                                        {/* INTERMEDIATE HEADER */}
                                                         <div
                                                             onClick={() => toggleInter(int.id)}
                                                             className="p-5 cursor-pointer hover:bg-muted/70 flex justify-between items-center"
@@ -271,8 +312,6 @@ export default function UserCertManager() {
                                                                 <span className="font-bold text-primary text-3xl">
                                                                     {int.common_name}
                                                                 </span>
-
-
 
                                                                 <span className="text-muted-foreground text-xl">
                                                                     {int.key_length} bits
@@ -291,20 +330,18 @@ export default function UserCertManager() {
                                                                     Certificates: {leafCerts.length}
                                                                 </span>
                                                             </div>
+
                                                             <Badge className={cn("px-4 py-1 text-lg", statusI.className)}>
                                                                 {statusI.text}
                                                             </Badge>
-
 
                                                             <div className="text-5xl text-muted-foreground">
                                                                 {expandedInter[int.id] ? "−" : "+"}
                                                             </div>
                                                         </div>
 
-                                                        {/* LEAF CERTS */}
                                                         {expandedInter[int.id] && (
                                                             <div className="p-6 pl-12 space-y-4 border-t border-border">
-
                                                                 {leafCerts.length > 0 ? (
                                                                     <>
                                                                         <h4 className="text-xl font-bold text-muted-foreground ml-12">
@@ -319,35 +356,26 @@ export default function UserCertManager() {
                                                                                     <TableHead>Key Length</TableHead>
                                                                                     <TableHead>Expiry</TableHead>
                                                                                     <TableHead>Status</TableHead>
-
                                                                                 </TableRow>
                                                                             </TableHeader>
 
                                                                             <TableBody>
-                                                                                {leafCerts.map((leaf: {
-                                                                                    valid_until: string | number | Date; is_active: boolean | undefined;
-                                                                                    id: boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> |
-                                                                                    Iterable<React.ReactNode> | React.Key | null | undefined;
-                                                                                    common_name: string | number | boolean | React.ReactElement<any, string |
-                                                                                        React.JSXElementConstructor<any>> | Iterable<React.ReactNode> |
-                                                                                    React.ReactPortal | null | undefined; key_length: string | number | boolean |
-                                                                                    React.ReactElement<any, string | React.JSXElementConstructor<any>> |
-                                                                                    Iterable<React.ReactNode> | React.ReactPortal | null | undefined;
-                                                                                }) => {
+                                                                                {leafCerts.map((leaf: { valid_until: string | number | Date; is_active: boolean | undefined; id: any; common_name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; key_length: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }) => {
                                                                                     const remL = daysRemaining(leaf.valid_until);
-                                                                                    const statusL = getStatusStyles(leaf.is_active, remL);
+                                                                                    const statusL = getStatusStyles(
+                                                                                        leaf.is_active,
+                                                                                        remL
+                                                                                    );
 
                                                                                     return (
-                                                                                        <TableRow key={leaf.id} className="text-xl">
+                                                                                        <TableRow key={String(leaf.id)} className="text-xl">
                                                                                             <TableCell className="font-semibold text-foreground/80">
-                                                                                                {leaf.id}
+                                                                                                {String(leaf.id)}
                                                                                             </TableCell>
-
 
                                                                                             <TableCell className="font-bold text-primary">
                                                                                                 {leaf.common_name}
                                                                                             </TableCell>
-
 
                                                                                             <TableCell className="text-muted-foreground">
                                                                                                 {leaf.key_length} bits
@@ -363,6 +391,7 @@ export default function UserCertManager() {
                                                                                             >
                                                                                                 {formatDate(leaf.valid_until)}
                                                                                             </TableCell>
+
                                                                                             <TableCell>
                                                                                                 <Badge className={statusL.className}>
                                                                                                     {statusL.text}
@@ -397,6 +426,7 @@ export default function UserCertManager() {
                 })}
             </div>
         );
+
     };
 
 
@@ -474,18 +504,20 @@ export default function UserCertManager() {
     };
     //Filter
     const renderCertFilters = () => (
-        <div className=" flex justify-center">
-            <div
-                className="
-        w-[90%] min-w-[75%]
-        shadow-md rounded-xl p-6
-        text-[var(--text-primary)]
-    "
-            >
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-2 items-end text-lg">
+        <div className="w-full ">
+
+            {/* <CardHeader>
+                <CardTitle className="text-[var(--text-primary)] text-center">
+                    Certificate Filters
+                </CardTitle>
+            </CardHeader> */}
+
+            <CardContent>
+
+                <div className="w-full flex flex-wrap gap-4 justify-between items-end bg-[var(--filter-bg)] p-4 rounded-lg">
 
                     {/* Root ID */}
-                    <div className="flex flex-col">
+                    <div className="flex flex-col flex-1 min-w-[250px]">
                         <label className="font-semibold text-center mb-1 text-[var(--text-secondary)]">
                             Root Certs
                         </label>
@@ -497,14 +529,15 @@ export default function UserCertManager() {
                             className="
                             border border-[var(--border-color)] rounded-lg px-3 py-2 text-center shadow-sm
                             bg-[var(--bg-primary)] text-[var(--text-primary)]
-                            dark:bg-[var(--bg-primary)] 
+                            dark:bg-[var(--bg-primary)]
                             dark:text-[var(--text-primary)]
-                            dark:border-[var(--border-color)]"
+                            dark:border-[var(--border-color)]
+                        "
                         />
                     </div>
 
                     {/* Intermediate ID */}
-                    <div className="flex flex-col">
+                    <div className="flex flex-col flex-1 min-w-[250px]">
                         <label className="font-semibold text-center mb-1 text-[var(--text-secondary)]">
                             Intermediate Certs
                         </label>
@@ -515,8 +548,7 @@ export default function UserCertManager() {
                             className="
                             border border-[var(--border-color)] rounded-lg px-3 py-2 text-center shadow-sm
                             bg-[var(--bg-primary)] text-[var(--text-primary)]
-
-                            dark:bg-[var(--bg-primary)] 
+                            dark:bg-[var(--bg-primary)]
                             dark:text-[var(--text-primary)]
                             dark:border-[var(--border-color)]
                         "
@@ -536,7 +568,7 @@ export default function UserCertManager() {
                     </div>
 
                     {/* Cert ID */}
-                    <div className="flex flex-col">
+                    <div className="flex flex-col flex-1 min-w-[250px]">
                         <label className="font-semibold text-center mb-1 text-[var(--text-secondary)]">
                             Certificates
                         </label>
@@ -547,8 +579,7 @@ export default function UserCertManager() {
                             className="
                             border border-[var(--border-color)] rounded-lg px-3 py-2 text-center shadow-sm
                             bg-[var(--bg-primary)] text-[var(--text-primary)]
-
-                            dark:bg-[var(--bg-primary)] 
+                            dark:bg-[var(--bg-primary)]
                             dark:text-[var(--text-primary)]
                             dark:border-[var(--border-color)]
                         "
@@ -568,7 +599,7 @@ export default function UserCertManager() {
                     </div>
 
                     {/* Clear Button */}
-                    <div className="flex flex-col">
+                    <div className="flex flex-col flex-1 min-w-[250px]">
                         <button
                             onClick={() => {
                                 setRootIdInput("");
@@ -579,10 +610,10 @@ export default function UserCertManager() {
                                 applyFilters(roots, interByRoot, certsByIntermediate, "", "", "");
                             }}
                             className="
-        px-4 py-2 rounded-lg font-semibold text-xl
-        bg-gray-600 text-white
-        border border-gray-700
-        hover:bg-gray-700
+                            px-4 py-2 rounded-lg font-semibold text-xl
+                            bg-gray-600 text-white
+                            border border-gray-700
+                            hover:bg-gray-700
                             dark:bg-[var(--bg-primary)]
                             dark:text-[var(--text-primary)]
                             dark:border-[var(--border-color)]
@@ -593,9 +624,11 @@ export default function UserCertManager() {
                         </button>
                     </div>
                 </div>
-            </div>
+            </CardContent>
+
         </div>
     );
+
 
     //UseEffect
     // when any of the filter inputs change, apply filters
@@ -682,36 +715,45 @@ export default function UserCertManager() {
     }, [activeTab]);
 
 
-
-    /////Main RETURN////
     return (
+
+
+        // 1. MAIN CONTAINER: More breathing room, controlled max width
         <div
-            className="min-h-screen w-[75%] mx-auto flex flex-col p-10 space-y-14 bg-[var(--bg-primary)] 
-        text-[var(--text-primary)] border border-[var(--border-color)] rounded-xl "
+            // REVISED MAIN CONTAINER: Explicitly w-[85%] and centered (mx-auto)
+            className="min-h-screen w-[80%] mx-auto flex flex-col p-12 space-y-12 
+        bg-[var(--bg-primary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl"
         >
-            {/* <div className="p-8 bg-white rounded-xl shadow-lg w-[75%] mx-auto"> */}
-            {/* Header */}
-            <header className=" bg-[var(--header-bg)] text-[var(--header-text)] py-8 px-8 text-center
-                rounded-lg shadow-md">
-                <h1 className="text-5xl font-bold">GoSecure - AnchorVPN</h1>
-                <p className="font-semibold text-3xl mt-2     text-[var(--header-text)]">
-                    User Certificate Management
-                </p>
-                <p className="font-semibold text-left text-3xl mt-2     text-[var(--header-text)]">
-                    Welcome User
-                </p>
+            {/* REVISED HEADER: Using relative positioning for Welcome User */}
+            <header className=" bg-[var(--header-bg)] text-[var(--header-text)] py-10 px-8 
+            rounded-xl shadow-lg border-b-4 border-indigo-700 relative">
+
+                <div className="flex flex-col items-center justify-center">
+                    <h1 className="text-4xl font-extrabold tracking-tight">
+                        GoSecure - AnchorVPN
+                    </h1>
+                    <p className="font-medium text-xl mt-1 opacity-90">
+                        User Certificate Management
+                    </p>
+                </div>
+
+                {/* Welcome User positioned bottom-left, within the header box */}
+                <div className="absolute bottom-4 left-8">
+                    <p className="text-xl font-medium text-[var(--header-text)]">
+                        Welcome User
+                    </p>
+                </div>
             </header>
+
             {/* Main App Layout */}
             <div
-                className=" min-h-screen flex flex-col rounded-t-2xl shadow-inner bg-[var(--bg-secondary)]
-                text-[var(--text-primary)] "
+                className=" flex flex-col rounded-t-2xl shadow-inner bg-[var(--bg-primary)] text-[var(--text-primary)] "
             >
-                {/* Navigation Tabs */}
+                {/* 2. NAVIGATION TABS: Minimalist, bottom-border style */}
                 <nav
-                    className="w-full border-b px-4 py-3 flex items-center bg-[var(--bg-primary)] text-[var(--text-primary)]"
+                    className="w-full px-4 pt-3 pb-0 flex items-center justify-between bg-[var(--bg-primary)] border-b-2 border-[var(--border-color)]"
                 >
-                    {/* This wrapper keeps tabs centered */}
-                    <div className="flex-1 flex justify-center gap-4">
+                    <div className="flex gap-8">
                         {[
                             { key: "certs", label: "Certificates by OrgId" },
                             { key: "download", label: "Download" },
@@ -723,41 +765,41 @@ export default function UserCertManager() {
                             <button
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
-                                className={`text-lg font-semibold px-4 py-2 rounded-md transition-colors duration-200
-                    ${activeTab === tab.key
-                                        ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"
-                                        : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+                                className={`text-lg font-semibold px-2 pb-3 transition-colors duration-200
+                                ${activeTab === tab.key
+                                        ? "text-[var(--accent-primary)] border-b-4 border-[var(--accent-primary)]"
+                                        : "text-[var(--text-secondary)] hover:text-[var(--accent-primary)]"
                                     }
-                `}
+                            `}
                             >
                                 {tab.label}
                             </button>
                         ))}
                     </div>
-                    {/* Theme Selector aligned RIGHT */}
-                    <div className="flex justify-end w-[15%]">
+                    {/* Theme Selector */}
+                    <div className="flex justify-end">
                         <ThemeSelector />
                     </div>
                 </nav>
+
                 {/* Active Tab Content */}
                 <main
-                    className="flex-grow p-8 bg-[var(--bg-primary)] text-[var(--text-primary)]" >
-
+                    className="flex-grow p-8 bg-[var(--bg-secondary)] text-[var(--text-primary)] rounded-b-xl"
+                >
                     {activeTab === "certs" && (
-                        <div className="w-full">
+                        <div className="w-full space-y-6">
 
-                            {/* SUB TABS */}
+                            {/* 3. SUB TABS: Rounded pills with better spacing */}
                             <div
-                                className="flex space-x-4 pb-2 mb-4 border-b border-[var(--border-color)]
-                                        text-[var(--text-primary)] bg-[var(--bg-primary)]">
-
+                                className="flex space-x-4 pb-2 text-[var(--text-primary)]"
+                            >
                                 <button
                                     onClick={() => setCertsSubTab("hierarchy")}
-                                    className={`px-4 py-2 rounded-md font-bold text-lg transition-colors` +
+                                    className={`px-5 py-2 rounded-full font-medium text-sm transition-colors shadow-sm` +
                                         (
                                             certsSubTab === "hierarchy"
                                                 ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                                : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
+                                                : " bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
                                         )
                                     }
                                 >
@@ -766,10 +808,10 @@ export default function UserCertManager() {
                                 <button
                                     onClick={() => setCertsSubTab("alerts")}
                                     className={
-                                        "px-4 py-2 rounded-t font-semibold " +
+                                        "px-5 py-2 rounded-full font-medium text-sm transition-colors shadow-sm " +
                                         (certsSubTab === "alerts"
-                                            ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
+                                            ? " bg-red-600 text-white " // Use red for Alerts
+                                            : " bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
                                     }
                                 >
                                     Alerts
@@ -777,54 +819,48 @@ export default function UserCertManager() {
                                 <button
                                     onClick={() => setCertsSubTab("issued")}
                                     className={
-                                        "px-4 py-2 rounded-t font-semibold " +
+                                        "px-5 py-2 rounded-full font-medium text-sm transition-colors shadow-sm " +
                                         (certsSubTab === "issued"
                                             ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
-                                            : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
+                                            : " bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] ")
                                     }
                                 >
                                     Issued Org Certs
                                 </button>
-
                             </div>
-                            <div
-                            // className="bg-[var(--bg-card)] border border-[var(--border-color)]
-                            //         rounded-xl shadow-md p-5 flex items-center gap-4 flex-wrap w-full"
-                            >
-                                <span className="text-2xl text-right font-extrabold text-[var(--text-primary)] whitespace-nowrap">
-                                    Organization ID
+
+                            {/* Org ID Input Area - Cleaned up and aligned */}
+                            <div className="flex items-center space-x-4 border-b pb-4 border-[var(--border-color)]">
+                                <span className="text-lg font-bold text-[var(--text-primary)]">
+                                    Organization ID:
                                 </span>
 
                                 <input
                                     type="text"
-                                    placeholder="--Enter Org ID--"
+                                    placeholder="5" // Use the value from the image
                                     value={orgId}
                                     onChange={(e) => setOrgId(e.target.value)}
-                                    className="text-2xl font-semibold text-center py-2 px-3 bg-[var(--bg-input)]
-                                        text-[var(--text-primary)] border border-[var(--border-color)] 
-                                        rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--accent-color)] w-[150px]"
+                                    className="text-lg font-semibold text-center py-2 px-3 bg-[var(--bg-input)]
+                                    text-[var(--text-primary)] border-2 border-[var(--border-color)] 
+                                    rounded-lg shadow-inner focus:ring-2 focus:ring-[var(--accent-primary)] w-[100px]"
                                 />
-
                             </div>
+
                             {/* SUBTAB CONTENT */}
                             {certsSubTab === "hierarchy" && (
                                 <>
-
-                                    {/* {renderCertFilters()} */}
                                     {renderExpandableTable()}
                                 </>
                             )}
                             {certsSubTab === "alerts" && (
-                                <>
-                                    <RenderAlerts
-                                        certs={certs}
-                                        intermediates={intermediates}
-                                        loading={false}
-                                        error={null}
-                                        orgId={orgId}
-                                        setOrgId={setOrgId}
-                                    />
-                                </>
+                                <RenderAlerts
+                                    certs={certs}
+                                    intermediates={intermediates}
+                                    loading={false}
+                                    error={null}
+                                    orgId={orgId}
+                                    setOrgId={setOrgId}
+                                />
                             )}
                             {certsSubTab === "issued" && renderOrgIdCertificates()}
                         </div>
@@ -833,19 +869,17 @@ export default function UserCertManager() {
                     {activeTab === "servers" && (<RenderServerCertsTable servercerts={servercerts} />)}
                     {activeTab === "user" && <RenderUserCertsTable usercerts={usercerts} />}
                     {activeTab === "allcerts" && (
-                        <div className="p-4">
-
-                            {/* SUB TABS */}
+                        <div className="p-4 bg-[var(--bg-primary)] rounded-xl shadow-inner">
                             <div className="flex gap-4 mb-4 border-b pb-3 border-[var(--border-color)]">
                                 <button
                                     onClick={() => setAllcertSubTab("root")}
                                     className={`
                                 px-4 py-2 text-lg font-semibold rounded
-            ${allcertSubTab === "root"
+                                ${allcertSubTab === "root"
                                             ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
                                             : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "
                                         }
-        `}
+                                `}
                                 >
                                     Root Certificates
                                 </button>
@@ -853,10 +887,10 @@ export default function UserCertManager() {
                                 <button
                                     onClick={() => setAllcertSubTab("intermediate")}
                                     className={`px-4 py-2 text-lg font-semibold rounded
-            ${allcertSubTab === "intermediate"
+                                ${allcertSubTab === "intermediate"
                                             ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
                                             : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "}
-        `}
+                                `}
                                 >
                                     Intermediate Certs
                                 </button>
@@ -864,25 +898,24 @@ export default function UserCertManager() {
                                 <button
                                     onClick={() => setAllcertSubTab("issued")}
                                     className={`px-4 py-2 text-lg font-semibold rounded
-            ${allcertSubTab === "issued"
+                                ${allcertSubTab === "issued"
                                             ? " bg-[var(--accent-primary)] text-[var(--text-on-accent)] "
                                             : " bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] "}
-        `}
+                                `}
                                 >
                                     Issued Certificates
                                 </button>
                             </div>
-                            {/* SUB TAB RENDER LOGIC */}
                             {allcertSubTab === "root" && renderRootallTable()}
                             {allcertSubTab === "intermediate" && renderIntermediateallTable()}
                             {allcertSubTab === "issued" && renderIssuedCertsallTable()}
-                            {/* {certSubTab === "root" && renderRootCertsTable()} */}
                         </div>
                     )}
                     {activeTab === "help" && renderHelp()}
                 </main>
+
                 {/* Footer */}
-                <footer className="w-full text-center py-4 text-gray-500 text-sm border-t">
+                <footer className="w-full text-center py-3 text-[var(--text-secondary)] text-sm border-t border-[var(--border-color)] bg-[var(--bg-primary)] rounded-b-xl">
                     © GoSecure 2025
                 </footer>
             </div >

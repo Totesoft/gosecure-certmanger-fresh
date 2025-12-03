@@ -75,7 +75,7 @@ export const useOrgIdCertificates = (orgId: string) => {
             <div className="py-6 flex justify-center">
 
 
-                <Table className="w-[90%] border border-gray-300 dark:border-gray-700 rounded-xl shadow bg-white dark:bg-gray-900">
+                <Table className="w-[80%] border border-gray-300 dark:border-gray-700 rounded-xl shadow bg-white dark:bg-gray-900">
                     <TableHeader className="bg-gray-100 dark:bg-gray-800 text-lg">
                         <TableRow>
                             <TableHead className="border dark:border-gray-700">ID</TableHead>
